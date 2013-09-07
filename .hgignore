@@ -1,0 +1,7 @@
+syntax:glob
+*.suo
+*.csproj.user
+obj\*
+bin\*
+TestResults\*
+ThriftSharp.Samples\*
