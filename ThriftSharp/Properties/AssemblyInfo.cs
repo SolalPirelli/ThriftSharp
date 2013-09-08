@@ -10,3 +10,4 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyVersion( "1.0.*" )]
 
 [assembly: InternalsVisibleTo( "ThriftSharp.Extensions" )]
+[assembly: InternalsVisibleTo( "ThriftSharp.Tests" )]

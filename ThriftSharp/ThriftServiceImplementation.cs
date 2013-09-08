@@ -131,7 +131,7 @@ namespace ThriftSharp
         /// <param name="expr">An expression representing the method.</param>
         /// <param name="arg">The method's only argument.</param>
         /// <returns>The task object representing the asynchronous call.</returns>
-        protected Task CallAsync<T1>( Expression<Func<TService, Func<T1, Task>>> expr, T1 arg )
+        protected Task CallAsync<T>( Expression<Func<TService, Func<T, Task>>> expr, T arg )
         {
             return (Task) Thrift.SendMessage( _protocol, GetMethod( expr ), arg );
         }
@@ -209,7 +209,7 @@ namespace ThriftSharp
         /// <param name="expr">An expression representing the method.</param>
         /// <param name="arg">The method's only argument.</param>
         /// <returns>The call's return value.</returns>
-        protected TReturn Call<T1, TReturn>( Expression<Func<TService, Func<T1, TReturn>>> expr, T1 arg )
+        protected TReturn Call<T, TReturn>( Expression<Func<TService, Func<T, TReturn>>> expr, T arg )
         {
             EnsureNotTask<TReturn>();
             return (TReturn) Thrift.SendMessage( _protocol, GetMethod( expr ), arg );

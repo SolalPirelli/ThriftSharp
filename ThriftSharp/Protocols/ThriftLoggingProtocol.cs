@@ -457,7 +457,7 @@ namespace ThriftSharp.Protocols
         /// <summary>
         /// Writes the specified array of signed bytes and logs the call.
         /// </summary>
-        /// <param name="bytes">The array of signed bytes.</param>
+        /// <param name="value">The array of signed bytes.</param>
         public void WriteBinary( sbyte[] value )
         {
             Log( "WriteBinary", "[" + string.Join( ",", value ) + "]" );

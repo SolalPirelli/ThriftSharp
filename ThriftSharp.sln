@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThriftSharp", "ThriftSharp\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThriftSharp.Extensions", "ThriftSharp.Extensions\ThriftSharp.Extensions.csproj", "{7B5349A9-5CE4-432D-A32B-F870867649A0}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ThriftSharp.Tests", "ThriftSharp.Tests\ThriftSharp.Tests.fsproj", "{1F3EDE6E-7D84-45BD-9B0C-00198760A714}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,10 @@ Global
 		{7B5349A9-5CE4-432D-A32B-F870867649A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B5349A9-5CE4-432D-A32B-F870867649A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7B5349A9-5CE4-432D-A32B-F870867649A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F3EDE6E-7D84-45BD-9B0C-00198760A714}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F3EDE6E-7D84-45BD-9B0C-00198760A714}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F3EDE6E-7D84-45BD-9B0C-00198760A714}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F3EDE6E-7D84-45BD-9B0C-00198760A714}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

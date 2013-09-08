@@ -216,9 +216,25 @@ namespace ThriftSharp
     [AttributeUsage( AttributeTargets.Method )]
     public sealed class ThriftMethodAttribute : Attribute
     {
+        /// <summary>
+        /// Gets the method's name.
+        /// </summary>
         public string Name { get; private set; }
+
+        /// <summary>
+        /// Gets a value indicating whether the method is a one-way method.
+        /// </summary>
+        /// <remarks>
+        /// One-way methods do not expect or wait for a server reply.
+        /// </remarks>
         public bool IsOneWay { get; private set; }
 
+
+        /// <summary>
+        /// Initializes a new instance of the ThriftMethodAttribute class with the specified values.
+        /// </summary>
+        /// <param name="name">The name of the method the attribute is applied to.</param>
+        /// <param name="isOneWay">Whether the method the attribute is applied to is one-way.</param>
         public ThriftMethodAttribute( string name, bool isOneWay = false )
         {
             Name = name;

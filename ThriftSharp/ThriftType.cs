@@ -135,6 +135,7 @@ namespace ThriftSharp
 
                     readIds.Add( field.Header.Id );
                 }
+                protocol.ReadFieldEnd();
             }
             protocol.ReadStructEnd();
 
@@ -144,7 +145,7 @@ namespace ThriftSharp
                 {
                     if ( field.IsRequired )
                     {
-                        throw new ArgumentException( string.Format( "Field '{0}' of type '{1}' is required but was not received.", field.Header.Name, st.Header.Name ) );
+                        throw new ThriftProtocolException( ThriftProtocolExceptionType.MissingResult, string.Format( "Field '{0}' of type '{1}' is required but was not received.", field.Header.Name, st.Header.Name ) );
                     }
                     if ( field.DefaultValue.HasValue )
                     {
