@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using ThriftSharp.Models;
@@ -277,10 +278,10 @@ namespace ThriftSharp
             internal override void Write( IThriftProtocol protocol, object obj )
             {
                 var enm = ThriftAttributesParser.ParseEnum( obj.GetType() );
-                var member = enm.Members.FirstOrDefault( m => m.UnderlyingField.GetValue( null ) == obj );
+                var member = enm.Members.FirstOrDefault( m => (int) m.UnderlyingField.GetValue( null ) == (int) obj );
                 if ( member == null )
                 {
-                    throw new InvalidOperationException( "Cannot write an undeclared enum value." );
+                    throw new ThriftProtocolException( ThriftProtocolExceptionType.InternalError, "Cannot write an undeclared enum value." );
                 }
                 protocol.WriteInt32( member.Value );
             }
@@ -326,11 +327,11 @@ namespace ThriftSharp
                 var elemType = obj.GetType().GetElementType();
                 var elemTType = ThriftType.FromType( elemType );
 
-                var array = (object[]) obj;
+                var array = (Array) obj;
                 protocol.WriteListHeader( new ThriftCollectionHeader( array.Length, elemTType ) );
                 for ( int n = 0; n < array.Length; n++ )
                 {
-                    elemTType.Write( protocol, array[n] );
+                    elemTType.Write( protocol, array.GetValue( n ) );
                 }
                 protocol.WriteListEnd();
             }
@@ -398,10 +399,10 @@ namespace ThriftSharp
             {
                 var elemType = obj.GetType().GetGenericInterface( _collectionGenericType ).GetGenericArguments()[0];
                 var elemTType = ThriftType.FromType( elemType );
-                var coll = (ICollection<object>) obj;
+                var arr = ( (IEnumerable) obj ).Cast<object>().ToArray();
 
-                _writeHeader( protocol )( new ThriftCollectionHeader( coll.Count, elemTType ) );
-                foreach ( var elem in coll )
+                _writeHeader( protocol )( new ThriftCollectionHeader( arr.Length, elemTType ) );
+                foreach ( var elem in arr )
                 {
                     elemTType.Write( protocol, elem );
                 }
@@ -458,13 +459,14 @@ namespace ThriftSharp
                 var valType = typeArgs[1];
                 var keyTType = ThriftType.FromType( keyType );
                 var valTType = ThriftType.FromType( valType );
-                var map = (IDictionary<object, object>) obj;
+                var map = (IDictionary) obj;
 
                 protocol.WriteMapHeader( new ThriftMapHeader( map.Count, keyTType, valTType ) );
-                foreach ( var pair in map )
+                var enumerator = map.GetEnumerator();
+                while ( enumerator.MoveNext() )
                 {
-                    keyTType.Write( protocol, pair.Key );
-                    valTType.Write( protocol, pair.Value );
+                    keyTType.Write( protocol, enumerator.Key );
+                    valTType.Write( protocol, enumerator.Value );
                 }
                 protocol.WriteMapEnd();
             }

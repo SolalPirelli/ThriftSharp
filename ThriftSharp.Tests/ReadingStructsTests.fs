@@ -7,8 +7,8 @@ open ThriftSharp
 [<ThriftStruct("NoFields")>]
 type StructWithoutFields1() = class end
 
-[<ThriftStruct("OnePrimitiveField")>]
-type StructWithOnePrimitiveField1() =
+[<ThriftStruct("OneField")>]
+type StructWithOneField1() =
     [<ThriftField(1s, true, "Field")>]
     member val Field = 42 with get, set
 
@@ -43,7 +43,7 @@ type StructWithCollectionFields1() =
 [<ThriftStruct("StructField")>]
 type StructWithStructField1() =
     [<ThriftField(1s, true, "StructField")>]
-    member val Struct = StructWithOnePrimitiveField1() with get, set
+    member val Struct = StructWithOneField1() with get, set
 
 [<ThriftEnum("Enum")>]
 type Enum1 =
@@ -79,19 +79,19 @@ type ``Reading structs``() =
         m.IsEmpty <=> true
 
     [<Test>]
-    member x.``One primitive field``() =
-        let m = MemoryProtocol([StructHeader "OnePrimitiveField"
+    member x.``One field``() =
+        let m = MemoryProtocol([StructHeader "OneField"
                                 FieldHeader (1s, "Field", ThriftType.FromType(typeof<int>))
                                 Int32 34
                                 FieldEnd
                                 FieldStop
                                 StructEnd])
-        let inst = x.ReadStruct<StructWithOnePrimitiveField1>(m)
+        let inst = x.ReadStruct<StructWithOneField1>(m)
         inst.Field <=> 34
         m.IsEmpty <=> true
 
     [<Test>]
-    member x.``Many primitive fields``() =
+    member x.``Primitive fields``() =
         let m = MemoryProtocol([StructHeader "ManyPrimitiveFields"
                                 FieldHeader (1s, "BoolField", ttype typeof<bool>)
                                 Bool false
@@ -168,8 +168,8 @@ type ``Reading structs``() =
     [<Test>]
     member x.``Struct field``() =
         let m = MemoryProtocol([StructHeader "StructField"
-                                FieldHeader (1s, "StructField", ttype typeof<StructWithOnePrimitiveField1>)
-                                StructHeader "OnePrimitiveField"
+                                FieldHeader (1s, "StructField", ttype typeof<StructWithOneField1>)
+                                StructHeader "OneField"
                                 FieldHeader (1s, "Field", ttype typeof<int>)
                                 Int32 23
                                 FieldEnd

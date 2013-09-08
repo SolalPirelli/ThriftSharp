@@ -9,6 +9,7 @@ open ThriftSharp
 type TestAttribute = TestMethodAttribute
 
 let ttype = ThriftType.FromType
+let tid = ThriftType.FromId
 
 let (<=>) (act:'a) (exp:'a) =
     if act <> exp then Assert.Fail(sprintf "Expected: %A%sActual: %A" exp Environment.NewLine act)
