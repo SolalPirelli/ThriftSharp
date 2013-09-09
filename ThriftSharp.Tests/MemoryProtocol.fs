@@ -2,7 +2,6 @@
 
 open System.Collections.Generic
 open ThriftSharp
-open ThriftSharp.Models
 open ThriftSharp.Protocols
 
 type ThriftProtocolValue =

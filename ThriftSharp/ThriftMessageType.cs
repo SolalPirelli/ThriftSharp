@@ -1,4 +1,4 @@
-﻿namespace ThriftSharp.Models
+﻿namespace ThriftSharp
 {
     /// <summary>
     /// The available Thrift message types.

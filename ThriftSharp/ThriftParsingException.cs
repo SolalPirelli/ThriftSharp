@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace ThriftSharp.Reflection
+namespace ThriftSharp
 {
     /// <summary>
     /// Raised when a parsing error occurs.

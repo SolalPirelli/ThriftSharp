@@ -2,6 +2,7 @@
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
 open ThriftSharp
+open ThriftSharp.Internals
 
 [<ThriftStruct("NoFields")>]
 type StructWithoutFields2() = class end
@@ -14,12 +15,12 @@ type StructWithOneField2() =
 
 [<TestClass>]
 type ``Reading structs skipping fields``() =
-    let readSt prot typ = ThriftType.Struct.Read(prot, typ) |> ignore
+    let readSt prot typ = ThriftSerializer.Struct.Read(prot, typ) |> ignore
 
     [<Test>]
     member x.``One field for a struct without fields``() =
         let m = MemoryProtocol([StructHeader "NoFields"
-                                FieldHeader (1s, "Field", ThriftType.FromType(typeof<int>))
+                                FieldHeader (1s, "Field", tid 8uy)
                                 Int32 42
                                 FieldEnd
                                 FieldStop
@@ -31,13 +32,13 @@ type ``Reading structs skipping fields``() =
     [<Test>]
     member x.``Many fields for a struct with one primitive fields``() =
         let m = MemoryProtocol([StructHeader "OneField"
-                                FieldHeader (3s, "Field3", ThriftType.FromType(typeof<string>))
+                                FieldHeader (3s, "Field3", tid 11uy)
                                 String "abc"
                                 FieldEnd
-                                FieldHeader (1s, "Field", ThriftType.FromType(typeof<int>))
+                                FieldHeader (1s, "Field", tid 8uy)
                                 Int32 42
                                 FieldEnd
-                                FieldHeader(2s, "Field2", ThriftType.FromType(typeof<int>))
+                                FieldHeader(2s, "Field2", tid 8uy)
                                 Int32 34
                                 FieldEnd
                                 FieldStop

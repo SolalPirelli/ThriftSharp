@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 
-namespace ThriftSharp.Internals
+namespace ThriftSharp.Utilities
 {
     /// <summary>
     /// Utility class for enums.
     /// </summary>
-    public static class EnumEx
+    internal static class EnumEx
     {
         /// <summary>
         /// Gets the values of an enum in a type-safe way.

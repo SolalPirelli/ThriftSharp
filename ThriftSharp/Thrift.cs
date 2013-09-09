@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ThriftSharp.Internals;
-using ThriftSharp.Models;
 using ThriftSharp.Protocols;
-using ThriftSharp.Reflection;
+using ThriftSharp.Utilities;
 
 namespace ThriftSharp
 {
@@ -18,9 +17,9 @@ namespace ThriftSharp
         /// <summary>
         /// Creates a read-only ThriftField with the specified header and value.
         /// </summary>
-        private static ThriftField ReadOnlyField( ThriftFieldHeader header, object value )
+        private static ThriftField ReadOnlyField( ThriftFieldHeader header, Type underlyingType, object value )
         {
-            return new ThriftField( header, true, new Option<object>(), null, _ => value, null );
+            return new ThriftField( header, true, new Option<object>(), underlyingType, _ => value, null );
         }
 
         /// <summary>
@@ -32,9 +31,9 @@ namespace ThriftSharp
             for ( int n = 0; n < method.Parameters.Count; n++ )
             {
                 var param = method.Parameters[n];
-                var type = ThriftType.FromType( param.UnderlyingParameter.ParameterType );
-                var header = new ThriftFieldHeader( param.Id, param.Name, type );
-                paramFields[n] = ReadOnlyField( header, args[n] );
+                var type = ThriftSerializer.FromType( param.UnderlyingParameter.ParameterType );
+                var header = new ThriftFieldHeader( param.Id, param.Name, type.ThriftType );
+                paramFields[n] = ReadOnlyField( header, param.UnderlyingParameter.ParameterType, args[n] );
             }
 
             return new ThriftStruct( new ThriftStructHeader( "Parameters" ), paramFields );
@@ -49,7 +48,7 @@ namespace ThriftSharp
             var paramSt = MakeParametersStruct( method, args );
 
             protocol.WriteMessageHeader( msg );
-            ThriftType.WriteStruct( protocol, paramSt, null );
+            ThriftSerializer.WriteStruct( protocol, paramSt, null );
             protocol.WriteMessageEnd();
         }
 
@@ -72,14 +71,14 @@ namespace ThriftSharp
 
             if ( method.ReturnType != typeof( void ) )
             {
-                var retType = ThriftType.FromType( method.ReturnType );
-                var retHeader = new ThriftFieldHeader( 0, "ReturnType", retType );
+                var retType = ThriftSerializer.FromType( method.ReturnType );
+                var retHeader = new ThriftFieldHeader( 0, "ReturnType", retType.ThriftType );
                 retFields.Add( SetOnlyField( retHeader, true, method.ReturnType, v => retValContainer.Value = v ) );
             }
 
             foreach ( var e in method.Exceptions )
             {
-                var header = new ThriftFieldHeader( e.Id, e.Name, ThriftType.Struct );
+                var header = new ThriftFieldHeader( e.Id, e.Name, ThriftSerializer.Struct.ThriftType );
                 retFields.Add( SetOnlyField( header, false, e.ExceptionType, v => { throw (Exception) v; } ) );
             }
 
@@ -92,7 +91,7 @@ namespace ThriftSharp
         private static ThriftProtocolException ReadException( IThriftProtocol protocol )
         {
             // Server exception (not a declared one)
-            var exn = ThriftType.Struct.Read( protocol, typeof( ThriftProtocolException ) );
+            var exn = ThriftSerializer.Struct.Read( protocol, typeof( ThriftProtocolException ) );
             protocol.ReadMessageEnd();
             return (ThriftProtocolException) exn;
         }
@@ -114,7 +113,7 @@ namespace ThriftSharp
             }
 
             var retStAndVal = MakeReturnStruct( method );
-            ThriftType.ReadStruct( protocol, retStAndVal.Item1, null );
+            ThriftSerializer.ReadStruct( protocol, retStAndVal.Item1, null );
             protocol.ReadMessageEnd();
 
             return retStAndVal.Item2.Value;

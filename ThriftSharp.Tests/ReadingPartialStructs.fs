@@ -2,6 +2,7 @@
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
 open ThriftSharp
+open ThriftSharp.Internals
 
 [<ThriftStruct("OptionalFields")>]
 type StructWithOptionalFields3() =
@@ -12,12 +13,12 @@ type StructWithOptionalFields3() =
 
 [<TestClass>]
 type ``Reading partial structs``() =
-    member x.ReadStruct<'T>(prot) = ThriftType.Struct.Read(prot, typeof<'T>) :?> 'T
+    member x.ReadStruct<'T>(prot) = ThriftSerializer.Struct.Read(prot, typeof<'T>) :?> 'T
 
     [<Test>]
     member x.``Missing optional field``() =
         let m = MemoryProtocol([StructHeader "OptionalFields"
-                                FieldHeader (1s, "Required", ttype typeof<int>)
+                                FieldHeader (1s, "Required", tid 8uy)
                                 Int32 10
                                 FieldEnd
                                 FieldStop
@@ -29,7 +30,7 @@ type ``Reading partial structs``() =
     [<Test>]
     member x.``Missing required field``() =
         let m = MemoryProtocol([StructHeader "OptionalFields"
-                                FieldHeader (2s, "Optional", ttype typeof<int>)
+                                FieldHeader (2s, "Optional", tid 8uy)
                                 Int32 10
                                 FieldEnd
                                 FieldStop

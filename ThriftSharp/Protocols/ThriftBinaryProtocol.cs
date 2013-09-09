@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using ThriftSharp.Models;
 using ThriftSharp.Transport;
 
 namespace ThriftSharp.Protocols
@@ -86,15 +85,14 @@ namespace ThriftSharp.Protocols
         /// </returns>
         public ThriftFieldHeader ReadFieldHeader()
         {
-            byte b = _transport.ReadByte();
-            if ( b == ThriftFieldHeader.Stop )
+            byte tid = _transport.ReadByte();
+            if ( tid == ThriftFieldHeader.Stop )
             {
                 return null;
             }
 
             short id = ReadInt16();
-            var type = ThriftType.FromId( b );
-            return new ThriftFieldHeader( id, "<not read>", type );
+            return new ThriftFieldHeader( id, "<not read>", (ThriftType) tid );
         }
 
         /// <summary>
@@ -108,9 +106,9 @@ namespace ThriftSharp.Protocols
         /// <returns>A list header.</returns>
         public ThriftCollectionHeader ReadListHeader()
         {
-            var elementType = ThriftType.FromId( _transport.ReadByte() );
+            byte tid = _transport.ReadByte();
             int count = ReadInt32();
-            return new ThriftCollectionHeader( count, elementType );
+            return new ThriftCollectionHeader( count, (ThriftType) tid );
         }
 
         /// <summary>
@@ -124,9 +122,9 @@ namespace ThriftSharp.Protocols
         /// <returns>A set header.</returns>
         public ThriftCollectionHeader ReadSetHeader()
         {
-            var elementType = ThriftType.FromId( _transport.ReadByte() );
+            byte tid = _transport.ReadByte();
             int count = ReadInt32();
-            return new ThriftCollectionHeader( count, elementType );
+            return new ThriftCollectionHeader( count, (ThriftType) tid );
         }
 
         /// <summary>
@@ -140,10 +138,10 @@ namespace ThriftSharp.Protocols
         /// <returns>A map header.</returns>
         public ThriftMapHeader ReadMapHeader()
         {
-            var keyType = ThriftType.FromId( _transport.ReadByte() );
-            var valueType = ThriftType.FromId( _transport.ReadByte() );
+            var keyTypeId = _transport.ReadByte();
+            var valueTypeId = _transport.ReadByte();
             int count = ReadInt32();
-            return new ThriftMapHeader( count, keyType, valueType );
+            return new ThriftMapHeader( count, (ThriftType) keyTypeId, (ThriftType) valueTypeId );
         }
 
         /// <summary>
@@ -274,7 +272,7 @@ namespace ThriftSharp.Protocols
         /// <param name="header">The header</param>
         public void WriteFieldHeader( ThriftFieldHeader header )
         {
-            WriteByte( header.FieldType.Id );
+            WriteByte( (byte) header.FieldType );
             WriteInt16( header.Id );
         }
 
@@ -297,7 +295,7 @@ namespace ThriftSharp.Protocols
         /// <param name="header">The header.</param>
         public void WriteListHeader( ThriftCollectionHeader header )
         {
-            WriteByte( header.ElementType.Id );
+            WriteByte( (byte) header.ElementType );
             WriteInt32( header.Count );
         }
 
@@ -312,7 +310,7 @@ namespace ThriftSharp.Protocols
         /// <param name="header">The header.</param>
         public void WriteSetHeader( ThriftCollectionHeader header )
         {
-            WriteByte( header.ElementType.Id );
+            WriteByte( (byte) header.ElementType );
             WriteInt32( header.Count );
         }
 
@@ -327,8 +325,8 @@ namespace ThriftSharp.Protocols
         /// <param name="header">The header.</param>
         public void WriteMapHeader( ThriftMapHeader header )
         {
-            WriteByte( header.KeyType.Id );
-            WriteByte( header.ValueType.Id );
+            WriteByte( (byte) header.KeyType );
+            WriteByte( (byte) header.ValueType );
             WriteInt32( header.Count );
         }
 

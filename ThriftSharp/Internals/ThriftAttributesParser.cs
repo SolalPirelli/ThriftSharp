@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using ThriftSharp.Internals;
-using ThriftSharp.Models;
+using ThriftSharp.Utilities;
 
-namespace ThriftSharp.Reflection
+namespace ThriftSharp.Internals
 {
     /// <summary>
     /// Parses attributes to build a Thrift interface definition.
@@ -63,7 +62,7 @@ namespace ThriftSharp.Reflection
             var defaultValAttr = info.GetAttribute<ThriftDefaultValueAttribute>();
             var defaultVal = Option.Get( defaultValAttr, a => a.Value );
 
-            var header = new ThriftFieldHeader( attr.Id, attr.Name, ThriftType.FromType( info.PropertyType ) );
+            var header = new ThriftFieldHeader( attr.Id, attr.Name, ThriftSerializer.FromType( info.PropertyType ).ThriftType );
             return new ThriftField( header, attr.IsRequired, defaultVal, info.PropertyType, o => info.GetValue( o, null ), ( o, v ) => info.SetValue( o, v, null ) );
         }
 

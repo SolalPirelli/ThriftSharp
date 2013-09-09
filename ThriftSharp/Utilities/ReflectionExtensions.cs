@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace ThriftSharp.Reflection
+namespace ThriftSharp.Utilities
 {
     /// <summary>
     /// Reflection utility methods and extension methods.

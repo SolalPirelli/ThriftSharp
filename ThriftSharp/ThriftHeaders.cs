@@ -1,4 +1,4 @@
-﻿namespace ThriftSharp.Models
+﻿namespace ThriftSharp
 {
     /// <summary>
     /// Header of Thrift collections (List and Set).
@@ -112,7 +112,7 @@
         /// </summary>
         /// <param name="id">The field ID.</param>
         /// <param name="name">The field name.</param>
-        /// <param name="fieldType">The field Thrift type.</param>
+        /// <param name="fieldType">The field type.</param>
         public ThriftFieldHeader( short id, string name, ThriftType fieldType )
         {
             Id = id;

@@ -1,8 +1,6 @@
 ﻿using System.Linq;
 using ThriftSharp.Internals;
-using ThriftSharp.Models;
 using ThriftSharp.Protocols;
-using ThriftSharp.Reflection;
 
 namespace ThriftSharp
 {

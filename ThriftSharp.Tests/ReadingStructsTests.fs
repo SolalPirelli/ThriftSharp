@@ -3,6 +3,7 @@
 open System.Collections.Generic
 open Microsoft.VisualStudio.TestTools.UnitTesting
 open ThriftSharp
+open ThriftSharp.Internals
 
 [<ThriftStruct("NoFields")>]
 type StructWithoutFields1() = class end
@@ -68,7 +69,7 @@ type StructWithArrayFields1() =
 
 [<TestClass>]
 type ``Reading structs``() =
-    member x.ReadStruct<'T>(prot) = ThriftType.Struct.Read(prot, typeof<'T>) :?> 'T
+    member x.ReadStruct<'T>(prot) = ThriftSerializer.Struct.Read(prot, typeof<'T>) :?> 'T
 
     [<Test>]
     member x.``No fields``() =
@@ -81,7 +82,7 @@ type ``Reading structs``() =
     [<Test>]
     member x.``One field``() =
         let m = MemoryProtocol([StructHeader "OneField"
-                                FieldHeader (1s, "Field", ThriftType.FromType(typeof<int>))
+                                FieldHeader (1s, "Field", tid 8uy)
                                 Int32 34
                                 FieldEnd
                                 FieldStop
@@ -93,28 +94,28 @@ type ``Reading structs``() =
     [<Test>]
     member x.``Primitive fields``() =
         let m = MemoryProtocol([StructHeader "ManyPrimitiveFields"
-                                FieldHeader (1s, "BoolField", ttype typeof<bool>)
+                                FieldHeader (1s, "BoolField", tid 2uy)
                                 Bool false
                                 FieldEnd
-                                FieldHeader (2s, "SByteField", ttype typeof<sbyte>)
+                                FieldHeader (2s, "SByteField", tid 3uy)
                                 SByte -1y
                                 FieldEnd
-                                FieldHeader (3s, "DoubleField", ttype typeof<float>)
+                                FieldHeader (3s, "DoubleField", tid 4uy)
                                 Double -1.0
                                 FieldEnd
-                                FieldHeader (4s, "Int16Field", ttype typeof<int16>)
+                                FieldHeader (4s, "Int16Field", tid 6uy)
                                 Int16 -1s
                                 FieldEnd
-                                FieldHeader (5s, "Int32Field", ttype typeof<int>)
+                                FieldHeader (5s, "Int32Field", tid 8uy)
                                 Int32 -1
                                 FieldEnd
-                                FieldHeader (6s, "Int64Field", ttype typeof<int64>)
+                                FieldHeader (6s, "Int64Field", tid 10uy)
                                 Int64 -1L
                                 FieldEnd
-                                FieldHeader (7s, "StringField", ttype typeof<string>)
+                                FieldHeader (7s, "StringField", tid 11uy)
                                 String "xyzzy"
                                 FieldEnd
-                                FieldHeader (8s, "BinaryField", ttype typeof<sbyte[]>)
+                                FieldHeader (8s, "BinaryField", tid 11uy)
                                 Binary [| 2y; 3y |]
                                 FieldEnd
                                 FieldStop
@@ -133,20 +134,20 @@ type ``Reading structs``() =
     [<Test>]
     member x.``Collection fields``() =
         let m = MemoryProtocol([StructHeader "CollectionFields"
-                                FieldHeader (1s, "ListField", ttype typeof<List<int>>)
-                                ListHeader (1, ttype typeof<int>)
+                                FieldHeader (1s, "ListField", tid 15uy)
+                                ListHeader (1, tid 8uy)
                                 Int32 1
                                 ListEnd
                                 FieldEnd
-                                FieldHeader (2s, "SetField", ttype typeof<HashSet<int>>)
-                                SetHeader (3, ttype typeof<int>)
+                                FieldHeader (2s, "SetField", tid 14uy)
+                                SetHeader (3, tid 8uy)
                                 Int32 2
                                 Int32 3
                                 Int32 4
                                 SetEnd
                                 FieldEnd
-                                FieldHeader (3s, "MapField", ttype typeof<Dictionary<int, string>>)
-                                MapHeader (2, ttype typeof<int>, ttype typeof<string>)
+                                FieldHeader (3s, "MapField", tid 13uy)
+                                MapHeader (2, tid 8uy, tid 11uy)
                                 Int32 5
                                 String "Five"
                                 Int32 6
@@ -168,9 +169,9 @@ type ``Reading structs``() =
     [<Test>]
     member x.``Struct field``() =
         let m = MemoryProtocol([StructHeader "StructField"
-                                FieldHeader (1s, "StructField", ttype typeof<StructWithOneField1>)
+                                FieldHeader (1s, "StructField", tid 12uy)
                                 StructHeader "OneField"
-                                FieldHeader (1s, "Field", ttype typeof<int>)
+                                FieldHeader (1s, "Field", tid 8uy)
                                 Int32 23
                                 FieldEnd
                                 FieldStop
@@ -184,13 +185,13 @@ type ``Reading structs``() =
     [<Test>]
     member x.``Enum fields``() =
         let m = MemoryProtocol([StructHeader "EnumFields"
-                                FieldHeader (2s, "Field2", ttype typeof<Enum1>)
+                                FieldHeader (2s, "Field2", tid 8uy)
                                 Int32 2
                                 FieldEnd
-                                FieldHeader (1s, "Field1", ttype typeof<Enum1>)
+                                FieldHeader (1s, "Field1", tid 8uy)
                                 Int32 3
                                 FieldEnd
-                                FieldHeader (3s, "Field3", ttype typeof<Enum1>)
+                                FieldHeader (3s, "Field3", tid 8uy)
                                 Int32 1
                                 FieldEnd
                                 FieldStop
@@ -203,14 +204,14 @@ type ``Reading structs``() =
     [<Test>]
     member x.``Array fields``() =
         let m = MemoryProtocol([StructHeader "ArrayFields"
-                                FieldHeader (1s, "Field1", ttype typeof<int[]>)
-                                ListHeader (2, ttype typeof<int>)
+                                FieldHeader (1s, "Field1", tid 15uy)
+                                ListHeader (2, tid 8uy)
                                 Int32 23
                                 Int32 42
                                 ListEnd
                                 FieldEnd
-                                FieldHeader (2s, "Field2", ttype typeof<int[]>)
-                                ListHeader (0, ttype typeof<int>)
+                                FieldHeader (2s, "Field2", tid 15uy)
+                                ListHeader (0, tid 8uy)
                                 ListEnd
                                 FieldEnd
                                 FieldStop

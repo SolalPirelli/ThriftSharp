@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ThriftSharp.Internals
+namespace ThriftSharp.Utilities
 {
     /// <summary>
     /// Represents an optional value.

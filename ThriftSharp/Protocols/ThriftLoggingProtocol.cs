@@ -1,5 +1,4 @@
 ﻿using System;
-using ThriftSharp.Models;
 
 // NOTE: Unfortunately, CallerMemberName is not available for .NET <4.5, which this PCL supports and logs the call.
 

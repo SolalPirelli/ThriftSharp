@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
-using ThriftSharp.Internals;
+using ThriftSharp.Utilities;
 
-namespace ThriftSharp.Models
+namespace ThriftSharp.Internals
 {
     /// <summary>
     /// Thrift field.
@@ -30,7 +30,7 @@ namespace ThriftSharp.Models
         public Option<object> DefaultValue { get; private set; }
 
         /// <summary>
-        /// Gets the field's underlying type, if it has one..
+        /// Gets the field's underlying type.
         /// </summary>
         public Type UnderlyingType { get; private set; }
 

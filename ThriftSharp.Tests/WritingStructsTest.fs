@@ -3,6 +3,7 @@
 open System.Collections.Generic
 open Microsoft.VisualStudio.TestTools.UnitTesting
 open ThriftSharp
+open ThriftSharp.Internals
 
 [<ThriftStruct("NoFields")>]
 type StructWithoutFields4() = class end
@@ -66,7 +67,7 @@ type StructWithArrayFields4() =
 
 [<TestClass>]
 type ``Writing structs``() =
-    let writeSt prot obj = ThriftType.Struct.Write(prot, obj)
+    let writeSt prot obj = ThriftSerializer.Struct.Write(prot, obj)
     
 
     [<Test>]
@@ -82,7 +83,7 @@ type ``Writing structs``() =
         let m = MemoryProtocol()
         writeSt m (StructWithOneField4())
         m.WrittenValues <=> [StructHeader "OneField"
-                             FieldHeader (1s, "Field", ThriftType.FromType(typeof<int>))
+                             FieldHeader (1s, "Field", tid 8uy)
                              Int32 42
                              FieldEnd
                              FieldStop

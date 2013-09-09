@@ -1,6 +1,4 @@
-﻿using ThriftSharp.Models;
-
-namespace ThriftSharp.Protocols
+﻿namespace ThriftSharp.Protocols
 {
     /// <summary>
     /// Represents a Thrift protocol that can send and receive primitive types as well as containers, structs and messages.

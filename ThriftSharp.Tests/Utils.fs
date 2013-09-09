@@ -8,8 +8,7 @@ open ThriftSharp
 
 type TestAttribute = TestMethodAttribute
 
-let ttype = ThriftType.FromType
-let tid = ThriftType.FromId
+let tid = LanguagePrimitives.EnumOfValue
 
 let (<=>) (act:'a) (exp:'a) =
     if act <> exp then Assert.Fail(sprintf "Expected: %A%sActual: %A" exp Environment.NewLine act)

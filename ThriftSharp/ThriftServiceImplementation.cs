@@ -3,9 +3,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using ThriftSharp.Models;
+using ThriftSharp.Internals;
 using ThriftSharp.Protocols;
-using ThriftSharp.Reflection;
 
 namespace ThriftSharp
 {
