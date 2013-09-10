@@ -466,6 +466,7 @@ namespace ThriftSharp.Internals
                     }
 
                     ThriftSerializer.FromThriftType( header.FieldType ).Skip( protocol );
+                    protocol.ReadFieldEnd();
                 }
                 protocol.ReadStructEnd();
             }

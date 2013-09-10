@@ -27,6 +27,11 @@ namespace ThriftSharp
         /// </summary>
         private static ThriftStruct MakeParametersStruct( ThriftMethod method, object[] args )
         {
+            if ( args.Length != method.Parameters.Count )
+            {
+                throw new ArgumentException( string.Format( "Parameter count mismatch. Expected {0}, got {1}.", method.Parameters.Count, args.Length ) );
+            }
+
             var paramFields = new ThriftField[method.Parameters.Count];
             for ( int n = 0; n < method.Parameters.Count; n++ )
             {
@@ -44,7 +49,7 @@ namespace ThriftSharp
         /// </summary>
         private static void CallMethod( IThriftProtocol protocol, ThriftMethod method, object[] args )
         {
-            var msg = new ThriftMessageHeader( 0, method.Name, method.IsOneWay ? ThriftMessageType.Call : ThriftMessageType.OneWay );
+            var msg = new ThriftMessageHeader( 0, method.Name, method.IsOneWay ? ThriftMessageType.OneWay : ThriftMessageType.Call );
             var paramSt = MakeParametersStruct( method, args );
 
             protocol.WriteMessageHeader( msg );

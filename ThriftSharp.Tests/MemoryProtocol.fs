@@ -1,6 +1,7 @@
 ﻿namespace ThriftSharp.Tests
 
 open System.Collections.Generic
+open Microsoft.VisualStudio.TestTools.UnitTesting
 open ThriftSharp
 open ThriftSharp.Protocols
 

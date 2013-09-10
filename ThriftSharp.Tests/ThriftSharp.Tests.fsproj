@@ -49,6 +49,7 @@
     <Compile Include="ReadingPartialStructs.fs" />
     <Compile Include="WritingStructsTest.fs" />
     <Compile Include="ReadingServiceTests.fs" />
+    <Compile Include="WritingServiceTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ThriftSharp\ThriftSharp.csproj">

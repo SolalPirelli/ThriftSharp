@@ -35,5 +35,4 @@ type ``Reading partial structs``() =
                                 FieldEnd
                                 FieldStop
                                 StructEnd])
-        throws<ThriftProtocolException> (fun () -> box (x.ReadStruct<StructWithOptionalFields3>(m)))
-        
+        throws<ThriftProtocolException> (fun () -> box (x.ReadStruct<StructWithOptionalFields3>(m))) |> ignore
