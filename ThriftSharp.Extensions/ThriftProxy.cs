@@ -13,12 +13,12 @@ namespace ThriftSharp
         /// Creates a proxy for the specified interface type using the specified protocol.
         /// </summary>
         /// <typeparam name="T">The interface type.</typeparam>
-        /// <param name="protocol">The protocol.</param>
+        /// <param name="communication">The means of communication with the server.</param>
         /// <returns>A dynamically generated proxy to the Thrift service.</returns>
-        public static T Create<T>( IThriftProtocol protocol )
+        public static T Create<T>( ThriftCommunication communication )
         {
             var service = ThriftAttributesParser.ParseService( typeof( T ) );
-            return TypeCreator.CreateImplementation<T>( m => args => Thrift.SendMessage( protocol, GetMethod( service, m.Name ), args ) );
+            return TypeCreator.CreateImplementation<T>( m => args => Thrift.SendMessage( communication.CreateProtocol(), GetMethod( service, m.Name ), args ) );
         }
 
         /// <summary>

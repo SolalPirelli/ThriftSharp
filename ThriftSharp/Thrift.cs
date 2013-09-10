@@ -143,16 +143,13 @@ namespace ThriftSharp
             return action();
         }
 
-
         /// <summary>
         /// Calls a ThriftMethod specified by its name with the specified arguments on the specified protocol.
         /// </summary>
-        /// <typeparam name="TService">The type of the Thrift service.</typeparam>
-        /// <param name="protocol">The protocol.</param>
-        /// <param name="methodName">The method name.</param>
-        /// <param name="args">The method arguments.</param>
-        /// <returns>The method result.</returns>
-        public static object CallMethod<TService>( IThriftProtocol protocol, string methodName, params object[] args )
+        /// <remarks>
+        /// This method mostly serves to enable unit tests that bypass the ThriftCommunication building mechanism.
+        /// </remarks>
+        internal static object CallMethod<TService>( IThriftProtocol protocol, string methodName, params object[] args )
         {
             var method = ThriftAttributesParser.ParseService( typeof( TService ) ).Methods.FirstOrDefault( m => m.UnderlyingName == methodName );
             if ( method == null )
@@ -160,6 +157,20 @@ namespace ThriftSharp
                 throw new ArgumentException( string.Format( "Invalid method name ({0})", methodName ) );
             }
             return SendMessage( protocol, method, args );
+        }
+
+
+        /// <summary>
+        /// Calls a ThriftMethod specified by its name with the specified arguments using the specified means of communication.
+        /// </summary>
+        /// <typeparam name="TService">The type of the Thrift service.</typeparam>
+        /// <param name="communication">The means of communication with the server.</param>
+        /// <param name="methodName">The method name.</param>
+        /// <param name="args">The method arguments.</param>
+        /// <returns>The method result.</returns>
+        public static object CallMethod<TService>( ThriftCommunication communication, string methodName, params object[] args )
+        {
+            return CallMethod<TService>( communication.CreateProtocol(), methodName, args );
         }
 
 

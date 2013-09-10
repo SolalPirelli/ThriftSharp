@@ -4,6 +4,7 @@ open System.Collections.Generic
 open Microsoft.VisualStudio.TestTools.UnitTesting
 open ThriftSharp
 open ThriftSharp.Protocols
+open ThriftSharp.Internals
 
 type ThriftProtocolValue =
     | MessageHeader of int * string * ThriftMessageType

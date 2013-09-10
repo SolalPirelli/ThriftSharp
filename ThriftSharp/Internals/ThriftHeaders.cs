@@ -1,9 +1,9 @@
-﻿namespace ThriftSharp
+﻿namespace ThriftSharp.Internals
 {
     /// <summary>
     /// Header of Thrift collections (List and Set).
     /// </summary>
-    public sealed class ThriftCollectionHeader
+    internal sealed class ThriftCollectionHeader
     {
         /// <summary>
         /// Gets the number of elements in the collection.
@@ -40,7 +40,7 @@
     /// <summary>
     /// Header of Thrift maps.
     /// </summary>
-    public sealed class ThriftMapHeader
+    internal sealed class ThriftMapHeader
     {
         /// <summary>
         /// Gets the number of elements in the map.
@@ -84,7 +84,7 @@
     /// <summary>
     /// Header of Thrift fields.
     /// </summary>
-    public sealed class ThriftFieldHeader
+    internal sealed class ThriftFieldHeader
     {
         /// <summary>
         /// Indicates the end of fields in a struct.
@@ -133,7 +133,7 @@
     /// <summary>
     /// Header of Thrift structs.
     /// </summary>
-    public sealed class ThriftStructHeader
+    internal sealed class ThriftStructHeader
     {
         /// <summary>
         /// Gets the struct's name.
@@ -163,7 +163,7 @@
     /// <summary>
     /// Header of Thrift messages.
     /// </summary>
-    public sealed class ThriftMessageHeader
+    internal sealed class ThriftMessageHeader
     {
         /// <summary>
         /// Gets the message's ID.

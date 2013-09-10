@@ -8,33 +8,24 @@ namespace ThriftSharp.Transport
     /// <summary>
     /// Transports binary data over HTTP POST requests.
     /// </summary>
-    public sealed class ThriftHttpTransport : IThriftTransport, IDisposable
+    internal sealed class ThriftHttpTransport : IThriftTransport, IDisposable
     {
         // The timeout for sending and receiving data, in milliseconds.
         private const int Timeout = 5000;
 
-        private readonly Uri _url;
+        private readonly string _url;
         private HttpWebRequest _request;
         private Stream _outputStream;
         private Stream _inputStream;
 
 
         /// <summary>
-        /// Initializes a new instance of the BinaryHttpClientTransport class using the specified Uri as an URL.
-        /// </summary>
-        /// <param name="url">The URL, including the port if necessary, as an Uri.</param>
-        public ThriftHttpTransport( Uri url )
-        {
-            _url = url;
-        }
-
-        /// <summary>
         /// Initializes a new instance of the BinaryHttpClientTransport class using the specified  URL.
         /// </summary>
         /// <param name="url">The URL, including the port if necessary.</param>
         public ThriftHttpTransport( string url )
-            : this( new Uri( url, UriKind.Absolute ) )
         {
+            _url = url;
         }
 
 

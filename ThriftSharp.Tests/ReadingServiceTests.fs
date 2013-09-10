@@ -2,6 +2,7 @@
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
 open ThriftSharp
+open ThriftSharp.Protocols
 open ThriftSharp.Internals
 
 [<ThriftStruct("MyException")>]
@@ -29,7 +30,7 @@ type Service5 =
 
 [<TestClass>]
 type ``Reading service replies``() =
-    member x.ReadMsg<'T>(prot, name) = Thrift.CallMethod<'T>(prot, name, [| |])
+    member x.ReadMsg<'T>(prot: IThriftProtocol, name) = Thrift.CallMethod<'T>(prot, name, [| |])
 
     [<Test>]
     member x.``No reply expected, none received``() =

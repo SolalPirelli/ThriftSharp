@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using ThriftSharp.Internals;
-using ThriftSharp.Protocols;
 
 namespace ThriftSharp
 {
@@ -16,16 +15,16 @@ namespace ThriftSharp
         where TService : class
     {
         private readonly ThriftService _service;
-        private readonly IThriftProtocol _protocol;
+        private readonly ThriftCommunication _communication;
 
         /// <summary>
         /// Initializes a new instance of the ThriftServiceImplementation class with the specified protocol.
         /// </summary>
-        /// <param name="protocol">The protocol to call methods.</param>
-        protected ThriftServiceImplementation( IThriftProtocol protocol )
+        /// <param name="communication">The means of communication with the server.</param>
+        protected ThriftServiceImplementation( ThriftCommunication communication )
         {
             _service = ThriftAttributesParser.ParseService( typeof( TService ) );
-            _protocol = protocol;
+            _communication = communication;
         }
 
 
@@ -41,7 +40,7 @@ namespace ThriftSharp
         /// </remarks>
         protected Task<T> CallAsync<T>( string methodName, params object[] args )
         {
-            return CastTask<T>( Thrift.SendMessage( _protocol, GetMethod( methodName ), args ) );
+            return CastTask<T>( Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( methodName ), args ) );
         }
 
         /// <summary>
@@ -54,7 +53,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task<TReturn> CallAsync<T, TReturn>( Expression<Func<TService, Func<T, Task<TReturn>>>> expr, T arg )
         {
-            return CastTask<TReturn>( Thrift.SendMessage( _protocol, GetMethod( expr ), arg ) );
+            return CastTask<TReturn>( Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg ) );
         }
 
         /// <summary>
@@ -69,7 +68,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task<TReturn> CallAsync<T1, T2, TReturn>( Expression<Func<TService, Func<T1, T2, Task<TReturn>>>> expr, T1 arg1, T2 arg2 )
         {
-            return CastTask<TReturn>( Thrift.SendMessage( _protocol, GetMethod( expr ), arg1, arg2 ) );
+            return CastTask<TReturn>( Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg1, arg2 ) );
         }
 
         /// <summary>
@@ -86,7 +85,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task<TReturn> CallAsync<T1, T2, T3, TReturn>( Expression<Func<TService, Func<T1, T2, T3, Task<TReturn>>>> expr, T1 arg1, T2 arg2, T3 arg3 )
         {
-            return CastTask<TReturn>( Thrift.SendMessage( _protocol, GetMethod( expr ), arg1, arg2, arg3 ) );
+            return CastTask<TReturn>( Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg1, arg2, arg3 ) );
         }
 
         /// <summary>
@@ -105,7 +104,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task<TReturn> CallAsync<T1, T2, T3, T4, TReturn>( Expression<Func<TService, Func<T1, T2, T3, T4, Task<TReturn>>>> expr, T1 arg1, T2 arg2, T3 arg3, T4 arg4 )
         {
-            return CastTask<TReturn>( Thrift.SendMessage( _protocol, GetMethod( expr ), arg1, arg2, arg3, arg4 ) );
+            return CastTask<TReturn>( Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg1, arg2, arg3, arg4 ) );
         }
 
 
@@ -120,7 +119,7 @@ namespace ThriftSharp
         /// </remarks>
         protected Task CallAsync( string methodName, params object[] args )
         {
-            return (Task) Thrift.SendMessage( _protocol, GetMethod( methodName ), args );
+            return (Task) Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( methodName ), args );
         }
 
         /// <summary>
@@ -132,7 +131,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task CallAsync<T>( Expression<Func<TService, Func<T, Task>>> expr, T arg )
         {
-            return (Task) Thrift.SendMessage( _protocol, GetMethod( expr ), arg );
+            return (Task) Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg );
         }
 
         /// <summary>
@@ -146,7 +145,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task CallAsync<T1, T2>( Expression<Func<TService, Func<T1, T2, Task>>> expr, T1 arg1, T2 arg2 )
         {
-            return (Task) Thrift.SendMessage( _protocol, GetMethod( expr ), arg1, arg2 );
+            return (Task) Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg1, arg2 );
         }
 
         /// <summary>
@@ -162,7 +161,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task CallAsync<T1, T2, T3>( Expression<Func<TService, Func<T1, T2, T3, Task>>> expr, T1 arg1, T2 arg2, T3 arg3 )
         {
-            return (Task) Thrift.SendMessage( _protocol, GetMethod( expr ), arg1, arg2, arg3 );
+            return (Task) Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg1, arg2, arg3 );
         }
 
         /// <summary>
@@ -180,7 +179,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task CallAsync<T1, T2, T3, T4>( Expression<Func<TService, Func<T1, T2, T3, T4, Task>>> expr, T1 arg1, T2 arg2, T3 arg3, T4 arg4 )
         {
-            return (Task) Thrift.SendMessage( _protocol, GetMethod( expr ), arg1, arg2, arg3, arg4 );
+            return (Task) Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg1, arg2, arg3, arg4 );
         }
 
 
@@ -197,7 +196,7 @@ namespace ThriftSharp
         protected T Call<T>( string methodName, params object[] args )
         {
             EnsureNotTask<T>();
-            return (T) Thrift.SendMessage( _protocol, GetMethod( methodName ), args );
+            return (T) Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( methodName ), args );
         }
 
         /// <summary>
@@ -211,7 +210,7 @@ namespace ThriftSharp
         protected TReturn Call<T, TReturn>( Expression<Func<TService, Func<T, TReturn>>> expr, T arg )
         {
             EnsureNotTask<TReturn>();
-            return (TReturn) Thrift.SendMessage( _protocol, GetMethod( expr ), arg );
+            return (TReturn) Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg );
         }
 
         /// <summary>
@@ -227,7 +226,7 @@ namespace ThriftSharp
         protected TReturn Call<T1, T2, TReturn>( Expression<Func<TService, Func<T1, T2, Task<TReturn>>>> expr, T1 arg1, T2 arg2 )
         {
             EnsureNotTask<TReturn>();
-            return (TReturn) Thrift.SendMessage( _protocol, GetMethod( expr ), arg1, arg2 );
+            return (TReturn) Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg1, arg2 );
         }
 
         /// <summary>
@@ -245,7 +244,7 @@ namespace ThriftSharp
         protected TReturn Call<T1, T2, T3, TReturn>( Expression<Func<TService, Func<T1, T2, T3, Task<TReturn>>>> expr, T1 arg1, T2 arg2, T3 arg3 )
         {
             EnsureNotTask<TReturn>();
-            return (TReturn) Thrift.SendMessage( _protocol, GetMethod( expr ), arg1, arg2, arg3 );
+            return (TReturn) Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg1, arg2, arg3 );
         }
 
         /// <summary>
@@ -265,7 +264,7 @@ namespace ThriftSharp
         protected TReturn Call<T1, T2, T3, T4, TReturn>( Expression<Func<TService, Func<T1, T2, T3, T4, Task<TReturn>>>> expr, T1 arg1, T2 arg2, T3 arg3, T4 arg4 )
         {
             EnsureNotTask<TReturn>();
-            return (TReturn) Thrift.SendMessage( _protocol, GetMethod( expr ), arg1, arg2, arg3, arg4 );
+            return (TReturn) Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg1, arg2, arg3, arg4 );
         }
 
 
@@ -279,7 +278,7 @@ namespace ThriftSharp
         /// </remarks>
         protected void Call( string methodName, params object[] args )
         {
-            Thrift.SendMessage( _protocol, GetMethod( methodName ), args );
+            Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( methodName ), args );
         }
 
         /// <summary>
@@ -290,7 +289,7 @@ namespace ThriftSharp
         /// <param name="arg">The method's only argument.</param>
         protected void Call<T>( Expression<Func<TService, Action<T>>> expr, T arg )
         {
-            Thrift.SendMessage( _protocol, GetMethod( expr ), arg );
+            Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg );
         }
 
         /// <summary>
@@ -303,7 +302,7 @@ namespace ThriftSharp
         /// <param name="arg2">The method's second argument.</param>
         protected void Call<T1, T2>( Expression<Func<TService, Action<T1, T2>>> expr, T1 arg1, T2 arg2 )
         {
-            Thrift.SendMessage( _protocol, GetMethod( expr ), arg1, arg2 );
+            Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg1, arg2 );
         }
 
         /// <summary>
@@ -318,7 +317,7 @@ namespace ThriftSharp
         /// <param name="arg3">The method's third argument.</param>
         protected void Call<T1, T2, T3>( Expression<Func<TService, Action<T1, T2, T3>>> expr, T1 arg1, T2 arg2, T3 arg3 )
         {
-            Thrift.SendMessage( _protocol, GetMethod( expr ), arg1, arg2, arg3 );
+            Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg1, arg2, arg3 );
         }
 
         /// <summary>
@@ -335,7 +334,7 @@ namespace ThriftSharp
         /// <param name="arg4">The method's fourth argument.</param>
         protected void Call<T1, T2, T3, T4>( Expression<Func<TService, Action<T1, T2, T3, T4>>> expr, T1 arg1, T2 arg2, T3 arg3, T4 arg4 )
         {
-            Thrift.SendMessage( _protocol, GetMethod( expr ), arg1, arg2, arg3, arg4 );
+            Thrift.SendMessage( _communication.CreateProtocol(), GetMethod( expr ), arg1, arg2, arg3, arg4 );
         }
 
 

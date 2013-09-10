@@ -1,9 +1,9 @@
-﻿namespace ThriftSharp
+﻿namespace ThriftSharp.Internals
 {
     /// <summary>
     /// The types supported by Thrift.
     /// </summary>
-    public enum ThriftType : byte
+    internal enum ThriftType : byte
     {
         /// <summary>
         /// Boolean.

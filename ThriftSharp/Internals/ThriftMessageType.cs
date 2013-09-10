@@ -1,9 +1,9 @@
-﻿namespace ThriftSharp
+﻿namespace ThriftSharp.Internals
 {
     /// <summary>
     /// The available Thrift message types.
     /// </summary>
-    public enum ThriftMessageType
+    internal enum ThriftMessageType
     {
         /// <summary>
         /// Client to server. Indicates a method call.

@@ -17,7 +17,7 @@ namespace ThriftSharp
         /// <summary>
         /// Creates an exception indicating a type was expected to be an enum but wasn't.
         /// </summary>
-        public static ThriftParsingException NotAnEnum( Type type )
+        internal static ThriftParsingException NotAnEnum( Type type )
         {
             return new ThriftParsingException( "The specified type, '{0}', is not an enum.", type.FullName );
         }
@@ -25,7 +25,7 @@ namespace ThriftSharp
         /// <summary>
         /// Creates an exception indicating an enum type lacked the appropriate attribute.
         /// </summary>
-        public static ThriftParsingException EnumWithoutAttribute( Type type )
+        internal static ThriftParsingException EnumWithoutAttribute( Type type )
         {
             return new ThriftParsingException( "The enum type '{0}' is not part of a Thrift interface definition."
                                              + Environment.NewLine
@@ -36,7 +36,7 @@ namespace ThriftSharp
         /// <summary>
         /// Creates an exception indicating a type was expected to be a class or struct but wasn't.
         /// </summary>
-        public static ThriftParsingException NotAStruct( Type type )
+        internal static ThriftParsingException NotAStruct( Type type )
         {
             return new ThriftParsingException( "The specified type, '{0}', is not a class or a struct.", type.FullName );
         }
@@ -44,7 +44,7 @@ namespace ThriftSharp
         /// <summary>
         /// Creates an exception indicating a class or struct type lacked the appropriate attribute.
         /// </summary>
-        public static ThriftParsingException StructWithoutAttribute( Type type )
+        internal static ThriftParsingException StructWithoutAttribute( Type type )
         {
             return new ThriftParsingException( "The class or struct type '{0}' is not part of a Thrift interface definition."
                                              + Environment.NewLine
@@ -55,7 +55,7 @@ namespace ThriftSharp
         /// <summary>
         /// Creates an exception indicating a parameter lacked the appropriate attribute.
         /// </summary>
-        public static ThriftParsingException ParameterWithoutAttribute( ParameterInfo info )
+        internal static ThriftParsingException ParameterWithoutAttribute( ParameterInfo info )
         {
             return new ThriftParsingException( "Parameter '{0}' of method '{1}' of type '{2}' does not have a Thrift interface definition."
                                              + Environment.NewLine
@@ -66,7 +66,7 @@ namespace ThriftSharp
         /// <summary>
         /// Creates an exception indicating a type was expected to be an exception but wasn't.
         /// </summary>
-        public static ThriftParsingException NotAnException( Type type )
+        internal static ThriftParsingException NotAnException( Type type )
         {
             return new ThriftParsingException( "Type '{0}' was used in a ThriftThrowsClauseAttribute but does not inherit from Exception."
                                              + Environment.NewLine
@@ -77,7 +77,7 @@ namespace ThriftSharp
         /// <summary>
         /// Creates an exception indicating a type was expected to be an interface but wasn't.
         /// </summary>
-        public static ThriftParsingException NotAService( Type type )
+        internal static ThriftParsingException NotAService( Type type )
         {
             return new ThriftParsingException( "The specified type, '{0}', is not an interface.", type.FullName );
         }
@@ -85,12 +85,24 @@ namespace ThriftSharp
         /// <summary>
         /// Creates an exception indicating a service type lacked the appropriate attribute.
         /// </summary>
-        public static ThriftParsingException ServiceWithoutAttribute( Type type )
+        internal static ThriftParsingException ServiceWithoutAttribute( Type type )
         {
             return new ThriftParsingException( "The interface '{0}' does not have a Thrift interface definition."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftServiceAttribute attribute.",
                                                type.FullName );
         }
+    }
+
+    /// <summary>
+    /// Occurs when a problem occurs during the transport of Thrift data.
+    /// </summary>
+    public sealed class ThriftTransportException : Exception
+    {
+        /// <summary>
+        /// Initializes a new instance of the ThriftTransportException class with the specified message.
+        /// </summary>
+        /// <param name="message">The exception message.</param>
+        internal ThriftTransportException( string message ) : base( message ) { }
     }
 }

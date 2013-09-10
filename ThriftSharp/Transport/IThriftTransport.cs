@@ -3,7 +3,7 @@
     /// <summary>
     /// Transmits binary data at the byte level.
     /// </summary>
-    public interface IThriftTransport
+    internal interface IThriftTransport
     {
         /// <summary>
         /// Reads an unsigned byte.

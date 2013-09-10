@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using ThriftSharp.Internals;
 using ThriftSharp.Transport;
 
 namespace ThriftSharp.Protocols
@@ -7,7 +8,7 @@ namespace ThriftSharp.Protocols
     /// <summary>
     /// Thrift's "binary" protocol. A compact but simple way to represent Thrift data.
     /// </summary>
-    public sealed class ThriftBinaryProtocol : IThriftProtocol
+    internal sealed class ThriftBinaryProtocol : IThriftProtocol
     {
         // The current Thrift protocol version.
         private const uint Version1 = 0x80010000;
