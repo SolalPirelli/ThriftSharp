@@ -16,10 +16,7 @@ namespace ThriftSharp
         public static T Create<T>( ThriftCommunication communication )
         {
             var service = ThriftAttributesParser.ParseService( typeof( T ) );
-            return TypeCreator.CreateImplementation<T>( m => args =>
-            {
-                return Thrift.CallMethod( communication, service, m.Name, args );
-            } );
+            return TypeCreator.CreateImplementation<T>( m => args => Thrift.CallMethod( communication, service, m.Name, args ) );
         }
     }
 }
