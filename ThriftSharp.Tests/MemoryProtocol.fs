@@ -206,3 +206,5 @@ type MemoryProtocol(toRead: ThriftProtocolValue list) =
             match read() with
             | Binary bs -> bs
             | x -> failwithf "Expected binary, got %A" x
+
+        member x.Dispose() = ()

@@ -52,7 +52,7 @@
     <Compile Include="ThriftProtocolExceptionType.cs" />
     <Compile Include="Protocols\ThriftBinaryProtocol.cs" />
     <Compile Include="ThriftExceptions.cs" />
-    <Compile Include="Thrift.cs" />
+    <Compile Include="Internals\Thrift.cs" />
     <Compile Include="ThriftServiceImplementation.cs" />
     <Compile Include="Internals\ThriftType.cs" />
     <Compile Include="Internals\ThriftSerializers.cs" />

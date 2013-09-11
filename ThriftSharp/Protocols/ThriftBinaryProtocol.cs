@@ -432,5 +432,24 @@ namespace ThriftSharp.Protocols
             }
             _transport.WriteBytes( bytes );
         }
+
+
+        #region IDisposable implementation
+        ~ThriftBinaryProtocol()
+        {
+            Dispose( false );
+        }
+
+        public void Dispose()
+        {
+            Dispose( true );
+            GC.SuppressFinalize( this );
+        }
+
+        private void Dispose( bool disposing )
+        {
+            _transport.Close();
+        }
+        #endregion
     }
 }

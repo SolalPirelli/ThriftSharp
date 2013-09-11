@@ -64,7 +64,7 @@ type ``Binary protocol writing``() =
     member x.``FieldStop``() =
         fun p -> p.WriteFieldStop()
         ==>
-        []
+        [ 0 ]
 
     [<Test>]
     member x.``ListHeader``() =

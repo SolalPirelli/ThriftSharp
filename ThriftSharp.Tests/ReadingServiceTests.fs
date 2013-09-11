@@ -30,7 +30,9 @@ type Service5 =
 
 [<TestClass>]
 type ``Reading service replies``() =
-    member x.ReadMsg<'T>(prot: IThriftProtocol, name) = Thrift.CallMethod<'T>(prot, name, [| |])
+    member x.ReadMsg<'T>(prot: IThriftProtocol, name) =
+        let svc = ThriftAttributesParser.ParseService(typeof<'T>)
+        Thrift.CallMethod(prot, svc, name, [| |])
 
     [<Test>]
     member x.``No reply expected, none received``() =

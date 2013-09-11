@@ -1,11 +1,12 @@
-﻿using ThriftSharp.Internals;
+﻿using System;
+using ThriftSharp.Internals;
 
 namespace ThriftSharp.Protocols
 {
     /// <summary>
     /// Represents a Thrift protocol that can send and receive primitive types as well as containers, structs and messages.
     /// </summary>
-    internal interface IThriftProtocol
+    internal interface IThriftProtocol : IDisposable
     {
         /// <summary>
         /// Reads a message header.

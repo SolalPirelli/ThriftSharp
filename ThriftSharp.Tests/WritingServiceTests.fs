@@ -29,7 +29,8 @@ type ``Writing service queries``() =
                                 FieldStop
                                 StructEnd
                                 MessageEnd])
-        Thrift.CallMethod<'T>(m, methodName, args) |> ignore
+        let svc = ThriftAttributesParser.ParseService(typeof<'T>)
+        Thrift.CallMethod(m, svc, methodName, args) |> ignore
         m
 
     [<Test>]

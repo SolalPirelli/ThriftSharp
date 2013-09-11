@@ -2,17 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ThriftSharp.Internals;
 using ThriftSharp.Protocols;
 using ThriftSharp.Utilities;
 
-namespace ThriftSharp
+namespace ThriftSharp.Internals
 {
     /// <summary>
     /// Main entry point to Thrift#.
     /// Translates Thrift interface definitions into protocol calls.
     /// </summary>
-    public static class Thrift
+    internal static class Thrift
     {
         /// <summary>
         /// Creates a read-only ThriftField with the specified header and value.
@@ -128,7 +127,7 @@ namespace ThriftSharp
         /// <summary>
         /// Sends a Thrift message representing the specified method call with the specified arguments on the specified protocol.
         /// </summary>
-        internal static object SendMessage( IThriftProtocol protocol, ThriftMethod method, params object[] args )
+        private static object SendMessage( IThriftProtocol protocol, ThriftMethod method, params object[] args )
         {
             Func<object> action = () =>
             {
@@ -149,9 +148,10 @@ namespace ThriftSharp
         /// <remarks>
         /// This method mostly serves to enable unit tests that bypass the ThriftCommunication building mechanism.
         /// </remarks>
-        internal static object CallMethod<TService>( IThriftProtocol protocol, string methodName, params object[] args )
+        [Obsolete( "Do not use this method anywhere but in unit tests.", false )]
+        internal static object CallMethod( IThriftProtocol protocol, ThriftService service, string methodName, params object[] args )
         {
-            var method = ThriftAttributesParser.ParseService( typeof( TService ) ).Methods.FirstOrDefault( m => m.UnderlyingName == methodName );
+            var method = service.Methods.FirstOrDefault( m => m.UnderlyingName == methodName );
             if ( method == null )
             {
                 throw new ArgumentException( string.Format( "Invalid method name ({0})", methodName ) );
@@ -163,14 +163,19 @@ namespace ThriftSharp
         /// <summary>
         /// Calls a ThriftMethod specified by its name with the specified arguments using the specified means of communication.
         /// </summary>
-        /// <typeparam name="TService">The type of the Thrift service.</typeparam>
         /// <param name="communication">The means of communication with the server.</param>
-        /// <param name="methodName">The method name.</param>
+        /// <param name="service">The Thrift service containing the method.</param>
+        /// <param name="methodName">The underlying method name.</param>
         /// <param name="args">The method arguments.</param>
         /// <returns>The method result.</returns>
-        public static object CallMethod<TService>( ThriftCommunication communication, string methodName, params object[] args )
+        public static object CallMethod( ThriftCommunication communication, ThriftService service, string methodName, params object[] args )
         {
-            return CallMethod<TService>( communication.CreateProtocol(), methodName, args );
+            using ( var protocol = communication.CreateProtocol() )
+            {
+#pragma warning disable 618
+                return CallMethod( protocol, service, methodName, args );
+#pragma warning restore 618
+            }
         }
 
 

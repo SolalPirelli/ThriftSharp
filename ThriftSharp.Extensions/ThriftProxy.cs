@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using ThriftSharp.Internals;
-using ThriftSharp.Protocols;
+﻿using ThriftSharp.Internals;
 
 namespace ThriftSharp
 {
@@ -18,15 +16,10 @@ namespace ThriftSharp
         public static T Create<T>( ThriftCommunication communication )
         {
             var service = ThriftAttributesParser.ParseService( typeof( T ) );
-            return TypeCreator.CreateImplementation<T>( m => args => Thrift.SendMessage( communication.CreateProtocol(), GetMethod( service, m.Name ), args ) );
-        }
-
-        /// <summary>
-        /// Gets the method of the specified Thrift service with the specified name.
-        /// </summary>
-        private static ThriftMethod GetMethod( ThriftService service, string name )
-        {
-            return service.Methods.FirstOrDefault( m => m.UnderlyingName == name );
+            return TypeCreator.CreateImplementation<T>( m => args =>
+            {
+                return Thrift.CallMethod( communication, service, m.Name, args );
+            } );
         }
     }
 }

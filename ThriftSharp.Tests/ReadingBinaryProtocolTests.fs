@@ -9,7 +9,7 @@ open ThriftSharp.Protocols
 type ``Binary protocol reading``() =
     let (==>) res read =
         let trans = MemoryTransport(res |> List.map byte)
-        read(ThriftBinaryProtocol(trans))
+        read(new ThriftBinaryProtocol(trans))
         ()
 
     [<Test>]
