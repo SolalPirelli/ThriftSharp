@@ -149,7 +149,7 @@ namespace ThriftSharp.Internals
         /// This method mostly serves to enable unit tests that bypass the ThriftCommunication building mechanism.
         /// </remarks>
         [Obsolete( "Do not use this method anywhere but in unit tests.", false )]
-        internal static object CallMethod( IThriftProtocol protocol, ThriftService service, string methodName, params object[] args )
+        public static object CallMethod( IThriftProtocol protocol, ThriftService service, string methodName, params object[] args )
         {
             var method = service.Methods.FirstOrDefault( m => m.UnderlyingName == methodName );
             if ( method == null )

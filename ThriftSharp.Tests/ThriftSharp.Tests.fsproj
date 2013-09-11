@@ -58,6 +58,7 @@
     <Compile Include="ReadingBinaryProtocolTests.fs" />
     <Compile Include="WritingBinaryProtocolTests.fs" />
     <Compile Include="CircularTesting.fs" />
+    <Compile Include="ServiceCallTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ThriftSharp\ThriftSharp.csproj">
