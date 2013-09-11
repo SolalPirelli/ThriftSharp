@@ -52,6 +52,7 @@
     <Compile Include="WritingStructsTest.fs" />
     <Compile Include="ReadingServiceTests.fs" />
     <Compile Include="WritingServiceTests.fs" />
+    <Compile Include="ReadingBinaryProtocolTests.fs" />
     <Compile Include="WritingBinaryProtocolTests.fs" />
   </ItemGroup>
   <ItemGroup>

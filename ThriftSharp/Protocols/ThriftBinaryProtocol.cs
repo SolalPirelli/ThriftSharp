@@ -70,7 +70,7 @@ namespace ThriftSharp.Protocols
         /// <returns>A struct header.</returns>
         public ThriftStructHeader ReadStructHeader()
         {
-            return new ThriftStructHeader( "<not read>" );
+            return new ThriftStructHeader( "" );
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace ThriftSharp.Protocols
             }
 
             short id = ReadInt16();
-            return new ThriftFieldHeader( id, "<not read>", (ThriftType) tid );
+            return new ThriftFieldHeader( id, "", (ThriftType) tid );
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace ThriftSharp.Protocols
         /// <returns>A boolean.</returns>
         public bool ReadBoolean()
         {
-            return _transport.ReadByte() == 0;
+            return _transport.ReadByte() != 0;
         }
 
         /// <summary>
@@ -396,8 +396,9 @@ namespace ThriftSharp.Protocols
         /// <param name="value">The string.</param>
         public void WriteString( string value )
         {
-            WriteInt32( value.Length );
-            _transport.WriteBytes( Encoding.UTF8.GetBytes( value ) );
+            byte[] bytes = Encoding.UTF8.GetBytes( value );
+            WriteInt32( bytes.Length );
+            _transport.WriteBytes( bytes );
         }
 
         /// <summary>
