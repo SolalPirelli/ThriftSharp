@@ -11,6 +11,12 @@ type StructWithOptionalFields3() =
     [<ThriftField(2s, false, "Optional")>]
     member val Optional = 2 with get, set
 
+[<ThriftStruct("WithDefaultValue")>]
+type StructWithDefaultValue3() =
+    [<ThriftField(1s, false, "Field")>]
+    [<ThriftDefaultValue(456)>]
+    member val Field = 123 with get, set
+
 [<TestClass>]
 type ``Reading partial structs``() =
     member x.ReadStruct<'T>(prot) = ThriftSerializer.Struct.Read(prot, typeof<'T>) :?> 'T
@@ -36,3 +42,22 @@ type ``Reading partial structs``() =
                                 FieldStop
                                 StructEnd])
         throws<ThriftProtocolException> (fun () -> box (x.ReadStruct<StructWithOptionalFields3>(m))) |> ignore
+
+    [<Test>]
+    member x.``Present optional w/ default value field``() =
+        let m = MemoryProtocol([StructHeader "WithDefaultValue"
+                                FieldHeader (1s, "Field", tid 8uy)
+                                Int32 789
+                                FieldEnd
+                                FieldStop
+                                StructEnd])
+        let inst = x.ReadStruct<StructWithDefaultValue3>(m)
+        inst.Field <=> 789
+
+    [<Test>]
+    member x.``Missing optional w/ default value field``() =
+        let m = MemoryProtocol([StructHeader "WithDefaultValue"
+                                FieldStop
+                                StructEnd])
+        let inst = x.ReadStruct<StructWithDefaultValue3>(m)
+        inst.Field <=> 456

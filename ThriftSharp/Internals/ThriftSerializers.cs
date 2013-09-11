@@ -161,14 +161,9 @@ namespace ThriftSharp.Internals
             protocol.WriteStructHeader( st.Header );
             foreach ( var field in st.Fields )
             {
-                var value = field.Getter( instance );
-                bool isDefault = !field.IsRequired && field.DefaultValue.HasValue && value == field.DefaultValue.Value;
-                if ( !isDefault )
-                {
-                    protocol.WriteFieldHeader( field.Header );
-                    ThriftSerializer.FromType( field.UnderlyingType ).Write( protocol, value );
-                    protocol.WriteFieldEnd();
-                }
+                protocol.WriteFieldHeader( field.Header );
+                ThriftSerializer.FromType( field.UnderlyingType ).Write( protocol, field.Getter( instance ) );
+                protocol.WriteFieldEnd();
             }
             protocol.WriteFieldStop();
             protocol.WriteStructEnd();
@@ -379,6 +374,9 @@ namespace ThriftSharp.Internals
             }
         }
 
+        /// <summary>
+        /// The Thrift map parser.
+        /// </summary>
         private sealed class MapParser : ThriftSerializer
         {
             internal override bool MatchesType( Type type )
@@ -440,6 +438,9 @@ namespace ThriftSharp.Internals
             }
         }
 
+        /// <summary>
+        /// The Thrift parser for structs, which is the most complex one.
+        /// </summary>
         private sealed class StructParser : ThriftSerializer
         {
             internal override bool MatchesType( Type type )
