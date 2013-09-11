@@ -221,8 +221,15 @@ namespace ThriftSharp.Protocols
         /// <returns>An array of signed bytes.</returns>
         public sbyte[] ReadBinary()
         {
-            int length = ReadInt32();
-            return (sbyte[]) (Array) _transport.ReadBytes( length );
+            int length = ReadInt32();  
+            // The array must be converted, not just casted, otherwise weird stuff happens when it's used
+            byte[] bytes = _transport.ReadBytes( length );
+            sbyte[] sbytes = new sbyte[length];
+            for ( int n = 0; n < length;n++)
+            {
+                sbytes[n] = (sbyte) bytes[n];
+            }
+            return sbytes;
         }
 
         /// <summary>
