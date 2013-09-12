@@ -26,9 +26,9 @@ namespace ThriftSharp.Internals
         public static T CreateImplementation<T>( MethodImplementor implementor )
         {
             // Create a dynamic assembly
-            var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly( new AssemblyName( "GeneratedCode" ), AssemblyBuilderAccess.RunAndSave, "X:\\" );
+            var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly( new AssemblyName( "GeneratedCode" ), AssemblyBuilderAccess.Run );
             // Add a module
-            var moduleBuilder = assemblyBuilder.DefineDynamicModule( "MainModule", "MAIN_MODULE.dll" );
+            var moduleBuilder = assemblyBuilder.DefineDynamicModule( "MainModule" );
             // Add a type inside that module
             var typeBuilder = moduleBuilder.DefineType( typeof( T ).Name, TypeAttributes.Public );
             // Make the type inherit from the interface
@@ -140,8 +140,8 @@ namespace ThriftSharp.Internals
                     var continueWithMethod = typeof( Task<object> ).GetMethods()
                                                                    .First( mi => mi.Name == "ContinueWith"
                                                                         && mi.IsGenericMethod
-                                                                        // first param's first generic param is generic
-                                                                        // i.e. it's the overload taking a Func<Task<...>,...>
+                                                                       // first param's first generic param is generic
+                                                                       // i.e. it's the overload taking a Func<Task<...>,...>
                                                                         && mi.GetParameters()[0].ParameterType.GetGenericArguments()[0].IsGenericType )
                                                                    .MakeGenericMethod( wrapped );
                     // Call the "ContinueWith" method with the delegate
@@ -153,10 +153,6 @@ namespace ThriftSharp.Internals
                 // Required to implement the interface method
                 typeBuilder.DefineMethodOverride( methodBuilder, m );
             }
-
-            typeBuilder.CreateType();
-
-            assemblyBuilder.Save( "GENERATED_ASSEMBLY.dll" );
 
             // Create the instance
             var inst = (T) Activator.CreateInstance( typeBuilder.CreateType() );
