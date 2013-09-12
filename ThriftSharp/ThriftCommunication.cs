@@ -47,6 +47,20 @@ namespace ThriftSharp
         }
 
         /// <summary>
+        /// Initializes a new instance of the ThriftCommunication class
+        /// from the specified protocol.
+        /// </summary>
+        /// <remarks>
+        /// This should only be used in unit tests.
+        /// </remarks>
+        [Obsolete( "Only use this constructor in unit tests." )]
+        internal ThriftCommunication( IThriftProtocol protocol )
+        {
+            _protocolCreator = _ => protocol;
+            _transportFactory = () => null;
+        }
+
+        /// <summary>
         /// Transmit data in binary format.
         /// </summary>
         public static IThriftTransportPicker Binary()

@@ -40,7 +40,7 @@ namespace ThriftSharp.Internals
                 paramFields[n] = ReadOnlyField( header, param.UnderlyingParameter.ParameterType, args[n] );
             }
 
-            return new ThriftStruct( new ThriftStructHeader( "Parameters" ), paramFields );
+            return new ThriftStruct( new ThriftStructHeader( "" ), paramFields );
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace ThriftSharp.Internals
             if ( method.ReturnType != typeof( void ) )
             {
                 var retType = ThriftSerializer.FromType( method.ReturnType );
-                var retHeader = new ThriftFieldHeader( 0, "ReturnType", retType.ThriftType );
+                var retHeader = new ThriftFieldHeader( 0, "", retType.ThriftType );
                 retFields.Add( SetOnlyField( retHeader, true, method.ReturnType, v => retValContainer.Value = v ) );
             }
 
@@ -86,7 +86,7 @@ namespace ThriftSharp.Internals
                 retFields.Add( SetOnlyField( header, false, e.ExceptionType, v => { throw (Exception) v; } ) );
             }
 
-            return Tuple.Create( new ThriftStruct( new ThriftStructHeader( "Parameters" ), retFields ), retValContainer );
+            return Tuple.Create( new ThriftStruct( new ThriftStructHeader( "" ), retFields ), retValContainer );
         }
 
         /// <summary>
@@ -142,23 +142,6 @@ namespace ThriftSharp.Internals
             return action();
         }
 
-        /// <summary>
-        /// Calls a ThriftMethod specified by its name with the specified arguments on the specified protocol.
-        /// </summary>
-        /// <remarks>
-        /// This method mostly serves to enable unit tests that bypass the ThriftCommunication building mechanism.
-        /// </remarks>
-        [Obsolete( "Do not use this method anywhere but in unit tests.", false )]
-        public static object CallMethod( IThriftProtocol protocol, ThriftService service, string methodName, params object[] args )
-        {
-            var method = service.Methods.FirstOrDefault( m => m.UnderlyingName == methodName );
-            if ( method == null )
-            {
-                throw new ArgumentException( string.Format( "Invalid method name ({0})", methodName ) );
-            }
-            return SendMessage( protocol, method, args );
-        }
-
 
         /// <summary>
         /// Calls a ThriftMethod specified by its name with the specified arguments using the specified means of communication.
@@ -172,9 +155,12 @@ namespace ThriftSharp.Internals
         {
             using ( var protocol = communication.CreateProtocol() )
             {
-#pragma warning disable 618
-                return CallMethod( protocol, service, methodName, args );
-#pragma warning restore 618
+                var method = service.Methods.FirstOrDefault( m => m.UnderlyingName == methodName );
+                if ( method == null )
+                {
+                    throw new ArgumentException( string.Format( "Invalid method name ({0})", methodName ) );
+                }
+                return SendMessage( protocol, method, args );
             }
         }
 

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading.Tasks;
+using ThriftSharp.Utilities;
 // A big ugly, but declaring a delegate means declaring a public one (for the invoke to work) in an internals namespace, which is worse.
 using Method = System.Func<object[], object>;
 
@@ -24,16 +26,16 @@ namespace ThriftSharp.Internals
         public static T CreateImplementation<T>( MethodImplementor implementor )
         {
             // Create a dynamic assembly
-            var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly( new AssemblyName( "GeneratedCode" ), AssemblyBuilderAccess.Run );
+            var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly( new AssemblyName( "GeneratedCode" ), AssemblyBuilderAccess.RunAndSave, "X:\\" );
             // Add a module
-            var moduleBuilder = assemblyBuilder.DefineDynamicModule( "MainModule" );
+            var moduleBuilder = assemblyBuilder.DefineDynamicModule( "MainModule", "MAIN_MODULE.dll" );
             // Add a type inside that module
             var typeBuilder = moduleBuilder.DefineType( typeof( T ).Name, TypeAttributes.Public );
             // Make the type inherit from the interface
             typeBuilder.AddInterfaceImplementation( typeof( T ) );
 
             // Store the field names and their values to set them later, once we've created the type.
-            var fields = new List<Tuple<string, Method>>();
+            var fields = new List<Tuple<string, object>>();
 
             // Generate the methods
             foreach ( var m in typeof( T ).GetMethods( BindingFlags.Public | BindingFlags.Instance ) )
@@ -41,9 +43,9 @@ namespace ThriftSharp.Internals
                 // Create the implementation
                 var method = implementor.Invoke( m );
                 // Store it in a field
-                var fieldBuilder = typeBuilder.DefineField( "_" + m.Name, typeof( Method ), FieldAttributes.Public );
+                var fieldBuilder = typeBuilder.DefineField( "_Implementation_" + m.Name, typeof( Method ), FieldAttributes.Public );
                 // Add the field and its future value to the list of fields
-                fields.Add( Tuple.Create( fieldBuilder.Name, method ) );
+                fields.Add( Tuple.Create( fieldBuilder.Name, (object) method ) );
                 // The above steps are needed to invoke a delegate from IL; 
                 // otherwise it's in the generating assembly and the generated assembly can't access it.
 
@@ -105,12 +107,56 @@ namespace ThriftSharp.Internals
                 {
                     gen.Emit( OpCodes.Unbox_Any, m.ReturnType );
                 }
+                // Cast its wrapped return value if it returns a Task
+                var wrapped = ReflectionExtensions.UnwrapTaskIfNeeded( m.ReturnType );
+                if ( wrapped != null && wrapped != typeof( void ) )
+                {
+                    // Create a method that converts a Task<object> into its Result type casted correctly
+                    var dynMeth = new DynamicMethod( "_TaskCast_" + m.Name, wrapped, new[] { typeof( Task<object> ) } );
+                    // Generate another set of IL instructions. Yay!
+                    var mGen = dynMeth.GetILGenerator();
+                    // Load the first argument
+                    mGen.Emit( OpCodes.Ldarg_0 );
+                    // Get the "Result" property
+                    mGen.Emit( OpCodes.Callvirt, typeof( Task<object> ).GetProperty( "Result" ).GetGetMethod() );
+                    // If it's a value type, unbox it; otherwise cast it (same opcode)
+                    mGen.Emit( OpCodes.Unbox_Any, wrapped );
+                    // Return the casted value
+                    mGen.Emit( OpCodes.Ret );
+                    // Build the method delegate type
+                    var dynDelType = typeof( Func<,> ).MakeGenericType( typeof( Task<object> ), wrapped );
+                    // Finish creating the method
+                    var dynDel = dynMeth.CreateDelegate( dynDelType );
+                    // Create a field with the dynamic method
+                    var fieldCastBuilder = typeBuilder.DefineField( "_TaskCast" + m.Name, dynDelType, FieldAttributes.Public );
+                    // Add the field to the list of fields to be set on the instance
+                    fields.Add( Tuple.Create( fieldCastBuilder.Name, (object) dynDel ) );
+
+                    // Load the instance
+                    gen.Emit( OpCodes.Ldarg_0 );
+                    // Load the field that contains the delegate
+                    gen.Emit( OpCodes.Ldfld, fieldCastBuilder );
+                    // Get the "ContinueWith" method (this seems to be the only way; GetMethod fails to find a proper overload for generic methods)
+                    var continueWithMethod = typeof( Task<object> ).GetMethods()
+                                                                   .First( mi => mi.Name == "ContinueWith"
+                                                                        && mi.IsGenericMethod
+                                                                        // first param's first generic param is generic
+                                                                        // i.e. it's the overload taking a Func<Task<...>,...>
+                                                                        && mi.GetParameters()[0].ParameterType.GetGenericArguments()[0].IsGenericType )
+                                                                   .MakeGenericMethod( wrapped );
+                    // Call the "ContinueWith" method with the delegate
+                    gen.Emit( OpCodes.Callvirt, continueWithMethod );
+                }
                 // Return its return value
                 gen.Emit( OpCodes.Ret );
 
                 // Required to implement the interface method
                 typeBuilder.DefineMethodOverride( methodBuilder, m );
             }
+
+            typeBuilder.CreateType();
+
+            assemblyBuilder.Save( "GENERATED_ASSEMBLY.dll" );
 
             // Create the instance
             var inst = (T) Activator.CreateInstance( typeBuilder.CreateType() );

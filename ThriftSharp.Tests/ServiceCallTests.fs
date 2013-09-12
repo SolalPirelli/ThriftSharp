@@ -25,7 +25,7 @@ type ``Service calls``() =
                                 StructEnd
                                 MessageEnd])
         let svc = ThriftAttributesParser.ParseService(typeof<IService8>)
-        let res = Thrift.CallMethod(m, svc, "Sync", 1) :?> string
+        let res = Thrift.CallMethod(ThriftCommunication(m), svc, "Sync", 1) :?> string
         res <=> "the result"
 
     [<Test>]
@@ -39,6 +39,7 @@ type ``Service calls``() =
                                 StructEnd
                                 MessageEnd])
         let svc = ThriftAttributesParser.ParseService(typeof<IService8>)
-        let res = (Thrift.CallMethod(m, svc, "Async", 1) :?> Task<obj>).ContinueWith(fun (x: Task<obj>) -> x.Result :?> string)
+        let res = (Thrift.CallMethod(ThriftCommunication(m), svc, "Async", 1) :?> Task<obj>)
+                         .ContinueWith(fun (x: Task<obj>) -> x.Result :?> string)
                 |> Async.AwaitTask |> Async.RunSynchronously
         res <=> "the result"

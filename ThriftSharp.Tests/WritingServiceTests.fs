@@ -30,7 +30,7 @@ type ``Writing service queries``() =
                                 StructEnd
                                 MessageEnd])
         let svc = ThriftAttributesParser.ParseService(typeof<'T>)
-        Thrift.CallMethod(m, svc, methodName, args) |> ignore
+        Thrift.CallMethod(ThriftCommunication(m), svc, methodName, args) |> ignore
         m
 
     [<Test>]
@@ -38,7 +38,7 @@ type ``Writing service queries``() =
         let m = x.WriteMsg<Service6>("NoParameters", [| |])
         
         m.WrittenValues <===> [MessageHeader (0, "noParameters", ThriftMessageType.Call)
-                               StructHeader "Parameters"
+                               StructHeader ""
                                FieldStop
                                StructEnd
                                MessageEnd]
@@ -48,7 +48,7 @@ type ``Writing service queries``() =
         let m = x.WriteMsg<Service6>("OneParameter", [| 123 |])
 
         m.WrittenValues <===> [MessageHeader (0, "oneParameter", ThriftMessageType.Call)
-                               StructHeader "Parameters"
+                               StructHeader ""
                                FieldHeader (1s, "p1", ThriftType.Int32)
                                Int32 123
                                FieldEnd
@@ -61,7 +61,7 @@ type ``Writing service queries``() =
         let m = x.WriteMsg<Service6>("ManyParameters", [| 16; "Sayid"; "Jarrah" |])
 
         m.WrittenValues <===> [MessageHeader (0, "manyParameters", ThriftMessageType.Call)
-                               StructHeader "Parameters"
+                               StructHeader ""
                                FieldHeader (1s, "p1", ThriftType.Int32)
                                Int32 16
                                FieldEnd
@@ -80,7 +80,7 @@ type ``Writing service queries``() =
         let m = x.WriteMsg<Service6>("OneWay", [| |])
 
         m.WrittenValues <===> [MessageHeader (0, "oneWay", ThriftMessageType.OneWay)
-                               StructHeader "Parameters"
+                               StructHeader ""
                                FieldStop
                                StructEnd
                                MessageEnd]

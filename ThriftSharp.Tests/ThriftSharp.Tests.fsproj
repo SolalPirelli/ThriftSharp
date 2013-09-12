@@ -10,7 +10,8 @@
     <AssemblyName>ThriftSharp.Tests</AssemblyName>
     <targetframeworkversion>v4.5</targetframeworkversion>
     <Name>FsUnitTest</Name>
-    <TargetFrameworkProfile />
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
     <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -20,7 +21,7 @@
     <Tailcalls>false</Tailcalls>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
+    <WarningLevel>5</WarningLevel>
     <DocumentationFile>bin\Debug\FsUnitTest.XML</DocumentationFile>
     <NoWarn>760, 44</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -34,6 +35,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\FsUnitTest.XML</DocumentationFile>
+    <NoWarn>760, 44</NoWarn>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -59,8 +63,14 @@
     <Compile Include="WritingBinaryProtocolTests.fs" />
     <Compile Include="CircularTesting.fs" />
     <Compile Include="ServiceCallTests.fs" />
+    <Compile Include="ProxyTests.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ThriftSharp.Extensions\ThriftSharp.Extensions.csproj">
+      <Name>ThriftSharp.Extensions</Name>
+      <Project>{7b5349a9-5ce4-432d-a32b-f870867649a0}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\ThriftSharp\ThriftSharp.csproj">
       <Name>ThriftSharp</Name>
       <Project>{d1275e05-4238-447e-b6ab-f7301aa6cd2e}</Project>
