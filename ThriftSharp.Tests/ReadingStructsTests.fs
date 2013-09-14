@@ -67,6 +67,12 @@ type StructWithArrayFields1() =
     [<ThriftField(2s, true, "Field2")>]
     member val Field2 = [| 2 |] with get, set
 
+[<ThriftStruct("ConvertingField")>]
+type StructWithConvertingField1() =
+    [<ThriftField(1s, true, "UnixDate")>]
+    [<ThriftConverter(typeof<ThriftUnixDateConverter>)>]
+    member val UnixDate = System.DateTime.Now with get, set
+
 [<TestClass>]
 type ``Reading structs``() =
     member x.ReadStruct<'T>(prot) = ThriftSerializer.Struct.Read(prot, typeof<'T>) :?> 'T
@@ -219,3 +225,15 @@ type ``Reading structs``() =
         let inst = x.ReadStruct<StructWithArrayFields1>(m)
         inst.Field1 <===> [23; 42]
         inst.Field2 <===> []
+
+    [<Test>]
+    member x.``UnixDate converter``() =
+        let m = MemoryProtocol([StructHeader "ConvertingField"
+                                FieldHeader (1s, "UnixDate", tid 8uy)
+                                Int32 787708800
+                                FieldEnd
+                                FieldStop
+                                StructEnd])
+        let inst = x.ReadStruct<StructWithConvertingField1>(m)
+        inst.UnixDate <=> System.DateTime(1994, 12, 18, 0, 0, 0)
+        m.IsEmpty <=> true

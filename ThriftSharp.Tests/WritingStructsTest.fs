@@ -65,6 +65,12 @@ type StructWithArrayFields4() =
     [<ThriftField(2s, true, "Field2")>]
     member val Field2 = [| 2 |] with get, set
 
+[<ThriftStruct("ConvertingField")>]
+type StructWithConvertingField4() =
+    [<ThriftField(1s, true, "UnixDate")>]
+    [<ThriftConverter(typeof<ThriftUnixDateConverter>)>]
+    member val UnixDate = System.DateTime.Now with get, set
+
 [<TestClass>]
 type ``Writing structs``() =
     let writeSt prot obj = ThriftSerializer.Struct.Write(prot, obj)
@@ -213,6 +219,21 @@ type ``Writing structs``() =
                                FieldHeader (2s, "Field2", tid 15uy)
                                ListHeader (0, tid 8uy)
                                ListEnd
+                               FieldEnd
+                               FieldStop
+                               StructEnd]
+
+    [<Test>]
+    member x.``UnixDate converter``() =
+        let m = MemoryProtocol()
+        let inst = StructWithConvertingField4()
+        inst.UnixDate <- System.DateTime(1994, 12, 18, 0, 0, 0)
+        
+        writeSt m inst
+
+        m.WrittenValues <===> [StructHeader "ConvertingField"
+                               FieldHeader (1s, "UnixDate", tid 8uy)
+                               Int32 787708800
                                FieldEnd
                                FieldStop
                                StructEnd]

@@ -41,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ThriftCommunication.cs" />
+    <Compile Include="ThriftUnixDateConverters.cs" />
+    <Compile Include="ThriftValueConverter.cs" />
     <Compile Include="Utilities\EnumEx.cs" />
     <Compile Include="Utilities\IFluent.cs" />
     <Compile Include="Utilities\ListExtensions.cs" />

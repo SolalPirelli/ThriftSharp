@@ -45,6 +45,7 @@ namespace ThriftSharp.Internals
             return new ThriftEnum( attr.Name, members );
         }
 
+
         /// <summary>
         /// Parses a Thrift field from the specified PropertyInfo.
         /// </summary>
@@ -57,13 +58,27 @@ namespace ThriftSharp.Internals
             if ( attr == null )
             {
                 return null;
-            }
+            }   
 
             var defaultValAttr = info.GetAttribute<ThriftDefaultValueAttribute>();
-            var defaultVal = Option.Get( defaultValAttr, a => a.Value );
+            var defaultValue = Option.Get( defaultValAttr, a => a.Value );
 
-            var header = new ThriftFieldHeader( attr.Id, attr.Name, ThriftSerializer.FromType( info.PropertyType ).ThriftType );
-            return new ThriftField( header, attr.IsRequired, defaultVal, info.PropertyType, o => info.GetValue( o, null ), ( o, v ) => info.SetValue( o, v, null ) );
+            var converterAttr = info.GetAttribute<ThriftConverterAttribute>();
+            if ( converterAttr == null )
+            {
+                var header = new ThriftFieldHeader( attr.Id, attr.Name, ThriftSerializer.FromType( info.PropertyType ).ThriftType );
+                return new ThriftField( header, attr.IsRequired, defaultValue, info.PropertyType,
+                                        o => info.GetValue( o, null ), 
+                                        ( o, v ) => info.SetValue( o, v, null ) );
+            }
+            else
+            {
+                var converter = converterAttr.Converter;
+                var header = new ThriftFieldHeader( attr.Id, attr.Name, ThriftSerializer.FromType( converter.FromType ).ThriftType );               
+                return new ThriftField( header, attr.IsRequired, defaultValue, converter.FromType,
+                                        o => converter.ConvertBack( info.GetValue( o, null ) ),
+                                        ( o, v ) => info.SetValue( o, converter.Convert( v ), null ) );
+            }
         }
 
         /// <summary>
@@ -101,7 +116,10 @@ namespace ThriftSharp.Internals
                 throw ThriftParsingException.ParameterWithoutAttribute( info );
             }
 
-            return new ThriftMethodParameter( attr.Id, attr.Name, info );
+            var converterAttr = info.GetAttribute<ThriftConverterAttribute>();
+            var converter = converterAttr == null ? null : converterAttr.Converter;
+
+            return new ThriftMethodParameter( attr.Id, attr.Name, info.ParameterType, converter );
         }
 
         /// <summary>
@@ -136,12 +154,18 @@ namespace ThriftSharp.Internals
                 return null;
             }
 
+            var converterAttr = info.GetAttribute<ThriftConverterAttribute>();
+            var converter = converterAttr == null ? null : converterAttr.Converter;
+
             var throwsClauses = ParseThrowsClauses( info );
             var parameters = info.GetParameters()
                                  .Select( ParseMethodParameter )
                                  .ToArray();
+
             var unwrapped = ReflectionEx.UnwrapTaskIfNeeded( info.ReturnType );
-            return new ThriftMethod( attr.Name, unwrapped ?? info.ReturnType, attr.IsOneWay, unwrapped != null, parameters, throwsClauses, info.Name );
+
+            return new ThriftMethod( attr.Name, unwrapped ?? info.ReturnType, attr.IsOneWay, unwrapped != null, 
+                                     converter, parameters, throwsClauses, info.Name );
         }
 
         /// <summary>

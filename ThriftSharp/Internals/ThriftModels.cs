@@ -197,17 +197,23 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the parameter's underlying information.
         /// </summary>
-        public ParameterInfo UnderlyingParameter { get; private set; }
+        public Type UnderlyingType { get; private set; }
+
+        /// <summary>
+        /// Gets the parameter's converter, if any.
+        /// </summary>
+        public IThriftValueConverter Converter { get; private set; }
 
 
         /// <summary>
         /// Initializes a new instance of the ThriftMethodParameter class with the specified values.
         /// </summary>
-        public ThriftMethodParameter( short id, string name, ParameterInfo underlyingParameter )
+        public ThriftMethodParameter( short id, string name, Type underlyingType, IThriftValueConverter converter )
         {
             Id = id;
             Name = name;
-            UnderlyingParameter = underlyingParameter;
+            UnderlyingType = underlyingType;
+            Converter = converter;
         }
     }
 
@@ -240,6 +246,11 @@ namespace ThriftSharp.Internals
         public bool IsOneWay { get; private set; }
 
         /// <summary>
+        /// Gets the converter used to convert the method's return type, if any.
+        /// </summary>
+        public IThriftValueConverter ReturnValueConverter { get; private set; }
+
+        /// <summary>
         /// Gets the method's parameters.
         /// </summary>
         public ReadOnlyCollection<ThriftMethodParameter> Parameters { get; private set; }
@@ -262,6 +273,7 @@ namespace ThriftSharp.Internals
         /// Initializes a new instance of the ThriftMethod class with the specified values.
         /// </summary>
         public ThriftMethod( string name, Type returnType, bool isOneWay, bool isAsync,
+                             IThriftValueConverter returnValueConverter,
                              IList<ThriftMethodParameter> parameters, IList<ThriftThrowsClause> exceptions,
                              string underlyingName )
         {
@@ -269,6 +281,7 @@ namespace ThriftSharp.Internals
             ReturnType = returnType;
             IsOneWay = isOneWay;
             IsAsync = isAsync;
+            ReturnValueConverter = returnValueConverter;
             Parameters = parameters.CopyAsReadOnly();
             Exceptions = exceptions.CopyAsReadOnly();
             UnderlyingName = underlyingName;

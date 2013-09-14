@@ -27,6 +27,10 @@ type Service5 =
     [<ThriftThrows(1s, "exn", typeof<MyException5>)>]
     abstract WithException: unit -> int
 
+    [<ThriftMethod("withUnixDateReturnValue")>]
+    [<ThriftConverter(typeof<ThriftUnixDateConverter>)>]
+    abstract WithUnixDateReturnValue: unit -> System.DateTime
+
 
 [<TestClass>]
 type ``Reading service replies``() =
@@ -191,3 +195,15 @@ type ``Reading service replies``() =
                                 MessageEnd])   
         let exn = throws<MyException5> (fun () -> x.ReadMsg<Service5>(m, "WithException"))
         exn.Stuff <=> "Everything went wrong."
+
+    [<Test>]
+    member x.``UnixDate return type``() =
+        let m = MemoryProtocol([MessageHeader (0, "withUnixDateReturnValue", ThriftMessageType.Reply)
+                                StructHeader ""
+                                FieldHeader (0s, "", ThriftType.Int32)
+                                Int32 787708800
+                                FieldEnd
+                                FieldStop
+                                StructEnd
+                                MessageEnd])
+        (x.ReadMsg<Service5>(m, "WithUnixDateReturnValue") :?> System.DateTime) <=> System.DateTime(1994, 12, 18)

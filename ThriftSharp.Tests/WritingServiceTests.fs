@@ -20,6 +20,9 @@ type Service6 =
     [<ThriftMethod("oneWay", true)>]
     abstract OneWay: unit -> unit
 
+    [<ThriftMethod("withUnixDateParam")>]
+    abstract WithUnixDateParam: 
+        [<ThriftParameter(1s, "date"); ThriftConverter(typeof<ThriftUnixDateConverter>)>] date: System.DateTime -> unit
 
 [<TestClass>]
 type ``Writing service queries``() =
@@ -81,6 +84,19 @@ type ``Writing service queries``() =
 
         m.WrittenValues <===> [MessageHeader (0, "oneWay", ThriftMessageType.OneWay)
                                StructHeader ""
+                               FieldStop
+                               StructEnd
+                               MessageEnd]
+
+    [<Test>]
+    member x.``UnixDate parameter``() =
+        let m = x.WriteMsg<Service6>("WithUnixDateParam", [| System.DateTime(1994, 12, 18) |])
+
+        m.WrittenValues <===> [MessageHeader (0, "withUnixDateParam", ThriftMessageType.Call)
+                               StructHeader ""
+                               FieldHeader (1s, "date", ThriftType.Int32)
+                               Int32 787708800
+                               FieldEnd
                                FieldStop
                                StructEnd
                                MessageEnd]

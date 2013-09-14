@@ -285,4 +285,30 @@ namespace ThriftSharp
             Name = name;
         }
     }
+
+
+    /// <summary>
+    /// Optional attribute for Thrift fields, methods (applied to the return type) and method parameters.
+    /// Specifies a converter to be used when serializing the value.
+    /// </summary>
+    [AttributeUsage( AttributeTargets.Property | AttributeTargets.Parameter | AttributeTargets.Method )]
+    public sealed class ThriftConverterAttribute : Attribute
+    {
+        /// <summary>
+        /// Gets the converter.
+        /// </summary>
+        public IThriftValueConverter Converter { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the ThriftConverterAttribute class with the specified converter type.
+        /// </summary>
+        /// <param name="converter">The converter type.</param>
+        public ThriftConverterAttribute( Type converterType )
+        {
+            Validation.IsNotNull( converterType, () => converterType );
+
+            Converter = (IThriftValueConverter) ReflectionEx.Create( converterType );
+        }
+    }
+
 }

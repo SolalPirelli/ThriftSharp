@@ -35,9 +35,18 @@ namespace ThriftSharp.Internals
             for ( int n = 0; n < method.Parameters.Count; n++ )
             {
                 var param = method.Parameters[n];
-                var type = ThriftSerializer.FromType( param.UnderlyingParameter.ParameterType );
-                var header = new ThriftFieldHeader( param.Id, param.Name, type.ThriftType );
-                paramFields[n] = ReadOnlyField( header, param.UnderlyingParameter.ParameterType, args[n] );
+                var type = ThriftSerializer.FromType( param.UnderlyingType );
+
+                if ( param.Converter == null )
+                {
+                    var header = new ThriftFieldHeader( param.Id, param.Name, type.ThriftType );
+                    paramFields[n] = ReadOnlyField( header, param.UnderlyingType, args[n] );
+                }
+                else
+                {
+                    var header = new ThriftFieldHeader( param.Id, param.Name, ThriftSerializer.FromType( param.Converter.FromType ).ThriftType );
+                    paramFields[n] = ReadOnlyField( header, param.Converter.FromType, param.Converter.ConvertBack( args[n] ) );
+                }
             }
 
             return new ThriftStruct( new ThriftStructHeader( "" ), paramFields );
@@ -75,9 +84,19 @@ namespace ThriftSharp.Internals
 
             if ( method.ReturnType != typeof( void ) )
             {
-                var retType = ThriftSerializer.FromType( method.ReturnType );
-                var retHeader = new ThriftFieldHeader( 0, "", retType.ThriftType );
-                retFields.Add( SetOnlyField( retHeader, true, method.ReturnType, v => retValContainer.Value = v ) );
+                if ( method.ReturnValueConverter == null )
+                {
+                    var retType = ThriftSerializer.FromType( method.ReturnType );
+                    var retHeader = new ThriftFieldHeader( 0, "", retType.ThriftType );
+                    retFields.Add( SetOnlyField( retHeader, true, method.ReturnType, v => retValContainer.Value = v ) );
+                }
+                else
+                {
+                    var retType = ThriftSerializer.FromType( method.ReturnValueConverter.FromType );
+                    var retHeader = new ThriftFieldHeader( 0, "", retType.ThriftType );
+                    retFields.Add( SetOnlyField( retHeader, true, method.ReturnValueConverter.FromType,
+                                                 v => retValContainer.Value = method.ReturnValueConverter.Convert( v ) ) );
+                }
             }
 
             foreach ( var e in method.Exceptions )
