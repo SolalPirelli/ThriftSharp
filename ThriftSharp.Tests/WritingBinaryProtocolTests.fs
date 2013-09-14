@@ -1,4 +1,8 @@
-﻿namespace ThriftSharp.Tests
+﻿// Copyright (c) 2013 Solal Pirelli
+// This code is licensed under the MIT License (see Licence.txt for details).
+// Redistributions of this source code must retain the above copyright notice.
+
+namespace ThriftSharp.Tests
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
 open ThriftSharp.Internals
