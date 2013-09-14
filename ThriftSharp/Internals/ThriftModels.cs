@@ -48,10 +48,10 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Initializes a new instance of the ThriftField class with the specified values.
         /// </summary>
-        public ThriftField( ThriftFieldHeader header, bool isRequired, Option<object> defaultValue,
+        public ThriftField( short id, string name, bool isRequired, Option<object> defaultValue,
                             Type underlyingType, Func<object, object> getter, Action<object, object> setter )
         {
-            Header = header;
+            Header = new ThriftFieldHeader( id, name, ThriftSerializer.FromType( underlyingType ).ThriftType );
             IsRequired = isRequired;
             DefaultValue = defaultValue;
             UnderlyingType = underlyingType;

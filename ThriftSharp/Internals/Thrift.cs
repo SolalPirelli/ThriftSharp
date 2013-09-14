@@ -16,9 +16,9 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Creates a read-only ThriftField with the specified header and value.
         /// </summary>
-        private static ThriftField ReadOnlyField( ThriftFieldHeader header, Type underlyingType, object value )
+        private static ThriftField ReadOnlyField( short id, string name, Type underlyingType, object value )
         {
-            return new ThriftField( header, true, new Option<object>(), underlyingType, _ => value, null );
+            return new ThriftField( id, name, true, new Option<object>(), underlyingType, _ => value, null );
         }
 
         /// <summary>
@@ -39,13 +39,11 @@ namespace ThriftSharp.Internals
 
                 if ( param.Converter == null )
                 {
-                    var header = new ThriftFieldHeader( param.Id, param.Name, type.ThriftType );
-                    paramFields[n] = ReadOnlyField( header, param.UnderlyingType, args[n] );
+                    paramFields[n] = ReadOnlyField( param.Id, param.Name, param.UnderlyingType, args[n] );
                 }
                 else
                 {
-                    var header = new ThriftFieldHeader( param.Id, param.Name, ThriftSerializer.FromType( param.Converter.FromType ).ThriftType );
-                    paramFields[n] = ReadOnlyField( header, param.Converter.FromType, param.Converter.ConvertBack( args[n] ) );
+                    paramFields[n] = ReadOnlyField( param.Id, param.Name, param.Converter.FromType, param.Converter.ConvertBack( args[n] ) );
                 }
             }
 
@@ -69,9 +67,9 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Creates a set-only ThriftField with the specified header and values.
         /// </summary>
-        private static ThriftField SetOnlyField( ThriftFieldHeader header, bool isRequired, Type underlyingType, Action<object> setter )
+        private static ThriftField SetOnlyField( short id, string name, bool isRequired, Type underlyingType, Action<object> setter )
         {
-            return new ThriftField( header, isRequired, new Option<object>(), underlyingType, null, ( _, v ) => setter( v ) );
+            return new ThriftField( id, name, isRequired, new Option<object>(), underlyingType, null, ( _, v ) => setter( v ) );
         }
 
         /// <summary>
@@ -87,22 +85,19 @@ namespace ThriftSharp.Internals
                 if ( method.ReturnValueConverter == null )
                 {
                     var retType = ThriftSerializer.FromType( method.ReturnType );
-                    var retHeader = new ThriftFieldHeader( 0, "", retType.ThriftType );
-                    retFields.Add( SetOnlyField( retHeader, true, method.ReturnType, v => retValContainer.Value = v ) );
+                    retFields.Add( SetOnlyField( 0, "", true, method.ReturnType, v => retValContainer.Value = v ) );
                 }
                 else
                 {
                     var retType = ThriftSerializer.FromType( method.ReturnValueConverter.FromType );
-                    var retHeader = new ThriftFieldHeader( 0, "", retType.ThriftType );
-                    retFields.Add( SetOnlyField( retHeader, true, method.ReturnValueConverter.FromType,
+                    retFields.Add( SetOnlyField( 0, "", true, method.ReturnValueConverter.FromType,
                                                  v => retValContainer.Value = method.ReturnValueConverter.Convert( v ) ) );
                 }
             }
 
             foreach ( var e in method.Exceptions )
             {
-                var header = new ThriftFieldHeader( e.Id, e.Name, ThriftSerializer.Struct.ThriftType );
-                retFields.Add( SetOnlyField( header, false, e.ExceptionType, v => { throw (Exception) v; } ) );
+                retFields.Add( SetOnlyField( e.Id, e.Name, false, e.ExceptionType, v => { throw (Exception) v; } ) );
             }
 
             return Tuple.Create( new ThriftStruct( new ThriftStructHeader( "" ), retFields ), retValContainer );

@@ -66,16 +66,14 @@ namespace ThriftSharp.Internals
             var converterAttr = info.GetAttribute<ThriftConverterAttribute>();
             if ( converterAttr == null )
             {
-                var header = new ThriftFieldHeader( attr.Id, attr.Name, ThriftSerializer.FromType( info.PropertyType ).ThriftType );
-                return new ThriftField( header, attr.IsRequired, defaultValue, info.PropertyType,
+                return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue, info.PropertyType,
                                         o => info.GetValue( o, null ), 
                                         ( o, v ) => info.SetValue( o, v, null ) );
             }
             else
             {
                 var converter = converterAttr.Converter;
-                var header = new ThriftFieldHeader( attr.Id, attr.Name, ThriftSerializer.FromType( converter.FromType ).ThriftType );               
-                return new ThriftField( header, attr.IsRequired, defaultValue, converter.FromType,
+                return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue, converter.FromType,
                                         o => converter.ConvertBack( info.GetValue( o, null ) ),
                                         ( o, v ) => info.SetValue( o, converter.Convert( v ), null ) );
             }
