@@ -1,9 +1,11 @@
-﻿namespace ThriftSharp.Transport
+﻿using System;
+
+namespace ThriftSharp.Transport
 {
     /// <summary>
     /// Transmits binary data at the byte level.
     /// </summary>
-    internal interface IThriftTransport
+    internal interface IThriftTransport : IDisposable
     {
         /// <summary>
         /// Reads an unsigned byte.
@@ -30,11 +32,5 @@
         /// </summary>
         /// <param name="bytes">The array of unsigned bytes.</param>
         void WriteBytes( byte[] bytes );
-
-
-        /// <summary>
-        /// Closes the transport.
-        /// </summary>
-        void Close();
     }
 }

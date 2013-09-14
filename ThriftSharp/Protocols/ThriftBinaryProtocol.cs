@@ -455,7 +455,7 @@ namespace ThriftSharp.Protocols
 
         private void Dispose( bool disposing )
         {
-            _transport.Close();
+            _transport.Dispose();
         }
         #endregion
     }

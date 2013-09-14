@@ -34,5 +34,5 @@ type MemoryTransport(toRead: byte list) =
                 hasRead <- true
             read(len)
 
-        member x.Close() =
+        member x.Dispose() =
             hasRead <- false

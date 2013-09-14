@@ -28,6 +28,6 @@ type CircularTransport() =
             else
                 failwith "Not enough bytes were read."
 
-        member x.Close() =
+        member x.Dispose() =
             hasRead <- false
             stream.Position <- 0L

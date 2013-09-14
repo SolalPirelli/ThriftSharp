@@ -84,20 +84,6 @@ namespace ThriftSharp.Transport
             _outputStream.Write( bytes, 0, bytes.Length );
         }
 
-        /// <summary>
-        /// Closes the transport.
-        /// </summary>
-        public void Close()
-        {
-            if ( _outputStream != null || _inputStream == null )
-            {
-                throw new ThriftTransportException( "Closing a client transport can only be done after a read." );
-            }
-
-            _inputStream.Dispose();
-            _inputStream = null;
-        }
-
 
         /// <summary>
         /// Ensures a read is possible.
