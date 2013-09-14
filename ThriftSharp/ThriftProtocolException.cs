@@ -27,14 +27,14 @@ namespace ThriftSharp
         /// <remarks>
         /// For serialization purposes only.
         /// </remarks>
-        public ThriftProtocolException() { }
+        private ThriftProtocolException() { }
 
         /// <summary>
         /// Initializes a new instance of the ThriftTransferException class with the specified values.
         /// </summary>
         /// <param name="exceptionType">The exception type.</param>
         /// <param name="message">The exception message.</param>
-        public ThriftProtocolException( ThriftProtocolExceptionType exceptionType, string message )
+        internal ThriftProtocolException( ThriftProtocolExceptionType exceptionType, string message )
         {
             Message = message;
             ExceptionType = exceptionType;

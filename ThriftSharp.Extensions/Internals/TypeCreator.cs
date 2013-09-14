@@ -108,7 +108,7 @@ namespace ThriftSharp.Internals
                     gen.Emit( OpCodes.Unbox_Any, m.ReturnType );
                 }
                 // Cast its wrapped return value if it returns a Task
-                var wrapped = ReflectionExtensions.UnwrapTaskIfNeeded( m.ReturnType );
+                var wrapped = ReflectionEx.UnwrapTaskIfNeeded( m.ReturnType );
                 if ( wrapped != null && wrapped != typeof( void ) )
                 {
                     // Create a method that converts a Task<object> into its Result type casted correctly
@@ -155,7 +155,7 @@ namespace ThriftSharp.Internals
             }
 
             // Create the instance
-            var inst = (T) Activator.CreateInstance( typeBuilder.CreateType() );
+            var inst = (T) ReflectionEx.Create( typeBuilder.CreateType() );
 
             // Set the fields (delegates) values
             foreach ( var tup in fields )

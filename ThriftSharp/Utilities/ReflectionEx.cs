@@ -9,7 +9,7 @@ namespace ThriftSharp.Utilities
     /// <summary>
     /// Reflection utility methods and extension methods.
     /// </summary>
-    internal static class ReflectionExtensions
+    internal static class ReflectionEx
     {
         /// <summary>
         /// Gets the attribute of the specified type on the MemberInfo, or null if there is no such attribute.
@@ -77,6 +77,16 @@ namespace ThriftSharp.Utilities
         public static MethodInfo GetAddMethod( Type type, Type interfaceType )
         {
             return type.GetMethod( "Add", type.GetGenericInterface( interfaceType ).GetGenericArguments() );
+        }
+
+        /// <summary>
+        /// Creates a new instance of a type, using a public or non-public constructor.
+        /// </summary>
+        public static object Create( Type type )
+        {
+            return type.GetConstructors( BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic )
+                       .First( c => c.GetParameters().Length == 0 )
+                       .Invoke( null );
         }
     }
 }

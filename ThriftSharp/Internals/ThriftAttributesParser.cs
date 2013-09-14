@@ -140,7 +140,7 @@ namespace ThriftSharp.Internals
             var parameters = info.GetParameters()
                                  .Select( ParseMethodParameter )
                                  .ToArray();
-            var unwrapped = ReflectionExtensions.UnwrapTaskIfNeeded( info.ReturnType );
+            var unwrapped = ReflectionEx.UnwrapTaskIfNeeded( info.ReturnType );
             return new ThriftMethod( attr.Name, unwrapped ?? info.ReturnType, attr.IsOneWay, unwrapped != null, parameters, throwsClauses, info.Name );
         }
 

@@ -75,6 +75,8 @@ namespace ThriftSharp
         /// <returns>A built ThriftCommunication object.</returns>
         ThriftCommunication IThriftTransportPicker.OverHttp( string url )
         {
+            Validation.IsNeitherNullNorWhitespace( url, () => url );
+
             return new ThriftCommunication( this, () => new ThriftHttpTransport( url ) );
         }
 

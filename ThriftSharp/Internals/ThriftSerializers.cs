@@ -334,9 +334,9 @@ namespace ThriftSharp.Internals
             {
                 var elemType = targetType.GetGenericInterface( _collectionGenericType ).GetGenericArguments()[0];
                 var elemSerializer = ThriftSerializer.FromType( elemType );
-                var addMethod = ReflectionExtensions.GetAddMethod( targetType, _collectionGenericType );
+                var addMethod = ReflectionEx.GetAddMethod( targetType, _collectionGenericType );
 
-                var inst = Activator.CreateInstance( targetType );
+                var inst = ReflectionEx.Create( targetType );
 
                 var header = _readHeader( protocol )();
                 for ( int n = 0; n < header.Count; n++ )
@@ -391,9 +391,9 @@ namespace ThriftSharp.Internals
                 var valueType = typeArgs[1];
                 var keySerializer = ThriftSerializer.FromType( keyType );
                 var valueSerializer = ThriftSerializer.FromType( valueType );
-                var addMethod = ReflectionExtensions.GetAddMethod( targetType, typeof( IDictionary<,> ) );
+                var addMethod = ReflectionEx.GetAddMethod( targetType, typeof( IDictionary<,> ) );
 
-                var inst = Activator.CreateInstance( targetType );
+                var inst = ReflectionEx.Create( targetType );
 
                 var header = protocol.ReadMapHeader();
                 for ( int n = 0; n < header.Count; n++ )
@@ -451,7 +451,7 @@ namespace ThriftSharp.Internals
             internal override object Read( IThriftProtocol protocol, Type targetType )
             {
                 var st = ThriftAttributesParser.ParseStruct( targetType );
-                var inst = Activator.CreateInstance( targetType );
+                var inst = ReflectionEx.Create( targetType );
                 return ThriftSerializer.ReadStruct( protocol, st, inst );
             }
 

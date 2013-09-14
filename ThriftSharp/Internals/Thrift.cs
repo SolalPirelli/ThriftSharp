@@ -8,7 +8,7 @@ using ThriftSharp.Utilities;
 namespace ThriftSharp.Internals
 {
     /// <summary>
-    /// Main entry point to Thrift#.
+    /// Single entry point to Thrift#'s internals.
     /// Translates Thrift interface definitions into protocol calls.
     /// </summary>
     internal static class Thrift

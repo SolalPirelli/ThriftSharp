@@ -1,4 +1,5 @@
 ﻿using System;
+using ThriftSharp.Utilities;
 
 namespace ThriftSharp
 {
@@ -20,6 +21,8 @@ namespace ThriftSharp
         /// <param name="name">The name of the enum the attribute is applied to.</param>
         public ThriftEnumAttribute( string name )
         {
+            Validation.IsNeitherNullNorWhitespace( name, () => name );
+
             Name = name;
         }
     }
@@ -48,9 +51,12 @@ namespace ThriftSharp
         /// Initializes a new instance of the ThriftEnumMemberAttribute class with the specified name and value.
         /// </summary>
         /// <param name="name">The name of the member the attribute is applied to.</param>
-        /// <param name="value">The value of the member the attribute is applied to.</param>
+        /// <param name="value">The value of the member the attribute is applied to. Must be positive.</param>
         public ThriftEnumMemberAttribute( string name, int value )
         {
+            Validation.IsNeitherNullNorWhitespace( name, () => name );
+            Validation.IsPositive( value, () => value );
+
             Name = name;
             Value = value;
         }
@@ -87,11 +93,14 @@ namespace ThriftSharp
         /// <summary>
         /// Initializes a new instance of the ThriftFieldAttribute class with the specified values.
         /// </summary>
-        /// <param name="id">The ID of the field the attribute is applied to.</param>
+        /// <param name="id">The ID of the field the attribute is applied to. Must be positive.</param>
         /// <param name="isRequired">Whether the field the attribute is applied to is required.</param>
         /// <param name="name">The name of the field the attribute is applied to.</param>
         public ThriftFieldAttribute( short id, bool isRequired, string name )
         {
+            Validation.IsPositive( id, () => id );
+            Validation.IsNeitherNullNorWhitespace( name, () => name );
+
             Id = id;
             IsRequired = isRequired;
             Name = name;
@@ -138,6 +147,8 @@ namespace ThriftSharp
         /// <param name="name">The name of the struct the attribute is applied to.</param>
         public ThriftStructAttribute( string name )
         {
+            Validation.IsNeitherNullNorWhitespace( name, () => name );
+
             Name = name;
         }
     }
@@ -162,10 +173,13 @@ namespace ThriftSharp
         /// <summary>
         /// Initializes a new instance of the ThriftParameterAttribute class with the specified ID and name.
         /// </summary>
-        /// <param name="id">The ID of the parameter the attribute is applied to.</param>
+        /// <param name="id">The ID of the parameter the attribute is applied to. Must be positive.</param>
         /// <param name="name">The name of the parameter the attribute is applied to.</param>
         public ThriftParameterAttribute( short id, string name )
         {
+            Validation.IsPositive( id, () => id );
+            Validation.IsNeitherNullNorWhitespace( name, () => name );
+
             Id = id;
             Name = name;
         }
@@ -201,6 +215,10 @@ namespace ThriftSharp
         /// <param name="exceptionType">The type of the exception whose clause is defined by the attribute.</param>
         public ThriftThrowsAttribute( short id, string name, Type exceptionType )
         {
+            Validation.IsPositive( id, () => id );
+            Validation.IsNeitherNullNorWhitespace( name, () => name );
+            Validation.IsNotNull( exceptionType, () => exceptionType );
+
             Id = id;
             Name = name;
             ExceptionType = exceptionType;
@@ -237,6 +255,8 @@ namespace ThriftSharp
         /// <param name="isOneWay">Whether the method the attribute is applied to is one-way.</param>
         public ThriftMethodAttribute( string name, bool isOneWay = false )
         {
+            Validation.IsNeitherNullNorWhitespace( name, () => name );
+
             Name = name;
             IsOneWay = isOneWay;
         }
@@ -260,6 +280,8 @@ namespace ThriftSharp
         /// <param name="name">The name of the service the attribute is applied to.</param>
         public ThriftServiceAttribute( string name )
         {
+            Validation.IsNeitherNullNorWhitespace( name, () => name );
+
             Name = name;
         }
     }

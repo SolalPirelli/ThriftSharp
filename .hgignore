@@ -4,4 +4,3 @@ syntax:glob
 obj\*
 bin\*
 TestResults\*
-ThriftSharp.Samples\*
