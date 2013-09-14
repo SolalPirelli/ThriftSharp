@@ -7,11 +7,9 @@ open ThriftSharp
 open ThriftSharp.Internals
 
 [<ThriftService("Service")>]
-type IService10 =
+type IService9 =
     [<ThriftMethod("Sync")>]
     abstract Sync: [<ThriftParameter(1s, "arg")>] arg: int -> string
-    [<ThriftMethod("SyncReturnsValueType")>]
-    abstract SyncReturnsValueType: unit -> int
     [<ThriftMethod("SyncNoReturn")>]
     abstract SyncNoReturn: unit -> unit
     [<ThriftMethod("Async")>]
@@ -24,8 +22,22 @@ type IService10 =
                     * [<ThriftParameter(3s, "arg3")>] arg3: int[]
                     -> Task<List<string>>
 
+type Service9(comm) =
+    inherit ThriftServiceImplementation<IService9>(comm)
+    interface IService9 with
+        member x.Sync(n) =
+            x.Call<string>("Sync", n)
+        member x.SyncNoReturn() =
+            x.Call("SyncNoReturn")
+        member x.Async(n) =
+            x.CallAsync<int>("Async", n)
+        member x.AsyncNoReturn() =
+            x.CallAsync("AsyncNoReturn")
+        member x.Complex(str, d, ints) =
+            x.CallAsync<List<string>>("Complex", str, d, ints)
+
 [<TestClass>]
-type ``Proxy generator``() =
+type ``ServiceImplementation helper class``() =
     [<Test>]
     member x.``Synchronous call``() =
         let m = MemoryProtocol([MessageHeader (0, "", ThriftMessageType.Reply)
@@ -37,7 +49,7 @@ type ``Proxy generator``() =
                                 StructEnd
                                 MessageEnd])
         let comm = ThriftCommunication(m)
-        let impl = ThriftProxy.Create<IService10>(comm)
+        let impl = Service9(comm) :> IService9
 
         impl.Sync(1) <=> "the result"
 
@@ -51,27 +63,6 @@ type ``Proxy generator``() =
                                MessageEnd]
 
     [<Test>]
-    member x.``Synchronous call, returns a value type``() =
-        let m = MemoryProtocol([MessageHeader (0, "", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldHeader (0s, "", ThriftType.Int32)
-                                Int32 34
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                MessageEnd])
-        let comm = ThriftCommunication(m)
-        let impl = ThriftProxy.Create<IService10>(comm)
-
-        impl.SyncReturnsValueType() <=> 34
-
-        m.WrittenValues <===> [MessageHeader (0, "SyncReturnsValueType", ThriftMessageType.Call)
-                               StructHeader ""
-                               FieldStop
-                               StructEnd
-                               MessageEnd]
-
-    [<Test>]
     member x.``Synchronous call, no return value``() =
         let m = MemoryProtocol([MessageHeader (0, "", ThriftMessageType.Reply)
                                 StructHeader ""
@@ -79,7 +70,7 @@ type ``Proxy generator``() =
                                 StructEnd
                                 MessageEnd])
         let comm = ThriftCommunication(m)
-        let impl = ThriftProxy.Create<IService10>(comm)
+        let impl = Service9(comm) :> IService9
 
         impl.SyncNoReturn() <=> ()
 
@@ -100,7 +91,7 @@ type ``Proxy generator``() =
                                 StructEnd
                                 MessageEnd])
         let comm = ThriftCommunication(m)
-        let impl = ThriftProxy.Create<IService10>(comm) 
+        let impl = Service9(comm) :> IService9
 
         (impl.Async(2) |> Async.AwaitTask |> Async.RunSynchronously) <=> 123
 
@@ -121,7 +112,7 @@ type ``Proxy generator``() =
                                 StructEnd
                                 MessageEnd])
         let comm = ThriftCommunication(m)
-        let impl = ThriftProxy.Create<IService10>(comm) 
+        let impl = Service9(comm) :> IService9
 
         (impl.AsyncNoReturn() |> Async.AwaitIAsyncResult |> Async.Ignore |> Async.RunSynchronously) <=> ()
 
@@ -146,7 +137,7 @@ type ``Proxy generator``() =
                                 StructEnd
                                 MessageEnd])
         let comm = ThriftCommunication(m)
-        let impl = ThriftProxy.Create<IService10>(comm)
+        let impl = Service9(comm) :> IService9
 
         (impl.Complex("abc", 123.4, [| 1; 2 |]) |> Async.AwaitTask |> Async.RunSynchronously)
         <===>

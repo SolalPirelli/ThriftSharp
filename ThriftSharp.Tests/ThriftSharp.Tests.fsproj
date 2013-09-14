@@ -63,6 +63,7 @@
     <Compile Include="WritingBinaryProtocolTests.fs" />
     <Compile Include="CircularTesting.fs" />
     <Compile Include="ServiceCallTests.fs" />
+    <Compile Include="ServiceImplementationTests.fs" />
     <Compile Include="ProxyTests.fs" />
   </ItemGroup>
   <ItemGroup>
