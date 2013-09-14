@@ -21,9 +21,9 @@ let throws<'T> func =
     try func() |> ignore with x -> e := x
 
     if !e = null then
-        Assert.Fail(sprintf "Expected an exception of type %A, but no exception was thrown" typeof<'T>.FullName)
+        Assert.Fail(sprintf "Expected an exception of type %A, but no exception was thrown" typeof<'T>)
 
     let e = !e
     if not (typeof<'T>.IsAssignableFrom(e.GetType())) then
-        Assert.Fail(sprintf "Expected an exception of type %A, but got one of type %A" typeof<'T>.FullName (e.GetType().FullName))
+        Assert.Fail(sprintf "Expected an exception of type %A, but got one of type %A" typeof<'T> (e.GetType()))
     box e :?> 'T

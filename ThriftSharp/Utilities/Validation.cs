@@ -49,7 +49,7 @@ namespace ThriftSharp.Utilities
         {
             if ( !type.IsAssignableFrom( value.GetType() ) )
             {
-                throw new ArgumentException( string.Format( "Parameter {0} must be of type {1}. It was of type {2}.", GetName( paramGet ), type.FullName, value.GetType().FullName ) );
+                throw new ArgumentException( string.Format( "Parameter {0} must be of type {1}. It was of type {2}.", GetName( paramGet ), type, value.GetType() ) );
             }
         }
 

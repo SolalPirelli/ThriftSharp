@@ -75,13 +75,13 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The object.</param>
         /// <remarks>A converted form of the object.</remarks>
-        protected abstract TTo Convert( TFrom value );
+        protected internal abstract TTo Convert( TFrom value );
 
         /// <summary>
         /// Converts the specified object.
         /// </summary>
         /// <param name="value">The object.</param>
         /// <remarks>A converted form of the object.</remarks>
-        protected abstract TFrom ConvertBack( TTo value );
+        protected internal abstract TFrom ConvertBack( TTo value );
     }
 }

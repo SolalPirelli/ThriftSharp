@@ -19,7 +19,7 @@ namespace ThriftSharp
         /// </summary>
         internal static ThriftParsingException NotAnEnum( Type type )
         {
-            return new ThriftParsingException( "The specified type, '{0}', is not an enum.", type.FullName );
+            return new ThriftParsingException( "The specified type, '{0}', is not an enum.", type );
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace ThriftSharp
             return new ThriftParsingException( "The enum type '{0}' is not part of a Thrift interface definition."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftEnumAttribute attribute.",
-                                               type.FullName );
+                                               type );
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace ThriftSharp
         /// </summary>
         internal static ThriftParsingException NotAStruct( Type type )
         {
-            return new ThriftParsingException( "The specified type, '{0}', is not a class or a struct.", type.FullName );
+            return new ThriftParsingException( "The specified type, '{0}', is not a class or a struct.", type );
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace ThriftSharp
             return new ThriftParsingException( "The class or struct type '{0}' is not part of a Thrift interface definition."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftStructAttribute attribute.",
-                                               type.FullName );
+                                               type );
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace ThriftSharp
             return new ThriftParsingException( "Parameter '{0}' of method '{1}' of type '{2}' does not have a Thrift interface definition."
                                              + Environment.NewLine
                                              + "It must be decorated with the ThriftParameterAttribute attribute.",
-                                               info.Name, info.Member.Name, info.Member.DeclaringType.FullName );
+                                               info.Name, info.Member.Name, info.Member.DeclaringType );
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace ThriftSharp
             return new ThriftParsingException( "Type '{0}' was used in a ThriftThrowsClauseAttribute but does not inherit from Exception."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftStructAttribute.",
-                                               type.FullName );
+                                               type );
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace ThriftSharp
         /// </summary>
         internal static ThriftParsingException NotAService( Type type )
         {
-            return new ThriftParsingException( "The specified type, '{0}', is not an interface.", type.FullName );
+            return new ThriftParsingException( "The specified type, '{0}', is not an interface.", type );
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace ThriftSharp
             return new ThriftParsingException( "The interface '{0}' does not have a Thrift interface definition."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftServiceAttribute attribute.",
-                                               type.FullName );
+                                               type );
         }
     }
 
