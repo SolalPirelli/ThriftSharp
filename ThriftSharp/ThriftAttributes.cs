@@ -102,7 +102,6 @@ namespace ThriftSharp
         /// <param name="name">The name of the field the attribute is applied to.</param>
         public ThriftFieldAttribute( short id, bool isRequired, string name )
         {
-            Validation.IsPositive( id, () => id );
             Validation.IsNeitherNullNorWhitespace( name, () => name );
 
             Id = id;
@@ -181,7 +180,6 @@ namespace ThriftSharp
         /// <param name="name">The name of the parameter the attribute is applied to.</param>
         public ThriftParameterAttribute( short id, string name )
         {
-            Validation.IsPositive( id, () => id );
             Validation.IsNeitherNullNorWhitespace( name, () => name );
 
             Id = id;
@@ -219,7 +217,6 @@ namespace ThriftSharp
         /// <param name="exceptionType">The type of the exception whose clause is defined by the attribute.</param>
         public ThriftThrowsAttribute( short id, string name, Type exceptionType )
         {
-            Validation.IsPositive( id, () => id );
             Validation.IsNeitherNullNorWhitespace( name, () => name );
             Validation.IsNotNull( exceptionType, () => exceptionType );
 
@@ -306,7 +303,7 @@ namespace ThriftSharp
         /// <summary>
         /// Initializes a new instance of the ThriftConverterAttribute class with the specified converter type.
         /// </summary>
-        /// <param name="converter">The converter type.</param>
+        /// <param name="converterType">The converter type.</param>
         public ThriftConverterAttribute( Type converterType )
         {
             Validation.IsNotNull( converterType, () => converterType );
