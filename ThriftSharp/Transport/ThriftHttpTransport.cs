@@ -144,6 +144,11 @@ namespace ThriftSharp.Transport
         /// </summary>
         private void Flush()
         {
+            // These two calls MUST appear before the GetResponse calls
+            // Silverlight (and WP8) throws a NotSupportedException otherwise.
+            _outputStream.Dispose();
+            _outputStream = null;
+
             var resp = WaitOnBeginEnd( _request.BeginGetResponse, _request.EndGetResponse, Timeout );
             if ( resp == null )
             {
@@ -151,9 +156,6 @@ namespace ThriftSharp.Transport
             }
 
             _inputStream = resp.GetResponseStream();
-
-            _outputStream.Dispose();
-            _outputStream = null;
         }
 
         /// <summary>
