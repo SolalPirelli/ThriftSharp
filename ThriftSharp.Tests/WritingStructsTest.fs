@@ -75,6 +75,11 @@ type StructWithConvertingField4() =
     [<ThriftConverter(typeof<ThriftUnixDateConverter>)>]
     member val UnixDate = System.DateTime.Now with get, set
 
+[<ThriftStruct("NullableField")>]
+type StructWithNullableField4() =
+    [<ThriftField(1s, false, "Field")>]
+    member val Field = System.Nullable() with get, set
+
 [<TestClass>]
 type ``Writing structs``() =
     let writeSt prot obj = ThriftSerializer.Struct.Write(prot, obj)
@@ -238,6 +243,32 @@ type ``Writing structs``() =
         m.WrittenValues <===> [StructHeader "ConvertingField"
                                FieldHeader (1s, "UnixDate", tid 8uy)
                                Int32 787708800
+                               FieldEnd
+                               FieldStop
+                               StructEnd]
+
+    [<Test>]
+    member x.``Nullable field, not set``() =
+        let m = MemoryProtocol()
+        let inst = StructWithNullableField4()
+
+        writeSt m inst
+
+        m.WrittenValues <===> [StructHeader "NullableField"
+                               FieldStop
+                               StructEnd]                             
+
+    [<Test>]
+    member x.``Nullable field, set``() =
+        let m = MemoryProtocol()
+        let inst = StructWithNullableField4()
+        inst.Field <- System.Nullable(112233)
+
+        writeSt m inst
+
+        m.WrittenValues <===> [StructHeader "NullableField"
+                               FieldHeader (1s, "Field", ThriftType.Int32)
+                               Int32 112233
                                FieldEnd
                                FieldStop
                                StructEnd]

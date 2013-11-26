@@ -55,7 +55,7 @@ namespace ThriftSharp.Internals
         public ThriftField( short id, string name, bool isRequired, Option<object> defaultValue,
                             Type underlyingType, Func<object, object> getter, Action<object, object> setter )
         {
-            Header = new ThriftFieldHeader( id, name, ThriftSerializer.FromType( underlyingType ).ThriftType );
+            Header = new ThriftFieldHeader( id, name, ThriftSerializer.FromType( underlyingType ).GetThriftType( underlyingType ).Value );
             IsRequired = isRequired;
             DefaultValue = defaultValue;
             UnderlyingType = underlyingType;

@@ -17,28 +17,29 @@ namespace ThriftSharp.Internals
     internal abstract class ThriftSerializer
     {
         // Order matters; FromType uses MatchesType on all, in order.
-        private static readonly Dictionary<ThriftSerializer, ThriftType> Types = new Dictionary<ThriftSerializer, ThriftType>
+        private static readonly ThriftSerializer[] Serializers = new ThriftSerializer[]
         {
-            { new PrimitiveSerializer<bool>( p => p.ReadBoolean, p => p.WriteBoolean ), ThriftType.Bool },
-            { new PrimitiveSerializer<sbyte>( p => p.ReadSByte, p => p.WriteSByte ), ThriftType.Byte },
-            { new PrimitiveSerializer<double>( p => p.ReadDouble, p => p.WriteDouble ), ThriftType.Double },
-            { new PrimitiveSerializer<short>( p => p.ReadInt16, p => p.WriteInt16 ), ThriftType.Int16 },
-            { new PrimitiveSerializer<int>( p => p.ReadInt32, p => p.WriteInt32 ), ThriftType.Int32 },
-            { new PrimitiveSerializer<long>( p => p.ReadInt64, p => p.WriteInt64 ), ThriftType.Int64 },
-            { new PrimitiveSerializer<string>( p => p.ReadString, p => p.WriteString ), ThriftType.String },
-            { new PrimitiveSerializer<sbyte[]>( p => p.ReadBinary, p => p.WriteBinary ), ThriftType.String },
-            { new EnumSerializer(), ThriftType.Int32 },
-            { new MapParser(), ThriftType.Map },
-            { new CollectionParser( typeof( ISet<> ), 
-                                  p => p.ReadSetHeader, p => p.ReadSetEnd, 
-                                  p => p.WriteSetHeader, p => p.WriteSetEnd ), 
-                                ThriftType.Set },
-            { new CollectionParser( typeof( ICollection<> ), 
-                                  p => p.ReadListHeader, p => p.ReadListEnd, 
-                                  p => p.WriteListHeader, p => p.WriteListEnd ), 
-                                ThriftType.List },
-            { new ArrayParser(), ThriftType.List },
-            { new StructParser(), ThriftType.Struct }
+            new PrimitiveSerializer<bool>( p => p.ReadBoolean, p => p.WriteBoolean , ThriftType.Bool ),
+            new PrimitiveSerializer<sbyte>( p => p.ReadSByte, p => p.WriteSByte , ThriftType.Byte ),
+            new PrimitiveSerializer<double>( p => p.ReadDouble, p => p.WriteDouble , ThriftType.Double ),
+            new PrimitiveSerializer<short>( p => p.ReadInt16, p => p.WriteInt16 , ThriftType.Int16 ),
+            new PrimitiveSerializer<int>( p => p.ReadInt32, p => p.WriteInt32 , ThriftType.Int32 ),
+            new PrimitiveSerializer<long>( p => p.ReadInt64, p => p.WriteInt64 , ThriftType.Int64 ),
+            new PrimitiveSerializer<string>( p => p.ReadString, p => p.WriteString , ThriftType.String ),
+            new PrimitiveSerializer<sbyte[]>( p => p.ReadBinary, p => p.WriteBinary , ThriftType.String ),
+            new EnumSerializer(),
+            new MapSerializer(),
+            new CollectionSerializer( typeof( ISet<> ), 
+                                      p => p.ReadSetHeader, p => p.ReadSetEnd, 
+                                      p => p.WriteSetHeader, p => p.WriteSetEnd, 
+                                      ThriftType.Set ),
+            new CollectionSerializer( typeof( ICollection<> ), 
+                                      p => p.ReadListHeader, p => p.ReadListEnd, 
+                                      p => p.WriteListHeader, p => p.WriteListEnd, 
+                                      ThriftType.List ),
+            new ArraySerializer(),
+            new NullableSerializer(),
+            new StructSerializer()
         };
 
         /// <summary>
@@ -50,27 +51,11 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Gets the type's ID.
-        /// </summary>
-        public ThriftType ThriftType
-        {
-            get { return Types[this]; }
-        }
-
-        /// <summary>
-        /// Gets a string representation of the type.
-        /// </summary>
-        public override string ToString()
-        {
-            return Types[this].ToString();
-        }
-
-        /// <summary>
         /// Gets a Thrift type from a .NET type.
         /// </summary>
         public static ThriftSerializer FromType( Type type )
         {
-            return Types.Keys.First( tt => tt.MatchesType( type ) );
+            return Serializers.First( tt => tt.MatchesType( type ) );
         }
 
         /// <summary>
@@ -78,7 +63,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static ThriftSerializer FromThriftType( ThriftType id )
         {
-            return Types.First( p => p.Value == id ).Key;
+            return Serializers.First( s => s.GetThriftType( null ) == id );
         }
 
 
@@ -91,6 +76,12 @@ namespace ThriftSharp.Internals
         /// Indicates whether the Thrift type matches the specified .NET type.
         /// </summary>
         internal abstract bool MatchesType( Type type );
+
+        /// <summary>
+        /// Gets the Thrift type associated with the specified type, which may be null.
+        /// The return value can be null if the argument is null.
+        /// </summary>
+        internal abstract ThriftType? GetThriftType( Type type );
 
         /// <summary>
         /// Reads an instance of the specified .NET type from the specified protocol.
@@ -165,9 +156,13 @@ namespace ThriftSharp.Internals
             protocol.WriteStructHeader( st.Header );
             foreach ( var field in st.Fields )
             {
-                protocol.WriteFieldHeader( field.Header );
-                ThriftSerializer.FromType( field.UnderlyingType ).Write( protocol, field.Getter( instance ) );
-                protocol.WriteFieldEnd();
+                var fieldValue = field.Getter( instance );
+                if ( fieldValue != null )
+                {
+                    protocol.WriteFieldHeader( field.Header );
+                    ThriftSerializer.FromType( field.UnderlyingType ).Write( protocol, fieldValue );
+                    protocol.WriteFieldEnd();
+                }
             }
             protocol.WriteFieldStop();
             protocol.WriteStructEnd();
@@ -181,19 +176,26 @@ namespace ThriftSharp.Internals
         {
             private readonly Func<IThriftProtocol, Func<T>> _read;
             private readonly Func<IThriftProtocol, Action<T>> _write;
+            private readonly ThriftType _thriftType;
 
             /// <summary>
             /// Creates a new instance of the PrimitiveType class from the specified reading and writing methods.
             /// </summary>
-            public PrimitiveSerializer( Func<IThriftProtocol, Func<T>> read, Func<IThriftProtocol, Action<T>> write )
+            public PrimitiveSerializer( Func<IThriftProtocol, Func<T>> read, Func<IThriftProtocol, Action<T>> write, ThriftType thriftType )
             {
                 _read = read;
                 _write = write;
+                _thriftType = thriftType;
             }
 
             internal override bool MatchesType( Type type )
             {
                 return type == typeof( T );
+            }
+
+            internal override ThriftType? GetThriftType( Type type )
+            {
+                return _thriftType;
             }
 
             internal override object Read( IThriftProtocol protocol, Type targetType )
@@ -220,6 +222,11 @@ namespace ThriftSharp.Internals
             internal override bool MatchesType( Type type )
             {
                 return type.IsEnum;
+            }
+
+            internal override ThriftType? GetThriftType( Type type )
+            {
+                return ThriftType.Int32;
             }
 
             internal override object Read( IThriftProtocol protocol, Type targetType )
@@ -254,13 +261,18 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// The Thrift array parser, parsing lists as arrays.
+        /// The Thrift array serializer, for lists as arrays.
         /// </summary>
-        private sealed class ArrayParser : ThriftSerializer
+        private sealed class ArraySerializer : ThriftSerializer
         {
             internal override bool MatchesType( Type type )
             {
                 return type.IsArray;
+            }
+
+            internal override ThriftType? GetThriftType( Type type )
+            {
+                return ThriftType.List;
             }
 
             internal override object Read( IThriftProtocol protocol, Type targetType )
@@ -295,7 +307,7 @@ namespace ThriftSharp.Internals
                 var elemSerializer = ThriftSerializer.FromType( elemType );
 
                 var array = (Array) obj;
-                protocol.WriteListHeader( new ThriftCollectionHeader( array.Length, elemSerializer.ThriftType ) );
+                protocol.WriteListHeader( new ThriftCollectionHeader( array.Length, elemSerializer.GetThriftType( elemType ).Value ) );
                 for ( int n = 0; n < array.Length; n++ )
                 {
                     elemSerializer.Write( protocol, array.GetValue( n ) );
@@ -305,33 +317,41 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// The Thrift collections parameterized parser.
+        /// The Thrift collections parameterized serializer.
         /// </summary>
-        private sealed class CollectionParser : ThriftSerializer
+        private sealed class CollectionSerializer : ThriftSerializer
         {
             private readonly Type _collectionGenericType;
             private readonly Func<IThriftProtocol, Func<ThriftCollectionHeader>> _readHeader;
             private readonly Func<IThriftProtocol, Action> _readEnd;
             private readonly Func<IThriftProtocol, Action<ThriftCollectionHeader>> _writeHeader;
             private readonly Func<IThriftProtocol, Action> _writeEnd;
+            private readonly ThriftType _thriftType;
 
             /// <summary>
             /// Creates a new instance of the CollectionType class from the specified collection type and reading/writing methods.
             /// </summary>
-            public CollectionParser( Type collectionGenericType,
-                                   Func<IThriftProtocol, Func<ThriftCollectionHeader>> readHeader, Func<IThriftProtocol, Action> readEnd,
-                                   Func<IThriftProtocol, Action<ThriftCollectionHeader>> writeHeader, Func<IThriftProtocol, Action> writeEnd )
+            public CollectionSerializer( Type collectionGenericType,
+                                         Func<IThriftProtocol, Func<ThriftCollectionHeader>> readHeader, Func<IThriftProtocol, Action> readEnd,
+                                         Func<IThriftProtocol, Action<ThriftCollectionHeader>> writeHeader, Func<IThriftProtocol, Action> writeEnd,
+                                         ThriftType thriftType )
             {
                 _collectionGenericType = collectionGenericType;
                 _readHeader = readHeader;
                 _readEnd = readEnd;
                 _writeHeader = writeHeader;
                 _writeEnd = writeEnd;
+                _thriftType = thriftType;
             }
 
             internal override bool MatchesType( Type type )
             {
                 return !type.IsArray && type.GetGenericInterface( _collectionGenericType ) != null;
+            }
+
+            internal override ThriftType? GetThriftType( Type type )
+            {
+                return _thriftType;
             }
 
             internal override object Read( IThriftProtocol protocol, Type targetType )
@@ -369,7 +389,7 @@ namespace ThriftSharp.Internals
                 var elemSerializer = ThriftSerializer.FromType( elemType );
                 var arr = ( (IEnumerable) obj ).Cast<object>().ToArray();
 
-                _writeHeader( protocol )( new ThriftCollectionHeader( arr.Length, elemSerializer.ThriftType ) );
+                _writeHeader( protocol )( new ThriftCollectionHeader( arr.Length, elemSerializer.GetThriftType( elemType ).Value ) );
                 foreach ( var elem in arr )
                 {
                     elemSerializer.Write( protocol, elem );
@@ -379,13 +399,18 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// The Thrift map parser.
+        /// The Thrift map serializer.
         /// </summary>
-        private sealed class MapParser : ThriftSerializer
+        private sealed class MapSerializer : ThriftSerializer
         {
             internal override bool MatchesType( Type type )
             {
                 return type.GetGenericInterface( typeof( IDictionary<,> ) ) != null;
+            }
+
+            internal override ThriftType? GetThriftType( Type type )
+            {
+                return ThriftType.Map;
             }
 
             internal override object Read( IThriftProtocol protocol, Type targetType )
@@ -431,7 +456,7 @@ namespace ThriftSharp.Internals
                 var valueSerializer = ThriftSerializer.FromType( valueType );
                 var map = (IDictionary) obj;
 
-                protocol.WriteMapHeader( new ThriftMapHeader( map.Count, keySerializer.ThriftType, valueSerializer.ThriftType ) );
+                protocol.WriteMapHeader( new ThriftMapHeader( map.Count, keySerializer.GetThriftType( keyType ).Value, valueSerializer.GetThriftType( valueType ).Value ) );
                 var enumerator = map.GetEnumerator();
                 while ( enumerator.MoveNext() )
                 {
@@ -443,13 +468,58 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// The Thrift parser for structs, which is the most complex one.
+        /// The Thrift serializer for nullable value types, which converts "null" to and from an unset value.
         /// </summary>
-        private sealed class StructParser : ThriftSerializer
+        private sealed class NullableSerializer : ThriftSerializer
+        {
+            internal override bool MatchesType( Type type )
+            {
+                return type.IsGenericType && type.GetGenericTypeDefinition() == typeof( Nullable<> );
+            }
+
+            internal override ThriftType? GetThriftType( Type type )
+            {
+                if ( type == null )
+                {
+                    return null;
+                }
+                var wrappedType = type.GetGenericArguments()[0];
+                return ThriftSerializer.FromType( wrappedType ).GetThriftType( wrappedType );
+            }
+
+            internal override object Read( IThriftProtocol protocol, Type targetType )
+            {
+                var wrappedType = targetType.GetGenericArguments()[0];
+                var targetCtor = targetType.GetConstructor( new[] { wrappedType } );
+                var value = ThriftSerializer.FromType( wrappedType )
+                                            .Read( protocol, wrappedType );
+                return targetCtor.Invoke( new[] { value } );
+            }
+
+            internal override void Skip( IThriftProtocol protocol )
+            {
+                throw new InvalidOperationException( "NullableSerializer.Skip should never be called." );
+            }
+
+            internal override void Write( IThriftProtocol protocol, object obj )
+            {
+                ThriftSerializer.FromType( obj.GetType() ).Write( protocol, obj );
+            }
+        }
+
+        /// <summary>
+        /// The Thrift serializer for structs, which is the most complex one.
+        /// </summary>
+        private sealed class StructSerializer : ThriftSerializer
         {
             internal override bool MatchesType( Type type )
             {
                 return true;
+            }
+
+            internal override ThriftType? GetThriftType( Type type )
+            {
+                return ThriftType.Struct;
             }
 
             internal override object Read( IThriftProtocol protocol, Type targetType )

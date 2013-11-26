@@ -77,6 +77,17 @@ type StructWithConvertingField1() =
     [<ThriftConverter(typeof<ThriftUnixDateConverter>)>]
     member val UnixDate = System.DateTime.Now with get, set
 
+[<ThriftStruct("NullableField")>]
+type StructWithNullableField1() =
+    [<ThriftField(1s, false, "Field")>]
+    member val Field = System.Nullable() with get, set
+
+[<ThriftStruct("NullableFieldWithDefault")>]
+type StructWithNullableFieldWithDefault1() =
+    [<ThriftField(1s, false, "Field")>]
+    [<ThriftDefaultValue(42)>]
+    member val Field = System.Nullable() with get, set
+
 [<TestClass>]
 type ``Reading structs``() =
     member x.ReadStruct<'T>(prot) = ThriftSerializer.Struct.Read(prot, typeof<'T>) :?> 'T
@@ -240,4 +251,34 @@ type ``Reading structs``() =
                                 StructEnd])
         let inst = x.ReadStruct<StructWithConvertingField1>(m)
         inst.UnixDate <=> System.DateTime(1994, 12, 18, 0, 0, 0)
+        m.IsEmpty <=> true
+
+    [<Test>]
+    member x.``Nullable field, not set``() =
+        let m = MemoryProtocol([StructHeader "NullableField"
+                                FieldStop
+                                StructEnd])
+        let inst = x.ReadStruct<StructWithNullableField1>(m)
+        inst.Field <=> System.Nullable()
+        m.IsEmpty <=> true
+
+    [<Test>]
+    member x.``Nullable field, set``() =
+        let m = MemoryProtocol([StructHeader "NullableField"
+                                FieldHeader (1s, "Field", tid 8uy)
+                                Int32 12345
+                                FieldEnd
+                                FieldStop
+                                StructEnd])
+        let inst = x.ReadStruct<StructWithNullableField1>(m)
+        inst.Field <=> System.Nullable(12345)
+        m.IsEmpty <=> true
+
+    [<Test>]
+    member x.``Nullable field, not set, with default value``() =
+        let m = MemoryProtocol([StructHeader "NullableFieldWithDefault"
+                                FieldStop
+                                StructEnd])
+        let inst = x.ReadStruct<StructWithNullableFieldWithDefault1>(m)
+        inst.Field <=> System.Nullable(42)
         m.IsEmpty <=> true
