@@ -44,7 +44,7 @@ namespace ThriftSharp.Transport
             int retVal = _inputStream.ReadByte();
             if ( retVal == -1 )
             {
-                throw new ThriftTransportException( "There are no bytes left to be read." );
+                throw new InvalidOperationException( "There are no bytes left to be read." );
             }
             return (byte) retVal;
         }
@@ -61,7 +61,7 @@ namespace ThriftSharp.Transport
             byte[] array = new byte[length];
             if ( _inputStream.Read( array, 0, array.Length ) != length )
             {
-                throw new ThriftTransportException( "There are not enough bytes to be read." );
+                throw new InvalidOperationException( "There are not enough bytes to be read." );
             }
             return array;
         }
@@ -101,7 +101,7 @@ namespace ThriftSharp.Transport
 
             if ( _inputStream == null )
             {
-                throw new ThriftTransportException( "Cannot read before writing." );
+                throw new InvalidOperationException( "Cannot read before writing." );
             }
         }
 
