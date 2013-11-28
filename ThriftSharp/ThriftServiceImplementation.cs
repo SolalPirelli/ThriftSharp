@@ -31,7 +31,6 @@ namespace ThriftSharp
             _communication = communication;
         }
 
-
         /// <summary>
         /// Asynchronously calls the specified method name, with the specified arguments.
         /// </summary>
@@ -48,6 +47,19 @@ namespace ThriftSharp
             Validation.IsNotNull( args, () => args );
 
             return CastTask<T>( Thrift.CallMethod( _communication, _service, methodName, args ) );
+        }
+
+        /// <summary>
+        /// Asynchronously calls the specified method.
+        /// </summary>
+        /// <typeparam name="T">The method's return type.</typeparam>
+        /// <param name="expr">An expression representing the method.</param>
+        /// <returns>The task object representing the asynchronous call.</returns>
+        protected Task<T> CallAsync<T>( Expression<Func<TService, Func<Task<T>>>> expr )
+        {
+            Validation.IsNotNull( expr, () => expr );
+
+            return CastTask<T>( Thrift.CallMethod( _communication, _service, GetMethodName( expr ) ) );
         }
 
         /// <summary>
@@ -141,6 +153,18 @@ namespace ThriftSharp
         }
 
         /// <summary>
+        /// Asynchronously calls the specified method.
+        /// </summary>
+        /// <param name="expr">An expression representing the method.</param>
+        /// <returns>The task object representing the asynchronous call.</returns>
+        protected Task CallAsync( Expression<Func<TService, Func<Task>>> expr )
+        {
+            Validation.IsNotNull( expr, () => expr );
+
+            return (Task) Thrift.CallMethod( _communication, _service, GetMethodName( expr ) );
+        }
+
+        /// <summary>
         /// Asynchronously calls the specified method, with the specified argument.
         /// </summary>
         /// <typeparam name="T">The type of the method's only argument.</typeparam>
@@ -226,6 +250,19 @@ namespace ThriftSharp
             EnsureNotTask<T>();
 
             return (T) Thrift.CallMethod( _communication, _service, methodName, args );
+        }
+
+        /// <summary>
+        /// Calls the specified method.
+        /// </summary>
+        /// <typeparam name="T">The method's return type.</typeparam>
+        /// <param name="expr">An expression representing the method.</param>
+        /// <returns>The call's return value.</returns>
+        protected T Call<T>( Expression<Func<TService, Func<T>>> expr )
+        {
+            Validation.IsNotNull( expr, () => expr );
+
+            return (T) Thrift.CallMethod( _communication, _service, GetMethodName( expr ) );
         }
 
         /// <summary>
@@ -319,6 +356,17 @@ namespace ThriftSharp
             Validation.IsNotNull( args, () => args );
 
             Thrift.CallMethod( _communication, _service, methodName, args );
+        }
+
+        /// <summary>
+        /// Calls the specified method.
+        /// </summary>
+        /// <param name="expr">An expression representing the method.</param>
+        protected void Call( Expression<Func<TService, Action>> expr )
+        {
+            Validation.IsNotNull( expr, () => expr );
+
+            Thrift.CallMethod( _communication, _service, GetMethodName( expr ) );
         }
 
         /// <summary>
