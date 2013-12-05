@@ -5,7 +5,7 @@
 using System;
 using System.IO;
 using System.Net;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace ThriftSharp.Transport
 {
@@ -14,10 +14,9 @@ namespace ThriftSharp.Transport
     /// </summary>
     internal sealed class ThriftHttpTransport : IThriftTransport, IDisposable
     {
-        // The timeout for sending and receiving data, in milliseconds.
-        private const int Timeout = 5000;
-
         private readonly string _url;
+        private readonly int _timeout;
+
         private HttpWebRequest _request;
         private Stream _outputStream;
         private Stream _inputStream;
@@ -27,16 +26,18 @@ namespace ThriftSharp.Transport
         /// Initializes a new instance of the BinaryHttpClientTransport class using the specified  URL.
         /// </summary>
         /// <param name="url">The URL, including the port if necessary.</param>
-        public ThriftHttpTransport( string url )
+        /// <param name="timeout">The timeout in milliseconds (or -1 for an infinite timeout).</param>
+        public ThriftHttpTransport( string url, int timeout )
         {
             _url = url;
+            _timeout = timeout;
         }
 
 
         /// <summary>
         /// Reads an unsigned byte.
         /// </summary>
-        /// <returns>An unsighed byte.</returns>
+        /// <returns>An unsigned byte.</returns>
         public byte ReadByte()
         {
             CheckRead();
@@ -131,11 +132,11 @@ namespace ThriftSharp.Transport
             _request.ContentType = "application/x-thrift";
             _request.Accept = "application/x-thrift";
             _request.Method = "POST";
-            _outputStream = WaitOnBeginEnd( _request.BeginGetRequestStream, _request.EndGetRequestStream, Timeout );
+            _outputStream = WaitOnBeginEnd( _request.BeginGetRequestStream, _request.EndGetRequestStream, _timeout );
 
             if ( _outputStream == null )
             {
-                throw new ThriftTransportException( string.Format( "The timeout ({0} ms) to send a request was exceeded.", Timeout ) );
+                throw new ThriftTransportException( string.Format( "The timeout ({0} ms) to send a request was exceeded.", _timeout ) );
             }
         }
 
@@ -149,13 +150,13 @@ namespace ThriftSharp.Transport
             _outputStream.Dispose();
             _outputStream = null;
 
-            var resp = WaitOnBeginEnd( _request.BeginGetResponse, _request.EndGetResponse, Timeout );
-            if ( resp == null )
+            var response = WaitOnBeginEnd( _request.BeginGetResponse, _request.EndGetResponse, _timeout );
+            if ( response == null )
             {
-                throw new ThriftTransportException( string.Format( "The timeout ({0} ms) to get a response was exceeded.", Timeout ) );
+                throw new ThriftTransportException( string.Format( "The timeout ({0} ms) to get a response was exceeded.", _timeout ) );
             }
 
-            _inputStream = resp.GetResponseStream();
+            _inputStream = response.GetResponseStream();
         }
 
         /// <summary>
@@ -163,11 +164,21 @@ namespace ThriftSharp.Transport
         /// </summary>
         private static T WaitOnBeginEnd<T>( Func<AsyncCallback, object, IAsyncResult> begin, Func<IAsyncResult, T> end, int timeout )
         {
-            var evt = new AutoResetEvent( false );
-            T result = default( T );
-            begin( res => { result = end( res ); evt.Set(); }, null );
-            evt.WaitOne( timeout );
-            return result;
+            var task = Task.Factory.FromAsync( begin, end, null );
+
+            try
+            {
+                if ( task.Wait( timeout ) )
+                {
+                    return task.Result;
+                }
+                return default( T );
+            }
+            catch ( AggregateException )
+            {
+                // An exception was thrown during the execution of the Task.
+                return default( T );
+            }
         }
 
         #region IDisposable implementation
