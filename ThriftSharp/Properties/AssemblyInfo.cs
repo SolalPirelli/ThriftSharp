@@ -11,7 +11,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCopyright( "Copyright © Solal Pirelli 2013" )]
 [assembly: NeutralResourcesLanguage( "en" )]
 
-[assembly: AssemblyVersion( "1.0.4.*" )]
+[assembly: AssemblyVersion( "1.0.5.*" )]
 
 [assembly: InternalsVisibleTo( "ThriftSharp.Extensions" )]
 [assembly: InternalsVisibleTo( "ThriftSharp.Tests" )]
