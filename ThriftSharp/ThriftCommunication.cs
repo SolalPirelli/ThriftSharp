@@ -20,8 +20,9 @@ namespace ThriftSharp
         /// Communicates over HTTP at the specified URL.
         /// </summary>
         /// <param name="url">The URL, including the port.</param>
-        /// <returns>A built ThriftCommunication object.</returns>
-        ThriftCommunication OverHttp( string url );
+        /// <param name="timeout">Optional. The timeout in milliseconds. The default is 5 seconds; use -1 for an infinite timeout.</param>
+        /// <returns>A finished ThriftCommunication object.</returns>
+        ThriftCommunication OverHttp( string url, int timeout = 5000 );
     }
 
     /// <summary>
@@ -76,12 +77,13 @@ namespace ThriftSharp
         /// Communicates over HTTP at the specified URL.
         /// </summary>
         /// <param name="url">The URL, including the port.</param>
-        /// <returns>A built ThriftCommunication object.</returns>
-        ThriftCommunication IThriftTransportPicker.OverHttp( string url )
+        /// <param name="timeout">Optional. The timeout in milliseconds. The default is 5 seconds; use -1 for an infinite timeout.</param>
+        /// <returns>A finished ThriftCommunication object.</returns>
+        ThriftCommunication IThriftTransportPicker.OverHttp( string url, int timeout )
         {
             Validation.IsNeitherNullNorWhitespace( url, () => url );
 
-            return new ThriftCommunication( this, () => new ThriftHttpTransport( url ) );
+            return new ThriftCommunication( this, () => new ThriftHttpTransport( url, timeout ) );
         }
 
 

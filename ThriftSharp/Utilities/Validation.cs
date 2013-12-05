@@ -42,7 +42,7 @@ namespace ThriftSharp.Utilities
         {
             if ( num < 0 )
             {
-                throw new ArgumentException( string.Format( "Parameter {0} must not be negative. It was '{1}'.", GetName( paramGet ), num ) );
+                throw new ArgumentException( string.Format( "Parameter {0} be positive. It was '{1}'.", GetName( paramGet ), num ) );
             }
         }
 
