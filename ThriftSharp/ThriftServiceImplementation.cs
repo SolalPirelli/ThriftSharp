@@ -450,7 +450,15 @@ namespace ThriftSharp
         /// </summary>
         private static Task<T> CastTask<T>( object obj )
         {
-            return ( (Task<object>) obj ).ContinueWith( x => (T) x.Result );
+            return ( (Task<object>) obj ).ContinueWith( t =>
+            {
+                if ( t.IsFaulted )
+                {
+                    // Ensure we're not throwing AggregateExceptions when a more specific exception happened.
+                    throw t.Exception.InnerException;
+                }
+                return (T) t.Result;
+            } );
         }
 
         /// <summary>

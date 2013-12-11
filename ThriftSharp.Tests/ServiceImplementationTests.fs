@@ -118,7 +118,7 @@ type ``ServiceImplementation helper class``() =
         let comm = ThriftCommunication(m)
         let impl = Service9(comm) :> IService9
 
-        (impl.AsyncNoReturn() |> Async.AwaitIAsyncResult |> Async.Ignore |> Async.RunSynchronously) <=> ()
+        await (impl.AsyncNoReturn()) |> ignore <=> ()
 
         m.WrittenValues <===> [MessageHeader (0, "AsyncNoReturn", ThriftMessageType.Call)
                                StructHeader ""

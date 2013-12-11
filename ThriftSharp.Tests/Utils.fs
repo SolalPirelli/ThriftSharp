@@ -22,7 +22,9 @@ let (<===>) (act:'a seq) (exp:'a seq) =
 
 let throws<'T> func =
     let e = ref null
-    try func() |> ignore with x -> e := x
+    try 
+        func() |> box |> ignore 
+    with x -> e := x
 
     if !e = null then
         Assert.Fail(sprintf "Expected an exception of type %A, but no exception was thrown" typeof<'T>)
@@ -31,3 +33,6 @@ let throws<'T> func =
     if not (typeof<'T>.IsAssignableFrom(e.GetType())) then
         Assert.Fail(sprintf "Expected an exception of type %A, but got one of type %A" typeof<'T> (e.GetType()))
     box e :?> 'T
+
+let await x  = 
+    x |> Async.AwaitIAsyncResult |> Async.RunSynchronously
