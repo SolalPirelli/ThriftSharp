@@ -236,7 +236,7 @@ type ``Writing structs``() =
     member x.``UnixDate converter``() =
         let m = MemoryProtocol()
         let inst = StructWithConvertingField4()
-        inst.UnixDate <- System.DateTime(1994, 12, 18, 0, 0, 0)
+        inst.UnixDate <- System.DateTime(1994, 12, 18, 0, 0, 0, System.DateTimeKind.Utc)
         
         writeSt m inst
 

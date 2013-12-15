@@ -8,7 +8,7 @@ namespace ThriftSharp
 {
     /// <summary>
     /// Converts 32-bit integer timestamps to DateTime using the Unix format, 
-    /// i.e. the number of seconds since Jan. 1, 1970 at midnight.
+    /// i.e. the number of seconds since Jan. 1, 1970 00:00:00 UTC.
     /// </summary>
     public sealed class ThriftUnixDateConverter : ThriftValueConverter<int, DateTime>
     {
@@ -37,12 +37,12 @@ namespace ThriftSharp
 
     /// <summary>
     /// Converts 64-bit integer timestamps to DateTime using the Unix format, 
-    /// i.e. the number of seconds since Jan. 1, 1970 at midnight.
+    /// i.e. the number of seconds since Jan. 1, 1970 00:00:00 UTC.
     /// </summary>
     public sealed class ThriftUnixDate64Converter : ThriftValueConverter<long, DateTime>
     {
-        // The Unix time start: Jan. 1, 1970 at midnight.
-        private static readonly DateTime UnixTimeStart = new DateTime( 1970, 1, 1 );
+        // The Unix time start: Jan. 1, 1970 00:00:00 UTC.
+        private static readonly DateTime UnixTimeStart = new DateTime( 1970, 1, 1, 0, 0, 0, DateTimeKind.Utc );
 
         /// <summary>
         /// Converts the specified 64-bit Unix timestamp to a DateTime.
@@ -51,7 +51,7 @@ namespace ThriftSharp
         /// <returns>The resulting DateTime.</returns>
         protected internal override DateTime Convert( long value )
         {
-            return UnixTimeStart.AddSeconds( value );
+            return UnixTimeStart.AddSeconds( value ).ToLocalTime();
         }
 
         /// <summary>
@@ -61,18 +61,18 @@ namespace ThriftSharp
         /// <returns>The resulting timestamp.</returns>
         protected internal override long ConvertBack( DateTime value )
         {
-            return (long) Math.Round( ( value - UnixTimeStart ).TotalSeconds );
+            return (long) Math.Round( ( value.ToUniversalTime() - UnixTimeStart ).TotalSeconds );
         }
     }
 
     /// <summary>
     /// Converts 64-bit integer timestamps to DateTime using the Java format, 
-    /// i.e. the number of milliseconds since Jan. 1, 1970 at midnight.
+    /// i.e. the number of milliseconds since Jan. 1, 1970 00:00:00 UTC.
     /// </summary>
     public sealed class ThriftJavaDateConverter : ThriftValueConverter<long, DateTime>
     {
-        // The Unix time start: Jan. 1, 1970 at midnight.
-        private static readonly DateTime UnixTimeStart = new DateTime( 1970, 1, 1 );
+        // The Java time start: Jan. 1, 1970 00:00:00 UTC.
+        private static readonly DateTime JavaTimeStart = new DateTime( 1970, 1, 1, 0, 0, 0, DateTimeKind.Utc );
 
         /// <summary>
         /// Converts the specified 64-bit Java timestamp to a DateTime.
@@ -81,7 +81,7 @@ namespace ThriftSharp
         /// <returns>The resulting DateTime.</returns>
         protected internal override DateTime Convert( long value )
         {
-            return UnixTimeStart.AddMilliseconds( value );
+            return JavaTimeStart.AddMilliseconds( value ).ToLocalTime();
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace ThriftSharp
         /// <returns>The resulting timestamp.</returns>
         protected internal override long ConvertBack( DateTime value )
         {
-            return (long) Math.Round( ( value - UnixTimeStart ).TotalMilliseconds );
+            return (long) Math.Round( ( value.ToUniversalTime() - JavaTimeStart ).TotalMilliseconds );
         }
     }
 }

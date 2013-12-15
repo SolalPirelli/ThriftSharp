@@ -250,7 +250,7 @@ type ``Reading structs``() =
                                 FieldStop
                                 StructEnd])
         let inst = x.ReadStruct<StructWithConvertingField1>(m)
-        inst.UnixDate <=> System.DateTime(1994, 12, 18, 0, 0, 0)
+        inst.UnixDate.ToUniversalTime() <=> System.DateTime(1994, 12, 18, 0, 0, 0, System.DateTimeKind.Utc)
         m.IsEmpty <=> true
 
     [<Test>]

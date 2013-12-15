@@ -94,7 +94,7 @@ type ``Writing service queries``() =
 
     [<Test>]
     member x.``UnixDate parameter``() =
-        let m = x.WriteMsg<Service6>("WithUnixDateParam", [| System.DateTime(1994, 12, 18) |])
+        let m = x.WriteMsg<Service6>("WithUnixDateParam", [| System.DateTime(1994, 12, 18, 0, 0, 0, System.DateTimeKind.Utc) |])
 
         m.WrittenValues <===> [MessageHeader (0, "withUnixDateParam", ThriftMessageType.Call)
                                StructHeader ""
