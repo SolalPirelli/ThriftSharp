@@ -90,7 +90,7 @@ type StructWithNullableFieldWithDefault1() =
 
 [<TestClass>]
 type ``Reading structs``() =
-    member x.ReadStruct<'T>(prot) = ThriftSerializer.Struct.Read(prot, typeof<'T>) :?> 'T
+    member x.ReadStruct<'T>(prot) = ThriftSerializer.FromType(typeof<'T>).Read(prot, typeof<'T>) :?> 'T
 
     [<Test>]
     member x.``No fields``() =
@@ -250,7 +250,8 @@ type ``Reading structs``() =
                                 FieldStop
                                 StructEnd])
         let inst = x.ReadStruct<StructWithConvertingField1>(m)
-        inst.UnixDate.ToUniversalTime() <=> System.DateTime(1994, 12, 18, 0, 0, 0, System.DateTimeKind.Utc)
+        let date = inst.UnixDate
+        date.ToUniversalTime() <=> System.DateTime(1994, 12, 18, 0, 0, 0, System.DateTimeKind.Utc)
         m.IsEmpty <=> true
 
     [<Test>]

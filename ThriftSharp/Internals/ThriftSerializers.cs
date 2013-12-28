@@ -43,14 +43,6 @@ namespace ThriftSharp.Internals
         };
 
         /// <summary>
-        /// Statically initializes the ThriftType class.
-        /// </summary>
-        static ThriftSerializer()
-        {
-            Struct = ThriftSerializer.FromThriftType( ThriftType.Struct );
-        }
-
-        /// <summary>
         /// Gets a Thrift type from a .NET type.
         /// </summary>
         public static ThriftSerializer FromType( Type type )
@@ -66,11 +58,6 @@ namespace ThriftSharp.Internals
             return Serializers.First( s => s.GetThriftType( null ) == id );
         }
 
-
-        /// <summary>
-        /// The "Struct" Thrift type.
-        /// </summary>
-        internal static ThriftSerializer Struct { get; private set; }
 
         /// <summary>
         /// Indicates whether the Thrift type matches the specified .NET type.

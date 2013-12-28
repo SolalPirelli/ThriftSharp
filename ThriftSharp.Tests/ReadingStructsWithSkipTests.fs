@@ -19,7 +19,7 @@ type StructWithOneField2() =
 
 [<TestClass>]
 type ``Reading structs skipping fields``() =
-    member x.ReadStruct<'T>(prot) = ThriftSerializer.Struct.Read(prot, typeof<'T>) |> ignore
+    member x.ReadStruct<'T>(prot) = ThriftSerializer.FromType(typeof<'T>).Read(prot, typeof<'T>) |> ignore
 
     [<Test>]
     member x.``One field for a struct without fields``() =

@@ -210,4 +210,5 @@ type ``Reading service replies``() =
                                 FieldStop
                                 StructEnd
                                 MessageEnd])
-        (x.ReadMsg<Service5>(m, "WithUnixDateReturnValue") :?> System.DateTime).ToUniversalTime() <=> System.DateTime(1994, 12, 18, 0, 0, 0, System.DateTimeKind.Utc)
+        let date = x.ReadMsg<Service5>(m, "WithUnixDateReturnValue") :?> System.DateTime
+        date.ToUniversalTime() <=> System.DateTime(1994, 12, 18, 0, 0, 0, System.DateTimeKind.Utc)

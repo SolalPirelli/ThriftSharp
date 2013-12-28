@@ -113,9 +113,10 @@ namespace ThriftSharp.Internals
         private static ThriftProtocolException ReadException( IThriftProtocol protocol )
         {
             // Server exception (not a declared one)
-            var exn = ThriftSerializer.Struct.Read( protocol, typeof( ThriftProtocolException ) );
+            var exceptionType = typeof( ThriftProtocolException );
+            var exception = ThriftSerializer.FromType( exceptionType ).Read( protocol, exceptionType );
             protocol.ReadMessageEnd();
-            return (ThriftProtocolException) exn;
+            return (ThriftProtocolException) exception;
         }
 
         /// <summary>

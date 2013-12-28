@@ -23,7 +23,7 @@ type StructWithDefaultValue3() =
 
 [<TestClass>]
 type ``Reading partial structs``() =
-    member x.ReadStruct<'T>(prot) = ThriftSerializer.Struct.Read(prot, typeof<'T>) :?> 'T
+    member x.ReadStruct<'T>(prot) = ThriftSerializer.FromType(typeof<'T>).Read(prot, typeof<'T>) :?> 'T
 
     [<Test>]
     member x.``Missing optional field``() =

@@ -77,7 +77,7 @@ type ``Serialized-and-back``() =
 
         let trans = CircularTransport()
         let prot = ThriftBinaryProtocol(trans)
-        ThriftSerializer.Struct.Write(prot, o)
-        let o2 = ThriftSerializer.Struct.Read(prot, typeof<ComplexStruct7>) :?> ComplexStruct7
+        ThriftSerializer.FromType(typeof<ComplexStruct7>).Write(prot, o)
+        let o2 = ThriftSerializer.FromType(typeof<ComplexStruct7>).Read(prot, typeof<ComplexStruct7>) :?> ComplexStruct7
 
         o2 <=> o

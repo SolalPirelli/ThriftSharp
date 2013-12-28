@@ -82,7 +82,7 @@ type StructWithNullableField4() =
 
 [<TestClass>]
 type ``Writing structs``() =
-    let writeSt prot obj = ThriftSerializer.Struct.Write(prot, obj)
+    let writeSt prot obj = ThriftSerializer.FromType(obj.GetType()).Write(prot, obj)
     
 
     [<Test>]
