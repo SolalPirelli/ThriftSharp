@@ -3,6 +3,7 @@
 // Redistributions of this source code must retain the above copyright notice.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using ThriftSharp.Protocols;
 using ThriftSharp.Transport;
@@ -21,8 +22,9 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="url">The URL, including the port.</param>
         /// <param name="timeout">Optional. The timeout in milliseconds. The default is 5 seconds; use -1 for an infinite timeout.</param>
+        /// <param name="headers">Optional. The headers to use with the requests. No additional headers by default.</param>    
         /// <returns>A finished ThriftCommunication object.</returns>
-        ThriftCommunication OverHttp( string url, int timeout = 5000 );
+        ThriftCommunication OverHttp( string url, int timeout = 5000, IDictionary<string, string> headers = null );
     }
 
     /// <summary>
@@ -78,12 +80,13 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="url">The URL, including the port.</param>
         /// <param name="timeout">Optional. The timeout in milliseconds. The default is 5 seconds; use -1 for an infinite timeout.</param>
+        /// <param name="headers">Optional. The headers to use with the requests. No additional headers by default.</param>
         /// <returns>A finished ThriftCommunication object.</returns>
-        ThriftCommunication IThriftTransportPicker.OverHttp( string url, int timeout )
+        ThriftCommunication IThriftTransportPicker.OverHttp( string url, int timeout, IDictionary<string, string> headers )
         {
             Validation.IsNeitherNullNorWhitespace( url, () => url );
 
-            return new ThriftCommunication( this, () => new ThriftHttpTransport( url, timeout ) );
+            return new ThriftCommunication( this, () => new ThriftHttpTransport( url, headers ?? new Dictionary<string, string>(), timeout ) );
         }
 
 

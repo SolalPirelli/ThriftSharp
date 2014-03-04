@@ -3,6 +3,7 @@
 // Redistributions of this source code must retain the above copyright notice.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace ThriftSharp.Transport
     internal sealed class ThriftHttpTransport : IThriftTransport, IDisposable
     {
         private readonly string _url;
+        private readonly IDictionary<string, string> _headers;
         private readonly int _timeout;
 
         private HttpWebRequest _request;
@@ -26,10 +28,12 @@ namespace ThriftSharp.Transport
         /// Initializes a new instance of the BinaryHttpClientTransport class using the specified  URL.
         /// </summary>
         /// <param name="url">The URL, including the port if necessary.</param>
+        /// <param name="headers">The HTTP headers to include with every request.</param>
         /// <param name="timeout">The timeout in milliseconds (or -1 for an infinite timeout).</param>
-        public ThriftHttpTransport( string url, int timeout )
+        public ThriftHttpTransport( string url, IDictionary<string, string> headers, int timeout )
         {
             _url = url;
+            _headers = headers;
             _timeout = timeout;
         }
 
@@ -132,6 +136,12 @@ namespace ThriftSharp.Transport
             _request.ContentType = "application/x-thrift";
             _request.Accept = "application/x-thrift";
             _request.Method = "POST";
+
+            foreach ( var header in _headers )
+            {
+                _request.Headers[header.Key] = header.Value;
+            }
+
             _outputStream = WaitOnBeginEnd( _request.BeginGetRequestStream, _request.EndGetRequestStream, _timeout );
 
             if ( _outputStream == null )
