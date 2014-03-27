@@ -20,12 +20,12 @@ namespace ThriftSharp.Transport
         private readonly int _timeout;
 
         private HttpWebRequest _request;
-        private Stream _outputStream;
+        private MemoryStream _outputStream;
         private Stream _inputStream;
 
 
         /// <summary>
-        /// Initializes a new instance of the BinaryHttpClientTransport class using the specified  URL.
+        /// Initializes a new instance of the ThriftHttpClientTransport class using the specified  URL.
         /// </summary>
         /// <param name="url">The URL, including the port if necessary.</param>
         /// <param name="headers">The HTTP headers to include with every request.</param>
@@ -126,13 +126,20 @@ namespace ThriftSharp.Transport
             }
         }
 
-
         /// <summary>
         /// Opens the transport.
         /// </summary>
         private void Open()
         {
-            _request = (HttpWebRequest) WebRequest.Create( _url );
+            _outputStream = new MemoryStream();
+        }
+
+        /// <summary>
+        /// Flushes the transport.
+        /// </summary>
+        private void Flush()
+        {
+            _request = WebRequest.CreateHttp( _url );
             _request.ContentType = "application/x-thrift";
             _request.Accept = "application/x-thrift";
             _request.Method = "POST";
@@ -142,19 +149,17 @@ namespace ThriftSharp.Transport
                 _request.Headers[header.Key] = header.Value;
             }
 
-            _outputStream = WaitOnBeginEnd( _request.BeginGetRequestStream, _request.EndGetRequestStream, _timeout );
-
-            if ( _outputStream == null )
+            using ( var requestStream = WaitOnBeginEnd( _request.BeginGetRequestStream, _request.EndGetRequestStream, _timeout ) )
             {
-                throw new ThriftTransportException( string.Format( "The timeout ({0} ms) to send a request was exceeded.", _timeout ) );
-            }
-        }
+                if ( requestStream == null )
+                {
+                    throw new ThriftTransportException( string.Format( "The timeout ({0} ms) to send a request was exceeded.", _timeout ) );
+                }
 
-        /// <summary>
-        /// Flushes the transport.
-        /// </summary>
-        private void Flush()
-        {
+                _outputStream.WriteTo( requestStream );
+                requestStream.Flush();
+            }
+
             // These two calls MUST appear before the GetResponse calls
             // Silverlight (and WP8) throws a NotSupportedException otherwise.
             _outputStream.Dispose();
@@ -215,13 +220,13 @@ namespace ThriftSharp.Transport
         /// <param name="disposing">Whether the call comes from the Dispose method.</param>
         private void Dispose( bool disposing )
         {
-            if ( _inputStream != null )
-            {
-                _inputStream.Dispose();
-            }
             if ( _outputStream != null )
             {
                 _outputStream.Dispose();
+            }
+            if ( _inputStream != null )
+            {
+                _inputStream.Dispose();
             }
         }
         #endregion

@@ -138,6 +138,9 @@ namespace ThriftSharp.Internals
             var retStAndVal = MakeReturnStruct( method );
             ThriftSerializer.ReadStruct( protocol, retStAndVal.Item1, null );
             protocol.ReadMessageEnd();
+            // Dispose of it now that we have finished reading and writing
+            // using() is quite dangerous in this case because of async stuff happening
+            protocol.Dispose();
 
             return retStAndVal.Item2.Value;
         }
@@ -172,15 +175,13 @@ namespace ThriftSharp.Internals
         /// <returns>The method result.</returns>
         public static object CallMethod( ThriftCommunication communication, ThriftService service, string methodName, params object[] args )
         {
-            using ( var protocol = communication.CreateProtocol() )
+            var protocol = communication.CreateProtocol();
+            var method = service.Methods.FirstOrDefault( m => m.UnderlyingName == methodName );
+            if ( method == null )
             {
-                var method = service.Methods.FirstOrDefault( m => m.UnderlyingName == methodName );
-                if ( method == null )
-                {
-                    throw new ArgumentException( string.Format( "Invalid method name ({0})", methodName ) );
-                }
-                return SendMessage( protocol, method, args );
+                throw new ArgumentException( string.Format( "Invalid method name ({0})", methodName ) );
             }
+            return SendMessage( protocol, method, args );
         }
 
 
