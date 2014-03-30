@@ -13,5 +13,6 @@ using System.Runtime.CompilerServices;
 
 [assembly: AssemblyVersion( "1.0.9.*" )]
 
+[assembly: InternalsVisibleTo( "ThriftSharp.Benchmarking" )]
 [assembly: InternalsVisibleTo( "ThriftSharp.Extensions" )]
 [assembly: InternalsVisibleTo( "ThriftSharp.Tests" )]
