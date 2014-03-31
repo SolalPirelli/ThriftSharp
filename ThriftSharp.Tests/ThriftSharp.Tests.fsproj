@@ -8,11 +8,11 @@
     <OutputType>Library</OutputType>
     <RootNamespace>ThriftSharp.Tests</RootNamespace>
     <AssemblyName>ThriftSharp.Tests</AssemblyName>
-    <targetframeworkversion>v4.5</targetframeworkversion>
+    <targetframeworkversion>v4.5.1</targetframeworkversion>
     <Name>FsUnitTest</Name>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
-    <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
+    <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -49,10 +49,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <Compile Include="Utils.fs" />
     <Compile Include="CircularTransport.fs" />
     <Compile Include="MemoryTransport.fs" />
     <Compile Include="MemoryProtocol.fs" />
+    <Compile Include="Utils.fs" />
     <Compile Include="ReadingStructsTests.fs" />
     <Compile Include="ReadingStructsWithSkipTests.fs" />
     <Compile Include="ReadingPartialStructs.fs" />

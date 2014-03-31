@@ -2,23 +2,21 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 // Redistributions of this source code must retain the above copyright notice.
 
-namespace ThriftSharp.Tests
+module ThriftSharp.Tests.``Writing structs``
 
 open System.Collections.Generic
-open Microsoft.VisualStudio.TestTools.UnitTesting
 open ThriftSharp
-open ThriftSharp.Internals
 
 [<ThriftStruct("NoFields")>]
-type StructWithoutFields4() = class end
+type StructWithoutFields() = class end
 
 [<ThriftStruct("OneField")>]
-type StructWithOneField4() =
+type StructWithOneField() =
     [<ThriftField(1s, true, "Field")>]
     member val Field = 42 with get, set
 
 [<ThriftStruct("ManyPrimitiveFields")>]
-type StructWithManyPrimitiveFields4() =
+type StructWithManyPrimitiveFields() =
     [<ThriftField(1s, true, "BoolField")>]
     member val Bool = true with get, set
     [<ThriftField(2s, true, "SByteField")>]
@@ -37,7 +35,7 @@ type StructWithManyPrimitiveFields4() =
     member val Binary = [| 1y |] with get, set
 
 [<ThriftStruct("CollectionFields")>]
-type StructWithCollectionFields4() =
+type StructWithCollectionFields() =
     [<ThriftField(1s, true, "ListField")>]
     member val List = List<int>() with get, set
     [<ThriftField(2s, true, "SetField")>]
@@ -46,229 +44,201 @@ type StructWithCollectionFields4() =
     member val Map = Dictionary<int, string>() with get, set
 
 [<ThriftStruct("StructField")>]
-type StructWithStructField4() =
+type StructWithStructField() =
     [<ThriftField(1s, true, "StructField")>]
-    member val Struct = StructWithOneField4() with get, set
+    member val Struct = StructWithOneField() with get, set
 
 [<ThriftEnum("Enum")>]
-type Enum4 =
+type Enum =
     | A = 1
     | [<ThriftEnumMember("B", 3)>] B = 2
 
 [<ThriftStruct("EnumFields")>]
-type StructWithEnumFields4() =
+type StructWithEnumFields() =
     [<ThriftField(1s, true, "Field1")>]
-    member val Field1 = Enum4.A with get, set
+    member val Field1 = Enum.A with get, set
     [<ThriftField(2s, true, "Field2")>]
-    member val Field2 = Enum4.A with get, set
+    member val Field2 = Enum.A with get, set
 
 [<ThriftStruct("ArrayFields")>]
-type StructWithArrayFields4() =
+type StructWithArrayFields() =
     [<ThriftField(1s, true, "Field1")>]
     member val Field1 = [| 1 |] with get, set
     [<ThriftField(2s, true, "Field2")>]
     member val Field2 = [| 2 |] with get, set
 
 [<ThriftStruct("ConvertingField")>]
-type StructWithConvertingField4() =
+type StructWithConvertingField() =
     [<ThriftField(1s, true, "UnixDate")>]
     [<ThriftConverter(typeof<ThriftUnixDateConverter>)>]
     member val UnixDate = System.DateTime.Now with get, set
 
 [<ThriftStruct("NullableField")>]
-type StructWithNullableField4() =
+type StructWithNullableField() =
     [<ThriftField(1s, false, "Field")>]
     member val Field = System.Nullable() with get, set
 
-[<TestClass>]
-type ``Writing structs``() =
-    let writeSt prot obj = ThriftSerializer.FromType(obj.GetType()).Write(prot, obj)
-    
 
+let (==>) obj data =
+    let m = MemoryProtocol()
+    write m obj
+    m.WrittenValues <===> data
+
+
+[<TestContainer>]
+type __() =
     [<Test>]
-    member x.``No fields``() =
-        let m = MemoryProtocol()
-        writeSt m (StructWithoutFields4())
-        m.WrittenValues <=> [StructHeader "NoFields"
-                             FieldStop
-                             StructEnd]
+    member __.``No fields``() =
+        StructWithoutFields()
+        ==>
+        [StructHeader "NoFields"
+         FieldStop
+         StructEnd]
         
     [<Test>]
-    member x.``One field``() =
-        let m = MemoryProtocol()
-        writeSt m (StructWithOneField4())
-        m.WrittenValues <=> [StructHeader "OneField"
-                             FieldHeader (1s, "Field", tid 8uy)
-                             Int32 42
-                             FieldEnd
-                             FieldStop
-                             StructEnd]
+    member __.``One field``() =
+        StructWithOneField()
+        ==>
+        [StructHeader "OneField"
+         FieldHeader (1s, "Field", tid 8uy)
+         Int32 42
+         FieldEnd
+         FieldStop
+         StructEnd]
 
     [<Test>]
-    member x.``Primitive fields``() =
-        let m = MemoryProtocol()
-        writeSt m (StructWithManyPrimitiveFields4())
-        m.WrittenValues <=> [StructHeader "ManyPrimitiveFields"
-                             FieldHeader (1s, "BoolField", tid 2uy)
-                             Bool true
-                             FieldEnd
-                             FieldHeader (2s, "SByteField", tid 3uy)
-                             SByte 1y
-                             FieldEnd
-                             FieldHeader (3s, "DoubleField", tid 4uy)
-                             Double 1.0
-                             FieldEnd
-                             FieldHeader (4s, "Int16Field", tid 6uy)
-                             Int16 1s
-                             FieldEnd
-                             FieldHeader (5s, "Int32Field", tid 8uy)
-                             Int32 1
-                             FieldEnd
-                             FieldHeader (6s, "Int64Field", tid 10uy)
-                             Int64 1L
-                             FieldEnd
-                             FieldHeader (7s, "StringField", tid 11uy)
-                             String "abc"
-                             FieldEnd
-                             FieldHeader (8s, "BinaryField", tid 11uy)
-                             Binary [| 1y |]
-                             FieldEnd
-                             FieldStop
-                             StructEnd]
+    member __.``Primitive fields``() =
+        StructWithManyPrimitiveFields()
+        ==>
+        [StructHeader "ManyPrimitiveFields"
+         FieldHeader (1s, "BoolField", tid 2uy)
+         Bool true
+         FieldEnd
+         FieldHeader (2s, "SByteField", tid 3uy)
+         SByte 1y
+         FieldEnd
+         FieldHeader (3s, "DoubleField", tid 4uy)
+         Double 1.0
+         FieldEnd
+         FieldHeader (4s, "Int16Field", tid 6uy)
+         Int16 1s
+         FieldEnd
+         FieldHeader (5s, "Int32Field", tid 8uy)
+         Int32 1
+         FieldEnd
+         FieldHeader (6s, "Int64Field", tid 10uy)
+         Int64 1L
+         FieldEnd
+         FieldHeader (7s, "StringField", tid 11uy)
+         String "abc"
+         FieldEnd
+         FieldHeader (8s, "BinaryField", tid 11uy)
+         Binary [| 1y |]
+         FieldEnd
+         FieldStop
+         StructEnd]
 
     [<Test>]
-    member x.``Collection fields``() =
-        let m = MemoryProtocol()
-        let inst = StructWithCollectionFields4()
-        inst.List.AddRange([4; 8; 15])
-        inst.Set.Add(16) |> ignore
-        inst.Set.Add(23) |> ignore
-        inst.Map.Add(42, "Lost")
-
-        writeSt m inst
-
-        m.WrittenValues <===> [StructHeader "CollectionFields"
-                               FieldHeader (1s, "ListField", tid 15uy)
-                               ListHeader (3, tid 8uy)
-                               Int32 4
-                               Int32 8
-                               Int32 15
-                               ListEnd
-                               FieldEnd
-                               FieldHeader (2s, "SetField", tid 14uy)
-                               SetHeader (2, tid 8uy)
-                               Int32 16
-                               Int32 23
-                               SetEnd
-                               FieldEnd
-                               FieldHeader (3s, "MapField", tid 13uy)
-                               MapHeader (1, tid 8uy, tid 11uy)
-                               Int32 42
-                               String "Lost"
-                               MapEnd
-                               FieldEnd
-                               FieldStop
-                               StructEnd]
+    member __.``Collection fields``() =
+        StructWithCollectionFields( List = List([4; 8; 15]), Set = HashSet([16; 23]), Map = dict([42, "Lost"]) )
+        ==>
+        [StructHeader "CollectionFields"
+         FieldHeader (1s, "ListField", tid 15uy)
+         ListHeader (3, tid 8uy)
+         Int32 4
+         Int32 8
+         Int32 15
+         ListEnd
+         FieldEnd
+         FieldHeader (2s, "SetField", tid 14uy)
+         SetHeader (2, tid 8uy)
+         Int32 16
+         Int32 23
+         SetEnd
+         FieldEnd
+         FieldHeader (3s, "MapField", tid 13uy)
+         MapHeader (1, tid 8uy, tid 11uy)
+         Int32 42
+         String "Lost"
+         MapEnd
+         FieldEnd
+         FieldStop
+         StructEnd]
 
     [<Test>]
-    member x.``Struct field``() =
-        let m = MemoryProtocol()
-        let inst = StructWithStructField4()
-        inst.Struct.Field <- 777
-
-        writeSt m inst
-
-        m.WrittenValues <===> [StructHeader "StructField"
-                               FieldHeader (1s, "StructField", tid 12uy)
-                               StructHeader "OneField"
-                               FieldHeader (1s, "Field", tid 8uy)
-                               Int32 777
-                               FieldEnd
-                               FieldStop
-                               StructEnd
-                               FieldEnd
-                               FieldStop
-                               StructEnd]
+    member __.``Struct field``() =
+        StructWithStructField( Struct = StructWithOneField( Field = 777 ) )
+        ==>
+        [StructHeader "StructField"
+         FieldHeader (1s, "StructField", tid 12uy)
+         StructHeader "OneField"
+         FieldHeader (1s, "Field", tid 8uy)
+         Int32 777
+         FieldEnd
+         FieldStop
+         StructEnd
+         FieldEnd
+         FieldStop
+         StructEnd]
 
     [<Test>]
-    member x.``Enum fields``() =
-        let m = MemoryProtocol()
-        let inst = StructWithEnumFields4()
-        inst.Field1 <- Enum4.A
-        inst.Field2 <- Enum4.B
-
-        writeSt m inst
-
-        m.WrittenValues <===> [StructHeader "EnumFields"
-                               FieldHeader (1s, "Field1", tid 8uy)
-                               Int32 1
-                               FieldEnd
-                               FieldHeader (2s, "Field2", tid 8uy)
-                               Int32 3
-                               FieldEnd
-                               FieldStop
-                               StructEnd]
+    member __.``Enum fields``() =
+        StructWithEnumFields( Field1 = Enum.A, Field2 = Enum.B )
+        ==>
+        [StructHeader "EnumFields"
+         FieldHeader (1s, "Field1", tid 8uy)
+         Int32 1
+         FieldEnd
+         FieldHeader (2s, "Field2", tid 8uy)
+         Int32 3
+         FieldEnd
+         FieldStop
+         StructEnd]
 
     [<Test>]
-    member x.``Array fields``() =
-        let m = MemoryProtocol()
-        let inst = StructWithArrayFields4()
-        inst.Field1 <- [| 12345; 67890 |]
-        inst.Field2 <- [| |]
-
-        writeSt m inst
-
-        m.WrittenValues <===> [StructHeader "ArrayFields"
-                               FieldHeader (1s, "Field1", tid 15uy)
-                               ListHeader (2, tid 8uy)
-                               Int32 12345
-                               Int32 67890
-                               ListEnd
-                               FieldEnd
-                               FieldHeader (2s, "Field2", tid 15uy)
-                               ListHeader (0, tid 8uy)
-                               ListEnd
-                               FieldEnd
-                               FieldStop
-                               StructEnd]
+    member __.``Array fields``() =
+        StructWithArrayFields( Field1 = [| 12345; 67890 |], Field2 = [| |] )
+        ==>
+        [StructHeader "ArrayFields"
+         FieldHeader (1s, "Field1", tid 15uy)
+         ListHeader (2, tid 8uy)
+         Int32 12345
+         Int32 67890
+         ListEnd
+         FieldEnd
+         FieldHeader (2s, "Field2", tid 15uy)
+         ListHeader (0, tid 8uy)
+         ListEnd
+         FieldEnd
+         FieldStop
+         StructEnd]
 
     [<Test>]
-    member x.``UnixDate converter``() =
-        let m = MemoryProtocol()
-        let inst = StructWithConvertingField4()
-        inst.UnixDate <- System.DateTime(1994, 12, 18, 0, 0, 0, System.DateTimeKind.Utc)
-        
-        writeSt m inst
-
-        m.WrittenValues <===> [StructHeader "ConvertingField"
-                               FieldHeader (1s, "UnixDate", tid 8uy)
-                               Int32 787708800
-                               FieldEnd
-                               FieldStop
-                               StructEnd]
+    member __.``UnixDate converter``() =
+        StructWithConvertingField( UnixDate = utcDate(18, 12, 1994) )
+        ==>
+        [StructHeader "ConvertingField"
+         FieldHeader (1s, "UnixDate", tid 8uy)
+         Int32 787708800
+         FieldEnd
+         FieldStop
+         StructEnd]
 
     [<Test>]
-    member x.``Nullable field, not set``() =
-        let m = MemoryProtocol()
-        let inst = StructWithNullableField4()
-
-        writeSt m inst
-
-        m.WrittenValues <===> [StructHeader "NullableField"
-                               FieldStop
-                               StructEnd]                             
+    member __.``Nullable field, not set``() =
+        StructWithNullableField()
+        ==>
+        [StructHeader "NullableField"
+         FieldStop
+         StructEnd]                             
 
     [<Test>]
-    member x.``Nullable field, set``() =
-        let m = MemoryProtocol()
-        let inst = StructWithNullableField4()
-        inst.Field <- System.Nullable(112233)
-
-        writeSt m inst
-
-        m.WrittenValues <===> [StructHeader "NullableField"
-                               FieldHeader (1s, "Field", ThriftType.Int32)
-                               Int32 112233
-                               FieldEnd
-                               FieldStop
-                               StructEnd]
+    member __.``Nullable field, set``() =
+        StructWithNullableField( Field = nullable 112233 )
+        ==>
+        [StructHeader "NullableField"
+         FieldHeader (1s, "Field", tid 8uy)
+         Int32 112233
+         FieldEnd
+         FieldStop
+         StructEnd]

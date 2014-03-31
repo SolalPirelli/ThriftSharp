@@ -2,17 +2,17 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 // Redistributions of this source code must retain the above copyright notice.
 
-namespace ThriftSharp.Tests
+module ThriftSharp.Tests.``Serialized and deserialized``
 
 open System.Collections.Generic
 open System.Linq
-open Microsoft.VisualStudio.TestTools.UnitTesting
+open System.Reflection
 open ThriftSharp
 open ThriftSharp.Internals
 open ThriftSharp.Protocols
 
 [<ThriftStruct("ComplexStruct")>]
-type ComplexStruct7() =
+type ComplexStruct() =
     [<ThriftField(12s, true, "Bool")>]
     member val Boolean = false with get, set
     [<ThriftField(45s, false, "Sbyte")>]
@@ -39,7 +39,7 @@ type ComplexStruct7() =
     member val DoubleSByteMap = Dictionary() with get, set
 
     override x.Equals(other) =
-        let o = box other :?> ComplexStruct7
+        let o = box other :?> ComplexStruct
         let eq x y = Enumerable.SequenceEqual(x,y)
         x.Boolean = o.Boolean
      && x.SByte = o.SByte
@@ -56,28 +56,30 @@ type ComplexStruct7() =
 
     override x.GetHashCode() = 0 // not used
 
-[<TestClass>]
-type ``Serialized-and-back``() =
+[<TestContainer>]
+type __() =
     [<Test>]
-    member x.``Complex struct``() =
-        let o = ComplexStruct7( Boolean = false, 
-                                SByte = 1y,
-                                Double = System.Double.PositiveInfinity,
-                                Int16 = System.Int16.MinValue,
-                                Int32 = System.Int32.MaxValue,
-                                Int64 = System.Int64.MaxValue - 1L,
-                                String = "ﻌ❺₤Ớᶳუٱ֍зʩǲŒâ௩რ",
-                                Binary = [| 1y; 2y; 3y; 100y |],
-                                Int32Array = [| |],
-                                StringList = List(["abc"; "def"; "೧೨೩"]),
-                                BoolSet = HashSet([ true; false ]))
+    member __.``Complex struct``() = run <| async {
+        let o = ComplexStruct( Boolean = false, 
+                               SByte = 1y,
+                               Double = System.Double.PositiveInfinity,
+                               Int16 = System.Int16.MinValue,
+                               Int32 = System.Int32.MaxValue,
+                               Int64 = System.Int64.MaxValue - 1L,
+                               String = "ﻌ❺₤Ớᶳუٱ֍зʩǲŒâ௩რ",
+                               Binary = [| 1y; 2y; 3y; 100y |],
+                               Int32Array = [| |],
+                               StringList = List(["abc"; "def"; "೧೨೩"]),
+                               BoolSet = HashSet([ true; false ]))
         o.DoubleSByteMap.Add(1.234, 45y)
         o.DoubleSByteMap.Add(4567.0, 112y)
         o.DoubleSByteMap.Add(0.000123, 0y)
 
         let trans = CircularTransport()
         let prot = ThriftBinaryProtocol(trans)
-        ThriftSerializer.FromType(typeof<ComplexStruct7>).Write(prot, o)
-        let o2 = ThriftSerializer.FromType(typeof<ComplexStruct7>).Read(prot, typeof<ComplexStruct7>) :?> ComplexStruct7
+        let ti = typeof<ComplexStruct>.GetTypeInfo()
+        ThriftSerializer.FromTypeInfo(ti).Write(prot, o)
+        let! o2 = ThriftSerializer.FromTypeInfo(ti).ReadAsync(prot, ti) |> Async.AwaitTask
 
-        o2 <=> o
+        (o2 :?> ComplexStruct) <=> o
+    }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using ThriftSharp.Utilities;
 
 namespace ThriftSharp.Transport
 {
@@ -15,13 +16,16 @@ namespace ThriftSharp.Transport
     /// </summary>
     internal sealed class ThriftHttpTransport : IThriftTransport, IDisposable
     {
+        private const string ThriftContentType = "application/x-thrift";
+        private const string ThriftHttpMethod = "POST";
+
         private readonly string _url;
         private readonly IDictionary<string, string> _headers;
         private readonly int _timeout;
 
-        private HttpWebRequest _request;
-        private MemoryStream _outputStream;
+        private readonly MemoryStream _outputStream;
         private Stream _inputStream;
+        private HttpWebRequest _request;
 
 
         /// <summary>
@@ -35,40 +39,38 @@ namespace ThriftSharp.Transport
             _url = url;
             _headers = headers;
             _timeout = timeout;
+
+            _outputStream = new MemoryStream();
         }
 
 
         /// <summary>
-        /// Reads an unsigned byte.
+        /// Asynchronously eads an unsigned byte.
         /// </summary>
         /// <returns>An unsigned byte.</returns>
-        public byte ReadByte()
+        public Task<byte> ReadByteAsync()
         {
-            CheckRead();
-
             int retVal = _inputStream.ReadByte();
             if ( retVal == -1 )
             {
                 throw new InvalidOperationException( "There are no bytes left to be read." );
             }
-            return (byte) retVal;
+            return Task.FromResult( (byte) retVal );
         }
 
         /// <summary>
-        /// Reads an array of unsigned bytes of the specified length.
+        /// Asynchronously reads an array of unsigned bytes of the specified length.
         /// </summary>
         /// <param name="length">The length.</param>
         /// <returns>An array of unsigned bytes.</returns>
-        public byte[] ReadBytes( int length )
+        public async Task<byte[]> ReadBytesAsync( int length )
         {
-            CheckRead();
-
-            byte[] array = new byte[length];
-            if ( _inputStream.Read( array, 0, array.Length ) != length )
+            byte[] buffer = new byte[length];
+            if ( await _inputStream.ReadAsync( buffer, 0, length ) != length )
             {
                 throw new InvalidOperationException( "There are not enough bytes to be read." );
             }
-            return array;
+            return buffer;
         }
 
         /// <summary>
@@ -77,8 +79,6 @@ namespace ThriftSharp.Transport
         /// <param name="b">The unsigned byte.</param>
         public void WriteByte( byte b )
         {
-            CheckWrite();
-
             _outputStream.WriteByte( b );
         }
 
@@ -88,112 +88,36 @@ namespace ThriftSharp.Transport
         /// <param name="bytes">The array of unsigned bytes.</param>
         public void WriteBytes( byte[] bytes )
         {
-            CheckWrite();
-
             _outputStream.Write( bytes, 0, bytes.Length );
         }
 
 
         /// <summary>
-        /// Ensures a read is possible.
+        /// Asynchronously flushes the written bytes.
         /// </summary>
-        private void CheckRead()
-        {
-            if ( _outputStream != null )
-            {
-                Flush();
-            }
-
-            if ( _inputStream == null )
-            {
-                throw new InvalidOperationException( "Cannot read before writing." );
-            }
-        }
-
-        /// <summary>
-        /// Ensures a write is possible.
-        /// </summary>
-        private void CheckWrite()
-        {
-            if ( _outputStream == null )
-            {
-                Open();
-            }
-
-            if ( _inputStream != null )
-            {
-                throw new ThriftTransportException( "Cannot write while reading is in progress. Call Close() first." );
-            }
-        }
-
-        /// <summary>
-        /// Opens the transport.
-        /// </summary>
-        private void Open()
-        {
-            _outputStream = new MemoryStream();
-        }
-
-        /// <summary>
-        /// Flushes the transport.
-        /// </summary>
-        private void Flush()
+        public async Task FlushAsync()
         {
             _request = WebRequest.CreateHttp( _url );
-            _request.ContentType = "application/x-thrift";
-            _request.Accept = "application/x-thrift";
-            _request.Method = "POST";
+            _request.ContentType = _request.Accept = ThriftContentType;
+            _request.Method = ThriftHttpMethod;
 
             foreach ( var header in _headers )
             {
                 _request.Headers[header.Key] = header.Value;
             }
 
-            using ( var requestStream = WaitOnBeginEnd( _request.BeginGetRequestStream, _request.EndGetRequestStream, _timeout ) )
+            using ( var requestStream = await TaskEx.FromAsync( _request.BeginGetRequestStream, _request.EndGetRequestStream, _timeout ) )
             {
-                if ( requestStream == null )
-                {
-                    throw new ThriftTransportException( string.Format( "The timeout ({0} ms) to send a request was exceeded.", _timeout ) );
-                }
-
                 _outputStream.WriteTo( requestStream );
                 requestStream.Flush();
             }
 
-            // These two calls MUST appear before the GetResponse calls
+            // This call MUST appear before the GetResponse call
             // Silverlight (and WP8) throws a NotSupportedException otherwise.
             _outputStream.Dispose();
-            _outputStream = null;
 
-            var response = WaitOnBeginEnd( _request.BeginGetResponse, _request.EndGetResponse, _timeout );
-            if ( response == null )
-            {
-                throw new ThriftTransportException( string.Format( "The timeout ({0} ms) to get a response was exceeded.", _timeout ) );
-            }
-
+            var response = await TaskEx.FromAsync( _request.BeginGetResponse, _request.EndGetResponse, _timeout );
             _inputStream = response.GetResponseStream();
-        }
-
-        /// <summary>
-        /// Utility method to synchronously wait on Begin/End methods, the old .NET async model.
-        /// </summary>
-        private static T WaitOnBeginEnd<T>( Func<AsyncCallback, object, IAsyncResult> begin, Func<IAsyncResult, T> end, int timeout )
-        {
-            var task = Task.Factory.FromAsync( begin, end, null );
-
-            try
-            {
-                if ( task.Wait( timeout ) )
-                {
-                    return task.Result;
-                }
-                return default( T );
-            }
-            catch ( AggregateException )
-            {
-                // An exception was thrown during the execution of the Task.
-                return default( T );
-            }
         }
 
         #region IDisposable implementation

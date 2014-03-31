@@ -106,14 +106,9 @@ namespace ThriftSharp.Internals
                 {
                     gen.Emit( OpCodes.Pop );
                 }
-                // Unbox it if needed
-                else if ( m.ReturnType.IsValueType )
-                {
-                    gen.Emit( OpCodes.Unbox_Any, m.ReturnType );
-                }
-                // Cast its wrapped return value if it returns a Task
+                // Cast its wrapped return value
                 var wrapped = ReflectionEx.UnwrapTaskIfNeeded( m.ReturnType );
-                if ( wrapped != null && wrapped != typeof( void ) )
+                if ( wrapped != typeof( void ) )
                 {
                     // Create a method that converts a Task<object> into its Result type casted correctly
                     var dynMeth = new DynamicMethod( "_TaskCast_" + m.Name, wrapped, new[] { typeof( Task<object> ) } );
@@ -159,7 +154,7 @@ namespace ThriftSharp.Internals
             }
 
             // Create the instance
-            var inst = (T) ReflectionEx.Create( typeBuilder.CreateType() );
+            var inst = (T) ReflectionEx.Create( typeBuilder.CreateType().GetTypeInfo() );
 
             // Set the fields (delegates) values
             foreach ( var tup in fields )

@@ -3,7 +3,6 @@
 // Redistributions of this source code must retain the above copyright notice.
 
 using System;
-using ThriftSharp.Utilities;
 
 namespace ThriftSharp
 {
@@ -57,8 +56,6 @@ namespace ThriftSharp
         /// <remarks>A converted form of the object.</remarks>
         public object Convert( object value )
         {
-            Validation.IsOfType( value, typeof( TFrom ), () => value );
-
             return Convert( (TFrom) value );
         }
 
@@ -69,8 +66,6 @@ namespace ThriftSharp
         /// <remarks>A converted form of the object.</remarks>
         public object ConvertBack( object value )
         {
-            Validation.IsOfType( value, typeof( TTo ), () => value );
-
             return ConvertBack( (TTo) value );
         }
 

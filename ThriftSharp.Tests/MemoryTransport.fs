@@ -5,6 +5,7 @@
 namespace ThriftSharp.Tests
 
 open System.Collections.Generic
+open System.Threading.Tasks
 open ThriftSharp.Transport
 
 type MemoryTransport(toRead: byte list) =
@@ -30,13 +31,17 @@ type MemoryTransport(toRead: byte list) =
             if hasRead then failwith "Cannot write after a read. Close the transport first."
             write bs
 
-        member x.ReadByte() =
-            (x :> IThriftTransport).ReadBytes(1).[0]
+        member x.ReadByteAsync() =
+            Task.FromResult((x :> IThriftTransport).ReadBytesAsync(1).Result.[0])
             
-        member x.ReadBytes(len) =
+        member x.ReadBytesAsync(len) =
             if not hasRead then
                 hasRead <- true
-            read(len)
+            Task.FromResult(read len)
+
+        member x.FlushAsync() =
+            hasRead <- true
+            Task.FromResult(0) :> Task
 
         member x.Dispose() =
             hasRead <- false

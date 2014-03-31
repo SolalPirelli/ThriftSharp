@@ -47,17 +47,6 @@ namespace ThriftSharp.Utilities
         }
 
         /// <summary>
-        /// Ensures the specified object is of the specified type.
-        /// </summary>
-        public static void IsOfType<T>( T value, Type type, Expression<Func<T>> paramGet )
-        {
-            if ( !type.IsAssignableFrom( value.GetType() ) )
-            {
-                throw new ArgumentException( string.Format( "Parameter {0} must be of type {1}. It was of type {2}.", GetName( paramGet ), type, value.GetType() ) );
-            }
-        }
-
-        /// <summary>
         /// Utility method to get the name of a value returned by a Func expression, e.g. () => abc.
         /// </summary>
         private static string GetName<T>( Expression<Func<T>> paramGet )

@@ -3,6 +3,7 @@
 // Redistributions of this source code must retain the above copyright notice.
 
 using System;
+using System.Reflection;
 using ThriftSharp.Utilities;
 
 namespace ThriftSharp
@@ -308,8 +309,14 @@ namespace ThriftSharp
         {
             Validation.IsNotNull( converterType, () => converterType );
 
-            Converter = (IThriftValueConverter) ReflectionEx.Create( converterType );
+            var typeInfo = converterType.GetTypeInfo();
+
+            if ( !typeof( IThriftValueConverter ).GetTypeInfo().IsAssignableFrom( typeInfo ) )
+            {
+                throw new ArgumentException( "The type must inherit from IThriftValueConverter." );
+            }
+
+            Converter = (IThriftValueConverter) ReflectionEx.Create( typeInfo );
         }
     }
-
 }

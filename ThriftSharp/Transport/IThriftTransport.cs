@@ -3,6 +3,7 @@
 // Redistributions of this source code must retain the above copyright notice.
 
 using System;
+using System.Threading.Tasks;
 
 namespace ThriftSharp.Transport
 {
@@ -12,18 +13,17 @@ namespace ThriftSharp.Transport
     internal interface IThriftTransport : IDisposable
     {
         /// <summary>
-        /// Reads an unsigned byte.
+        /// Asynchronously reads an unsigned byte.
         /// </summary>
-        /// <returns>An unsighed byte.</returns>
-        byte ReadByte();
+        /// <returns>An unsigned byte.</returns>
+        Task<byte> ReadByteAsync();
 
         /// <summary>
-        /// Reads an array of unsigned bytes of the specified length.
+        /// Asynchronously reads an array of unsigned bytes of the specified length.
         /// </summary>
         /// <param name="length">The length.</param>
         /// <returns>An array of unsigned bytes.</returns>
-        byte[] ReadBytes( int length );
-
+        Task<byte[]> ReadBytesAsync( int length );
 
         /// <summary>
         /// Writes the specified unsigned byte.
@@ -36,5 +36,10 @@ namespace ThriftSharp.Transport
         /// </summary>
         /// <param name="bytes">The array of unsigned bytes.</param>
         void WriteBytes( byte[] bytes );
+
+        /// <summary>
+        /// Asynchronously flushes the written bytes.
+        /// </summary>
+        Task FlushAsync();
     }
 }

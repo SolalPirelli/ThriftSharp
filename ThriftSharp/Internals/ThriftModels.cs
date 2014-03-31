@@ -34,9 +34,9 @@ namespace ThriftSharp.Internals
         public Option<object> DefaultValue { get; private set; }
 
         /// <summary>
-        /// Gets the field's underlying type.
+        /// Gets the field's underlying TypeInfo.
         /// </summary>
-        public Type UnderlyingType { get; private set; }
+        public TypeInfo TypeInfo { get; private set; }
 
         /// <summary>
         /// Gets a get method that takes an instance and returns the field's value for that instance, if the field is not write-only.
@@ -53,12 +53,12 @@ namespace ThriftSharp.Internals
         /// Initializes a new instance of the ThriftField class with the specified values.
         /// </summary>
         public ThriftField( short id, string name, bool isRequired, Option<object> defaultValue,
-                            Type underlyingType, Func<object, object> getter, Action<object, object> setter )
+                            TypeInfo typeInfo, Func<object, object> getter, Action<object, object> setter )
         {
-            Header = new ThriftFieldHeader( id, name, ThriftSerializer.FromType( underlyingType ).GetThriftType( underlyingType ).Value );
+            Header = new ThriftFieldHeader( id, name, ThriftSerializer.FromTypeInfo( typeInfo ).GetThriftType( typeInfo.AsType() ).Value );
             IsRequired = isRequired;
             DefaultValue = defaultValue;
-            UnderlyingType = underlyingType;
+            TypeInfo = typeInfo;
             Getter = getter;
             Setter = setter;
         }
@@ -167,19 +167,19 @@ namespace ThriftSharp.Internals
         public string Name { get; private set; }
 
         /// <summary>
-        /// Gets the clause's exception type.
+        /// Gets the clause's exception TypeInfo.
         /// </summary>
-        public Type ExceptionType { get; private set; }
+        public TypeInfo ExceptionTypeInfo { get; private set; }
 
 
         /// <summary>
         /// Initializes a new instance of the ThriftThrowsClause class with the specified values.
         /// </summary>
-        public ThriftThrowsClause( short id, string name, Type exceptionType )
+        public ThriftThrowsClause( short id, string name, TypeInfo exceptionTypeInfo )
         {
             Id = id;
             Name = name;
-            ExceptionType = exceptionType;
+            ExceptionTypeInfo = exceptionTypeInfo;
         }
     }
 
@@ -199,9 +199,9 @@ namespace ThriftSharp.Internals
         public string Name { get; private set; }
 
         /// <summary>
-        /// Gets the parameter's underlying information.
+        /// Gets the parameter's underlying TypeInfo.
         /// </summary>
-        public Type UnderlyingType { get; private set; }
+        public TypeInfo TypeInfo { get; private set; }
 
         /// <summary>
         /// Gets the parameter's converter, if any.
@@ -212,11 +212,11 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Initializes a new instance of the ThriftMethodParameter class with the specified values.
         /// </summary>
-        public ThriftMethodParameter( short id, string name, Type underlyingType, IThriftValueConverter converter )
+        public ThriftMethodParameter( short id, string name, TypeInfo typeInfo, IThriftValueConverter converter )
         {
             Id = id;
             Name = name;
-            UnderlyingType = underlyingType;
+            TypeInfo = typeInfo;
             Converter = converter;
         }
     }
@@ -234,12 +234,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the method's return type.
         /// </summary>
-        public Type ReturnType { get; private set; }
-
-        /// <summary>
-        /// Gets a value indicating whether the method is asynchronous.
-        /// </summary>
-        public bool IsAsync { get; private set; }
+        public TypeInfo ReturnTypeInfo { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether the method is one-way.
@@ -276,15 +271,14 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Initializes a new instance of the ThriftMethod class with the specified values.
         /// </summary>
-        public ThriftMethod( string name, Type returnType, bool isOneWay, bool isAsync,
+        public ThriftMethod( string name, TypeInfo returnTypeInfo, bool isOneWay,
                              IThriftValueConverter returnValueConverter,
                              IList<ThriftMethodParameter> parameters, IList<ThriftThrowsClause> exceptions,
                              string underlyingName )
         {
             Name = name;
-            ReturnType = returnType;
+            ReturnTypeInfo = returnTypeInfo;
             IsOneWay = isOneWay;
-            IsAsync = isAsync;
             ReturnValueConverter = returnValueConverter;
             Parameters = parameters.CopyAsReadOnly();
             Exceptions = exceptions.CopyAsReadOnly();

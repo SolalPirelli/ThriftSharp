@@ -2,213 +2,259 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 // Redistributions of this source code must retain the above copyright notice.
 
-namespace ThriftSharp.Tests
+module ThriftSharp.Tests.``Reading service replies``
 
-open Microsoft.VisualStudio.TestTools.UnitTesting
+open System.Threading.Tasks
 open ThriftSharp
-open ThriftSharp.Protocols
 open ThriftSharp.Internals
 
 [<ThriftStruct("MyException")>]
-type MyException5() =
+type MyException() =
     inherit System.Exception()
     [<ThriftField(1s, true, "stuff")>]
     member val Stuff = "" with get, set
 
 [<ThriftService("Service")>]
-type Service5 =
+type Service =
     [<ThriftMethod("noReply")>]
-    abstract NoReply: unit -> unit
+    abstract NoReply: unit -> Task
 
     [<ThriftMethod("noReplyWithException")>]
-    [<ThriftThrows(1s, "exn", typeof<MyException5>)>]
-    abstract NoReplyWithException: unit -> unit
+    [<ThriftThrows(1s, "exn", typeof<MyException>)>]
+    abstract NoReplyWithException: unit -> Task
 
     [<ThriftMethod("noException")>]
-    abstract NoException: unit -> int
+    abstract NoException: unit -> Task<int>
 
     [<ThriftMethod("withException")>]
-    [<ThriftThrows(1s, "exn", typeof<MyException5>)>]
-    abstract WithException: unit -> int
+    [<ThriftThrows(1s, "exn", typeof<MyException>)>]
+    abstract WithException: unit -> Task<int>
 
     [<ThriftMethod("withUnixDateReturnValue")>]
     [<ThriftConverter(typeof<ThriftUnixDateConverter>)>]
-    abstract WithUnixDateReturnValue: unit -> System.DateTime
+    abstract WithUnixDateReturnValue: unit -> Task<System.DateTime>
 
 
-[<TestClass>]
-type ``Reading service replies``() =
-    member x.ReadMsg<'T>(prot: IThriftProtocol, name) =
-        let svc = ThriftAttributesParser.ParseService(typeof<'T>)
-        Thrift.CallMethod(ThriftCommunication(prot), svc, name, [| |])
+let (--) a b = a,b
+
+let (==>) (data, methodName) (checker: 'a -> unit) = run <| async {
+    let m = MemoryProtocol(data)
+    let! reply = readMsgAsync<Service> m methodName
+    m.IsEmpty <=> true
+    do checker (reply :?> 'a)
+}
+
+let (=//=>) (data, methodName) (checker: 'a -> unit) = run <| async {
+    let m = MemoryProtocol(data)
+    return! throwsAsync<'a> (fun () -> readMsgAsync<Service> m methodName |> Async.Ignore)
+}
+
+
+[<TestContainer>]
+type __() =
+    [<Test>]
+    member __.``No reply expected, none received``() =
+        [MessageHeader (0, "noReply", ThriftMessageType.Reply)
+         StructHeader ""
+         FieldStop
+         StructEnd
+         MessageEnd]
+        --
+        "NoReply"
+        ==>
+        fun (o: obj) ->
+            o <=> null
 
     [<Test>]
-    member x.``No reply expected, none received``() =
-        let m = MemoryProtocol([MessageHeader (0, "noReply", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldStop
-                                StructEnd
-                                MessageEnd])
-        let reply = x.ReadMsg<Service5>(m, "NoReply")
-        reply <=> null
+    member __.``No reply expected, but one was received``() =
+        [MessageHeader (0, "noReply", ThriftMessageType.Reply)
+         StructHeader ""
+         FieldHeader (0s, "", tid 8uy)
+         Int32 69
+         FieldEnd
+         FieldStop
+         StructEnd
+         MessageEnd]
+        --
+        "NoReply"
+        ==>
+        fun (o: obj) ->
+            o <=> null
 
     [<Test>]
-    member x.``No reply expected, but one was received``() =
-        let m = MemoryProtocol([MessageHeader (0, "noReply", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldHeader (0s, "", ThriftType.Int32)
-                                Int32 69
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                MessageEnd])
-        let reply = x.ReadMsg<Service5>(m, "NoReply")
-        reply <=> null
+    member __.``No reply expected, but a server error was received``() =
+        [MessageHeader (0, "noReply", ThriftMessageType.Exception)
+         StructHeader "TApplicationException"
+         FieldHeader (1s, "message", ThriftType.String)
+         String "An error occured."
+         FieldEnd
+         FieldHeader (2s, "type", ThriftType.Int32)
+         Int32 6
+         FieldEnd
+         FieldStop
+         StructEnd
+         MessageEnd]
+        --
+        "NoReply"
+        =//=>
+        fun (ex: ThriftProtocolException) ->
+            ex.Message <=> "An error occured."
+            ex.ExceptionType <=> ThriftProtocolExceptionType.InternalError
 
     [<Test>]
-    member x.``No reply expected, but a server error was received``() =
-        let m = MemoryProtocol([MessageHeader (0, "noReply", ThriftMessageType.Exception)
-                                StructHeader "TApplicationException"
-                                FieldHeader (1s, "message", ThriftType.String)
-                                String "An error occured."
-                                FieldEnd
-                                FieldHeader (2s, "type", ThriftType.Int32)
-                                Int32 6
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                MessageEnd])
-        let exn = throws<ThriftProtocolException> (fun () -> x.ReadMsg<Service5>(m, "NoReply"))
-        exn.Message <=> "An error occured."
-        exn.ExceptionType <=> ThriftProtocolExceptionType.InternalError
+    member __.``No reply with exception declared, nothing received``() =
+        [MessageHeader (0, "noReplyWithException", ThriftMessageType.Reply)
+         StructHeader ""
+         FieldStop
+         StructEnd
+         MessageEnd]
+        --
+        "NoReplyWithException"
+        ==>
+        fun (o: obj) ->
+            o <=> null
 
     [<Test>]
-    member x.``No reply with exception declared, nothing received``() =
-        let m = MemoryProtocol([MessageHeader (0, "noReplyWithException", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldStop
-                                StructEnd
-                                MessageEnd])
-        let reply = x.ReadMsg<Service5>(m, "NoReplyWithException")
-        reply <=> null
+    member __.``No reply with exception declared, but another one was received``() = 
+        [MessageHeader (0, "noReplyWithException", ThriftMessageType.Reply)
+         StructHeader ""
+         FieldHeader (10s, "exn", ThriftType.Struct)
+         StructHeader "MyException"
+         FieldHeader (1s, "message", ThriftType.String)
+         String "Error."
+         FieldEnd
+         FieldStop
+         StructEnd
+         FieldEnd
+         FieldStop
+         StructEnd
+         MessageEnd]
+        --
+        "NoReplyWithException"
+        ==>
+        fun (o: obj) ->
+            o <=> null
 
     [<Test>]
-    member x.``No reply with exception declared, but another one was received``() =
-        let m = MemoryProtocol([MessageHeader (0, "noReplyWithException", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldHeader (10s, "exn", ThriftType.Struct)
-                                StructHeader "MyException"
-                                FieldHeader (1s, "message", ThriftType.String)
-                                String "Error."
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                MessageEnd])
-        let reply = x.ReadMsg<Service5>(m, "NoReplyWithException")
-        reply <=> null
+    member __.``No reply with exception declared and received``() =
+        [MessageHeader (0, "noReplyWithException", ThriftMessageType.Reply)
+         StructHeader ""
+         FieldHeader (1s, "exn", ThriftType.Struct)
+         StructHeader "MyException"
+         FieldHeader (1s, "stuff", ThriftType.String)
+         String "Everything went wrong."
+         FieldEnd
+         FieldStop
+         StructEnd
+         FieldEnd
+         FieldStop
+         StructEnd
+         MessageEnd]
+        --
+        "NoReplyWithException"
+        =//=>
+        fun (ex: MyException) ->
+            ex.Stuff <=> "Everything went wrong."
 
     [<Test>]
-    member x.``No reply with exception declared and received``() =
-        let m = MemoryProtocol([MessageHeader (0, "noReplyWithException", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldHeader (1s, "exn", ThriftType.Struct)
-                                StructHeader "MyException"
-                                FieldHeader (1s, "stuff", ThriftType.String)
-                                String "Everything went wrong."
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                MessageEnd])   
-        let exn = throws<MyException5> (fun () -> x.ReadMsg<Service5>(m, "NoReplyWithException"))
-        exn.Stuff <=> "Everything went wrong."
+    member __.``Reply expected, but none was received``() =
+        [MessageHeader (0, "noException", ThriftMessageType.Reply)
+         StructHeader ""
+         FieldStop
+         StructEnd
+         MessageEnd]
+        --
+        "NoException"
+        =//=>
+        fun (ex: ThriftProtocolException) ->
+            ex.ExceptionType <=> ThriftProtocolExceptionType.MissingResult
 
     [<Test>]
-    member x.``Reply expected, but none was received``() =
-        let m = MemoryProtocol([MessageHeader (0, "noException", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldStop
-                                StructEnd
-                                MessageEnd])
-        let exn = throws<ThriftProtocolException> (fun () -> x.ReadMsg<Service5>(m, "NoException"))
-        exn.ExceptionType <=> ThriftProtocolExceptionType.MissingResult
+    member __.``Reply expected and received``() =
+        [MessageHeader (0, "noException", ThriftMessageType.Reply)
+         StructHeader ""
+         FieldHeader (0s, "", ThriftType.Int32)
+         Int32 101
+         FieldEnd
+         FieldStop
+         StructEnd
+         MessageEnd]
+        --
+        "NoException"
+        ==>
+        fun (n: int) ->
+            n <=> 101
 
     [<Test>]
-    member x.``Reply expected and received``() =
-        let m = MemoryProtocol([MessageHeader (0, "noException", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldHeader (0s, "", ThriftType.Int32)
-                                Int32 101
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                MessageEnd])
-        let res = x.ReadMsg<Service5>(m, "NoException")
-        (res :?> int) <=> 101
+    member __.``Reply expected, but an undeclared exception was received``() =
+        [MessageHeader (0, "noException", ThriftMessageType.Reply)
+         StructHeader ""
+         FieldHeader (1s, "exn", ThriftType.Struct)
+         StructHeader "MyException"
+         FieldHeader (1s, "stuff", ThriftType.String)
+         String "Everything went wrong."
+         FieldEnd
+         FieldStop
+         StructEnd
+         FieldEnd
+         FieldStop
+         StructEnd
+         MessageEnd]
+        --
+        "NoException"
+        =//=>
+        fun (ex: ThriftProtocolException) ->
+            ex.ExceptionType <=> ThriftProtocolExceptionType.MissingResult
 
     [<Test>]
-    member x.``Reply expected, but an undeclared exception was received``() =
-        let m = MemoryProtocol([MessageHeader (0, "noException", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldHeader (1s, "exn", ThriftType.Struct)
-                                StructHeader "MyException"
-                                FieldHeader (1s, "stuff", ThriftType.String)
-                                String "Everything went wrong."
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                MessageEnd])   
-        let exn = throws<ThriftProtocolException> (fun () -> x.ReadMsg<Service5>(m, "NoException"))
-        exn.ExceptionType <=> ThriftProtocolExceptionType.MissingResult
+    member __.``Reply or exception expected, reply received``() =
+        [MessageHeader (0, "withException", ThriftMessageType.Reply)
+         StructHeader ""
+         FieldHeader (0s, "", ThriftType.Int32)
+         Int32 007
+         FieldEnd
+         FieldStop
+         StructEnd
+         MessageEnd]
+        --
+        "WithException"
+        ==>
+        fun (n: int) ->
+            n <=> 7
 
     [<Test>]
-    member x.``Reply or exception expected, reply received``() =
-        let m = MemoryProtocol([MessageHeader (0, "withException", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldHeader (0s, "", ThriftType.Int32)
-                                Int32 007
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                MessageEnd])
-        let res = x.ReadMsg<Service5>(m, "WithException")
-        (res :?> int) <=> 7
+    member __.``Reply or exception expected, exception received``() =
+        [MessageHeader (0, "withException", ThriftMessageType.Reply)
+         StructHeader ""
+         FieldHeader (1s, "exn", ThriftType.Struct)
+         StructHeader "MyException"
+         FieldHeader (1s, "stuff", ThriftType.String)
+         String "Everything went wrong."
+         FieldEnd
+         FieldStop
+         StructEnd
+         FieldEnd
+         FieldStop
+         StructEnd
+         MessageEnd]
+        --
+        "WithException" 
+        =//=>
+        fun (ex: MyException) ->
+            ex.Stuff <=> "Everything went wrong."
 
     [<Test>]
-    member x.``Reply or exception expected, exception received``() =
-        let m = MemoryProtocol([MessageHeader (0, "withException", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldHeader (1s, "exn", ThriftType.Struct)
-                                StructHeader "MyException"
-                                FieldHeader (1s, "stuff", ThriftType.String)
-                                String "Everything went wrong."
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                MessageEnd])   
-        let exn = throws<MyException5> (fun () -> x.ReadMsg<Service5>(m, "WithException"))
-        exn.Stuff <=> "Everything went wrong."
-
-    [<Test>]
-    member x.``UnixDate return type``() =
-        let m = MemoryProtocol([MessageHeader (0, "withUnixDateReturnValue", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldHeader (0s, "", ThriftType.Int32)
-                                Int32 787708800
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                MessageEnd])
-        let date = x.ReadMsg<Service5>(m, "WithUnixDateReturnValue") :?> System.DateTime
-        date.ToUniversalTime() <=> System.DateTime(1994, 12, 18, 0, 0, 0, System.DateTimeKind.Utc)
+    member __.``UnixDate return type``() =
+        [MessageHeader (0, "withUnixDateReturnValue", ThriftMessageType.Reply)
+         StructHeader ""
+         FieldHeader (0s, "", ThriftType.Int32)
+         Int32 787708800
+         FieldEnd
+         FieldStop
+         StructEnd
+         MessageEnd]
+        --
+        "WithUnixDateReturnValue"
+        ==>
+        fun (date: System.DateTime) ->
+            date.ToUniversalTime() <=> utcDate(18, 12, 1994)

@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using ThriftSharp.Internals;
 using ThriftSharp.Protocols;
 
@@ -15,6 +16,12 @@ namespace ThriftSharp.Benchmarking
      * Simple person       00:00:00.0000060
      * Complex person      00:00:00.0001019
      * Very complex person 00:00:00.0003622
+     * 
+     * Thrift# v1.0.9-async (i7-3612QM)
+     * Simple person       00:00:00.0000088
+     * Complex person      00:00:00.0001413
+     * Very complex person 00:00:00.0005167
+     * +50%
      */
 
     public sealed class Program
@@ -23,7 +30,7 @@ namespace ThriftSharp.Benchmarking
         private const int Iterations = 100000;
 
         private static readonly IThriftProtocol Protocol = new ThriftBinaryProtocol( new LoopTransport() );
-        private static readonly ThriftStruct ThriftPerson = ThriftAttributesParser.ParseStruct( typeof( Person ) );
+        private static readonly ThriftStruct ThriftPerson = ThriftAttributesParser.ParseStruct( typeof( Person ).GetTypeInfo() );
 
         private static readonly Dictionary<string, Action> Actions = new Dictionary<string, Action>
         {
@@ -44,7 +51,7 @@ namespace ThriftSharp.Benchmarking
         private static void WriteAndRead( Person person )
         {
             ThriftSerializer.WriteStruct( Protocol, ThriftPerson, person );
-            ThriftSerializer.ReadStruct( Protocol, ThriftPerson, person );
+            ThriftSerializer.ReadStructAsync( Protocol, ThriftPerson, person ).Wait();
         }
 
         private static TimeSpan MeasureExecutionTime( Action action )

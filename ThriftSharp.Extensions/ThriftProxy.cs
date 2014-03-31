@@ -2,6 +2,7 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 // Redistributions of this source code must retain the above copyright notice.
 
+using System.Reflection;
 using ThriftSharp.Internals;
 
 namespace ThriftSharp
@@ -19,8 +20,8 @@ namespace ThriftSharp
         /// <returns>A dynamically generated proxy to the Thrift service.</returns>
         public static T Create<T>( ThriftCommunication communication )
         {
-            var service = ThriftAttributesParser.ParseService( typeof( T ) );
-            return TypeCreator.CreateImplementation<T>( m => args => Thrift.CallMethod( communication, service, m.Name, args ) );
+            var service = ThriftAttributesParser.ParseService( typeof( T ).GetTypeInfo() );
+            return TypeCreator.CreateImplementation<T>( m => args => Thrift.CallMethodAsync<object>( communication, service, m.Name, args ) );
         }
     }
 }

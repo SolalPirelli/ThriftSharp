@@ -19,6 +19,7 @@ namespace ThriftSharp.Utilities
         /// Gets the attribute of the specified type on the MemberInfo, or null if there is no such attribute.
         /// </summary>
         public static T GetAttribute<T>( this MemberInfo info )
+            where T : Attribute
         {
             return (T) info.GetCustomAttributes( typeof( T ), true ).FirstOrDefault();
         }
@@ -30,6 +31,7 @@ namespace ThriftSharp.Utilities
         /// This is required since ParameterInfo does not inherit from MemberInfo.
         /// </remarks>
         public static T GetAttribute<T>( this ParameterInfo info )
+            where T : Attribute
         {
             return (T) info.GetCustomAttributes( typeof( T ), true ).FirstOrDefault();
         }
@@ -51,46 +53,48 @@ namespace ThriftSharp.Utilities
         }
 
         /// <summary>
-        /// Gets the specified generic interface definition on the Type, if it implements it.
+        /// Gets the specified generic interface definition on the TypeInfo, if it implements it.
         /// </summary>
-        public static Type GetGenericInterface( this Type type, Type interfaceType )
+        public static Type GetGenericInterface( this TypeInfo typeInfo, Type interfaceType )
         {
-            return type.GetInterfaces().FirstOrDefault( i => i.IsGenericType && i.GetGenericTypeDefinition() == interfaceType );
+            return typeInfo.ImplementedInterfaces.FirstOrDefault( i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == interfaceType );
+        }
+
+        /// <summary>
+        /// Gets the "Add" method of the specified collection interface type on the specified type.
+        /// </summary>
+        public static MethodInfo GetAddMethod( TypeInfo typeInfo, Type interfaceType )
+        {
+            // TODO: Edge case: Class has an "Add" method not from the interface
+            return typeInfo.GetDeclaredMethod( "Add" );
         }
 
         /// <summary>
         /// Unwraps a Task if the Type is one, or returns null.
         /// Returns typeof(void) if the Task is not a generic one.
         /// </summary>
-        public static Type UnwrapTaskIfNeeded( Type type )
+        public static TypeInfo UnwrapTaskIfNeeded( Type type )
         {
-            if ( typeof( Task ).IsAssignableFrom( type ) )
+            var typeInfo = type.GetTypeInfo();
+            if ( typeof( Task ).GetTypeInfo().IsAssignableFrom( typeInfo ) )
             {
-                if ( type.IsGenericType )
+                if ( typeInfo.IsGenericType )
                 {
-                    return type.GetGenericArguments()[0];
+                    return typeInfo.GenericTypeArguments[0].GetTypeInfo();
                 }
-                return typeof( void );
+                return typeof( void ).GetTypeInfo();
             }
             return null;
         }
 
         /// <summary>
-        /// Gets the "Add" method of the specified collection interface type on the specified type.
+        /// Creates a new instance of the specified TypeInfo, using a public constructor.
         /// </summary>
-        public static MethodInfo GetAddMethod( Type type, Type interfaceType )
+        public static object Create( TypeInfo typeInfo )
         {
-            return type.GetMethod( "Add", type.GetGenericInterface( interfaceType ).GetGenericArguments() );
-        }
-
-        /// <summary>
-        /// Creates a new instance of a type, using a public or non-public constructor.
-        /// </summary>
-        public static object Create( Type type )
-        {
-            return type.GetConstructors( BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic )
-                       .First( c => c.GetParameters().Length == 0 )
-                       .Invoke( null );
+            return typeInfo.DeclaredConstructors
+                           .First( c => c.GetParameters().Length == 0 )
+                           .Invoke( null );
         }
     }
 }

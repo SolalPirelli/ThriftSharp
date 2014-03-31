@@ -4,6 +4,7 @@
 
 using System;
 using System.Text;
+using System.Threading.Tasks;
 using ThriftSharp.Internals;
 using ThriftSharp.Transport;
 
@@ -19,6 +20,8 @@ namespace ThriftSharp.Protocols
         // A mask used to store more information in the message size field.
         private const uint VersionMask = 0xffff0000;
 
+        private static readonly Task CompletedTask = Task.FromResult( 0 );
+
         private readonly IThriftTransport _transport;
 
 
@@ -33,12 +36,12 @@ namespace ThriftSharp.Protocols
 
 
         /// <summary>
-        /// Reads a message header.
+        /// Asynchronously reads a message header.
         /// </summary>
         /// <returns>A message header.</returns>
-        public ThriftMessageHeader ReadMessageHeader()
+        public async Task<ThriftMessageHeader> ReadMessageHeaderAsync()
         {
-            int size = ReadInt32();
+            int size = await ReadInt32Async();
             if ( size < 0 )
             {
                 uint version = (uint) size & VersionMask;
@@ -48,188 +51,213 @@ namespace ThriftSharp.Protocols
                 }
 
                 var type = (ThriftMessageType) ( size & 0xFF );
-                string name = ReadString();
-                int id = ReadInt32();
+                string name = await ReadStringAsync();
+                int id = await ReadInt32Async();
                 return new ThriftMessageHeader( id, name, type );
             }
             else
             {
                 // Old protocol version
-                byte[] nameBytes = _transport.ReadBytes( size );
+                byte[] nameBytes = await _transport.ReadBytesAsync( size );
                 string name = Encoding.UTF8.GetString( nameBytes, 0, nameBytes.Length );
-                var type = (ThriftMessageType) _transport.ReadByte();
-                int id = ReadInt32();
+                var type = (ThriftMessageType) await _transport.ReadByteAsync();
+                int id = await ReadInt32Async();
                 return new ThriftMessageHeader( id, name, type );
             }
         }
 
         /// <summary>
-        /// Does nothing. The binary protocol does not use end tokens.
+        /// Does nothing. 
+        /// The binary protocol does not use end tokens.
         /// </summary>
-        public void ReadMessageEnd() { }
-
-        /// <summary>
-        /// Reads a struct header.
-        /// </summary>
-        /// <returns>A struct header.</returns>
-        public ThriftStructHeader ReadStructHeader()
+        public Task ReadMessageEndAsync()
         {
-            return new ThriftStructHeader( "" );
+            return CompletedTask;
         }
 
         /// <summary>
-        /// Does nothing. The binary protocol does not use end tokens.
+        /// Returns an empty struct header.
+        /// The binary protocol does not store struct headers.
         /// </summary>
-        public void ReadStructEnd() { }
+        /// <returns>An empty struct header.</returns>
+        public Task<ThriftStructHeader> ReadStructHeaderAsync()
+        {
+            return Task.FromResult( new ThriftStructHeader( "" ) );
+        }
 
         /// <summary>
-        /// Reads a field header.
+        /// Does nothing. 
+        /// The binary protocol does not use end tokens.
+        /// </summary>
+        public Task ReadStructEndAsync()
+        {
+            return CompletedTask;
+        }
+
+        /// <summary>
+        /// Asynchronously reads a field header.
         /// </summary>
         /// <returns>
         /// A field header, or null if an end-of-field token was encountered.
         /// </returns>
-        public ThriftFieldHeader ReadFieldHeader()
+        public async Task<ThriftFieldHeader> ReadFieldHeaderAsync()
         {
-            byte tid = _transport.ReadByte();
+            byte tid = await _transport.ReadByteAsync();
             if ( tid == ThriftFieldHeader.Stop )
             {
                 return null;
             }
 
-            short id = ReadInt16();
+            short id = await ReadInt16Async();
             return new ThriftFieldHeader( id, "", (ThriftType) tid );
         }
 
         /// <summary>
-        /// Does nothing. The binary protocol does not use end tokens.
+        /// Does nothing.
+        /// The binary protocol does not use end tokens.
         /// </summary>
-        public void ReadFieldEnd() { }
+        public Task ReadFieldEndAsync()
+        {
+            return CompletedTask;
+        }
 
         /// <summary>
-        /// Reads a list header.
+        /// Asynchronously reads a list header.
         /// </summary>
         /// <returns>A list header.</returns>
-        public ThriftCollectionHeader ReadListHeader()
+        public async Task<ThriftCollectionHeader> ReadListHeaderAsync()
         {
-            byte tid = _transport.ReadByte();
-            int count = ReadInt32();
+            byte tid = await _transport.ReadByteAsync();
+            int count = await ReadInt32Async();
             return new ThriftCollectionHeader( count, (ThriftType) tid );
         }
 
         /// <summary>
-        /// Does nothing. The binary protocol does not use end tokens.
+        /// Does nothing. 
+        /// The binary protocol does not use end tokens.
         /// </summary>
-        public void ReadListEnd() { }
+        public Task ReadListEndAsync()
+        {
+            return CompletedTask;
+        }
 
         /// <summary>
-        /// Reads a set header.
+        /// Asynchronously reads a set header.
         /// </summary>
         /// <returns>A set header.</returns>
-        public ThriftCollectionHeader ReadSetHeader()
+        public async Task<ThriftCollectionHeader> ReadSetHeaderAsync()
         {
-            byte tid = _transport.ReadByte();
-            int count = ReadInt32();
+            byte tid = await _transport.ReadByteAsync();
+            int count = await ReadInt32Async();
             return new ThriftCollectionHeader( count, (ThriftType) tid );
         }
 
         /// <summary>
-        /// Does nothing. The binary protocol does not use end tokens.
+        /// Does nothing.
+        /// The binary protocol does not use end tokens.
         /// </summary>
-        public void ReadSetEnd() { }
+        public Task ReadSetEndAsync()
+        {
+            return CompletedTask;
+        }
 
         /// <summary>
-        /// Reads a map header.
+        /// Asynchronously reads a map header.
         /// </summary>
         /// <returns>A map header.</returns>
-        public ThriftMapHeader ReadMapHeader()
+        public async Task<ThriftMapHeader> ReadMapHeaderAsync()
         {
-            var keyTypeId = _transport.ReadByte();
-            var valueTypeId = _transport.ReadByte();
-            int count = ReadInt32();
+            var keyTypeId = await _transport.ReadByteAsync();
+            var valueTypeId = await _transport.ReadByteAsync();
+            int count = await ReadInt32Async();
             return new ThriftMapHeader( count, (ThriftType) keyTypeId, (ThriftType) valueTypeId );
         }
 
         /// <summary>
-        /// Does nothing. The binary protocol does not use end tokens.
+        /// Does nothing.
+        /// The binary protocol does not use end tokens.
         /// </summary>
-        public void ReadMapEnd() { }
+        public Task ReadMapEndAsync()
+        {
+            return CompletedTask;
+        }
 
         /// <summary>
-        /// Reads a boolean value as a byte, where 0 is true and anything else is false.
+        /// Asynchronously reads a boolean value as a byte, where 0 is true and anything else is false.
         /// </summary>
         /// <returns>A boolean.</returns>
-        public bool ReadBoolean()
+        public async Task<bool> ReadBooleanAsync()
         {
-            return _transport.ReadByte() != 0;
+            return await _transport.ReadByteAsync() != 0;
         }
 
         /// <summary>
-        /// Reads a signed byte.
+        /// Asynchronously reads a signed byte.
         /// </summary>
         /// <returns>A signed byte.</returns>
-        public sbyte ReadSByte()
+        public async Task<sbyte> ReadSByteAsync()
         {
-            return (sbyte) _transport.ReadByte();
+            return (sbyte) await _transport.ReadByteAsync();
         }
 
         /// <summary>
-        /// Reads a big-endian, double-precision floating-point number.
+        /// Asynchronously reads a big-endian, double-precision floating-point number.
         /// </summary>
         /// <returns>A double-precision floating-point number.</returns>
-        public double ReadDouble()
+        public async Task<double> ReadDoubleAsync()
         {
-            return BitConverter.Int64BitsToDouble( ReadInt64() );
+            return BitConverter.Int64BitsToDouble( await ReadInt64Async() );
         }
 
         /// <summary>
-        /// Reads a big-endian 16-bit integer.
+        /// Asynchronously reads a big-endian 16-bit integer.
         /// </summary>
         /// <returns>A 16-bit integer.</returns>
-        public short ReadInt16()
+        public async Task<short> ReadInt16Async()
         {
-            return BitConverter.ToInt16( ReadBigEndianBytes( 2 ), 0 );
+            return BitConverter.ToInt16( await ReadBigEndianBytesAsync( 2 ), 0 );
         }
 
         /// <summary>
-        /// Reads a big-endian 32-bit integer.
+        /// Asynchronously reads a big-endian 32-bit integer.
         /// </summary>
         /// <returns>A 32-bit integer.</returns>
-        public int ReadInt32()
+        public async Task<int> ReadInt32Async()
         {
-            return BitConverter.ToInt32( ReadBigEndianBytes( 4 ), 0 );
+            return BitConverter.ToInt32( await ReadBigEndianBytesAsync( 4 ), 0 );
         }
 
         /// <summary>
-        /// Reads a big-endian 64-bit integer.
+        /// Asynchronously reads a big-endian 64-bit integer.
         /// </summary>
         /// <returns>A 64-bit integer.</returns>
-        public long ReadInt64()
+        public async Task<long> ReadInt64Async()
         {
-            return BitConverter.ToInt64( ReadBigEndianBytes( 8 ), 0 );
+            return BitConverter.ToInt64( await ReadBigEndianBytesAsync( 8 ), 0 );
         }
 
         /// <summary>
-        /// Reads an UTF-8 string, whose length is a leading 32-bit integer.
+        /// Asynchronously reads an UTF-8 string, whose length is a leading 32-bit integer.
         /// </summary>
         /// <returns>A string.</returns>
-        public string ReadString()
+        public async Task<string> ReadStringAsync()
         {
-            int length = ReadInt32();
-            byte[] bytes = _transport.ReadBytes( length );
+            int length = await ReadInt32Async();
+            byte[] bytes = await _transport.ReadBytesAsync( length );
             return Encoding.UTF8.GetString( bytes, 0, bytes.Length );
         }
 
         /// <summary>
-        /// Reads an array of signed bytes, whose length is a leading 32-bit integer.
+        /// Asynchronously reads an array of signed bytes, whose length is a leading 32-bit integer.
         /// </summary>
         /// <returns>An array of signed bytes.</returns>
-        public sbyte[] ReadBinary()
+        public async Task<sbyte[]> ReadBinaryAsync()
         {
-            int length = ReadInt32();  
+            int length = await ReadInt32Async();
             // The array must be converted, not just casted, otherwise weird stuff happens when it's used
-            byte[] bytes = _transport.ReadBytes( length );
+            byte[] bytes = await _transport.ReadBytesAsync( length );
             sbyte[] sbytes = new sbyte[length];
-            for ( int n = 0; n < length;n++)
+            for ( int n = 0; n < length; n++ )
             {
                 sbytes[n] = (sbyte) bytes[n];
             }
@@ -238,11 +266,11 @@ namespace ThriftSharp.Protocols
 
         /// <summary>
         /// Not part of the IThriftProtocol interface.
-        /// Reads an array of unsigned bytes of the specified length representing a number, ensuring they are in big-endian order.
+        /// Asynchronously reads an array of unsigned bytes of the specified length representing a number, ensuring they are in big-endian order.
         /// </summary>
-        private byte[] ReadBigEndianBytes( int length )
+        private async Task<byte[]> ReadBigEndianBytesAsync( int length )
         {
-            byte[] bytes = _transport.ReadBytes( length );
+            byte[] bytes = await _transport.ReadBytesAsync( length );
             if ( BitConverter.IsLittleEndian )
             {
                 Array.Reverse( bytes );

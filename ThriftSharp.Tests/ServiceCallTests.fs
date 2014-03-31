@@ -2,24 +2,22 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 // Redistributions of this source code must retain the above copyright notice.
 
-namespace ThriftSharp.Tests
+module ThriftSharp.Tests.``Service calls``
 
 open System.Threading.Tasks
-open Microsoft.VisualStudio.TestTools.UnitTesting
+open System.Reflection
 open ThriftSharp
 open ThriftSharp.Internals
 
 [<ThriftService("Service")>]
-type IService8 =
-    [<ThriftMethod("SyncMethod")>]
-    abstract Sync: [<ThriftParameter(1s, "arg")>] arg: int -> string
+type IService =
     [<ThriftMethod("AsyncMethod")>]
     abstract Async: [<ThriftParameter(1s, "arg")>] arg: int -> Task<string>
 
-[<TestClass>]
-type ``Service calls``() =
+[<TestContainer>]
+type __() =
     [<Test>]
-    member x.``Synchronous call``() =
+    member __.``Asynchronous call``() = run <| async {
         let m = MemoryProtocol([MessageHeader (0, "", ThriftMessageType.Reply)
                                 StructHeader ""
                                 FieldHeader (0s, "", ThriftType.String)
@@ -28,22 +26,9 @@ type ``Service calls``() =
                                 FieldStop
                                 StructEnd
                                 MessageEnd])
-        let svc = ThriftAttributesParser.ParseService(typeof<IService8>)
-        let res = Thrift.CallMethod(ThriftCommunication(m), svc, "Sync", 1) :?> string
-        res <=> "the result"
-
-    [<Test>]
-    member x.``Asynchronous call``() =
-        let m = MemoryProtocol([MessageHeader (0, "", ThriftMessageType.Reply)
-                                StructHeader ""
-                                FieldHeader (0s, "", ThriftType.String)
-                                String "the result"
-                                FieldEnd
-                                FieldStop
-                                StructEnd
-                                MessageEnd])
-        let svc = ThriftAttributesParser.ParseService(typeof<IService8>)
-        let res = (Thrift.CallMethod(ThriftCommunication(m), svc, "Async", 1) :?> Task<obj>)
+        let svc = ThriftAttributesParser.ParseService(typeof<IService>.GetTypeInfo())
+        let! res = Thrift.CallMethodAsync(ThriftCommunication(m), svc, "Async", 1)
                          .ContinueWith(fun (x: Task<obj>) -> x.Result :?> string)
-                |> Async.AwaitTask |> Async.RunSynchronously
+                |> Async.AwaitTask
         res <=> "the result"
+    }

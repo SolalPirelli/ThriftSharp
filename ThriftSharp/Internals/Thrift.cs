@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using ThriftSharp.Protocols;
 using ThriftSharp.Utilities;
@@ -20,9 +21,9 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Creates a read-only ThriftField with the specified header and value.
         /// </summary>
-        private static ThriftField ReadOnlyField( short id, string name, Type underlyingType, object value )
+        private static ThriftField ReadOnlyField( short id, string name, TypeInfo typeInfo, object value )
         {
-            return new ThriftField( id, name, true, new Option<object>(), underlyingType, _ => value, null );
+            return new ThriftField( id, name, true, new Option<object>(), typeInfo, _ => value, null );
         }
 
         /// <summary>
@@ -39,15 +40,15 @@ namespace ThriftSharp.Internals
             for ( int n = 0; n < method.Parameters.Count; n++ )
             {
                 var param = method.Parameters[n];
-                var type = ThriftSerializer.FromType( param.UnderlyingType );
+                var type = ThriftSerializer.FromTypeInfo( param.TypeInfo );
 
                 if ( param.Converter == null )
                 {
-                    paramFields[n] = ReadOnlyField( param.Id, param.Name, param.UnderlyingType, args[n] );
+                    paramFields[n] = ReadOnlyField( param.Id, param.Name, param.TypeInfo, args[n] );
                 }
                 else
                 {
-                    paramFields[n] = ReadOnlyField( param.Id, param.Name, param.Converter.FromType, param.Converter.ConvertBack( args[n] ) );
+                    paramFields[n] = ReadOnlyField( param.Id, param.Name, param.Converter.FromType.GetTypeInfo(), param.Converter.ConvertBack( args[n] ) );
                 }
             }
 
@@ -57,7 +58,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Calls the specified ThriftMethod on the specified protocol with the specified arguments.
         /// </summary>
-        private static void CallMethod( IThriftProtocol protocol, ThriftMethod method, object[] args )
+        internal static void CallMethod( IThriftProtocol protocol, ThriftMethod method, object[] args )
         {
             var msg = new ThriftMessageHeader( 0, method.Name, method.IsOneWay ? ThriftMessageType.OneWay : ThriftMessageType.Call );
             var paramSt = MakeParametersStruct( method, args );
@@ -71,9 +72,9 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Creates a set-only ThriftField with the specified header and values.
         /// </summary>
-        private static ThriftField SetOnlyField( short id, string name, bool isRequired, Type underlyingType, Action<object> setter )
+        private static ThriftField SetOnlyField( short id, string name, bool isRequired, TypeInfo typeInfo, Action<object> setter )
         {
-            return new ThriftField( id, name, isRequired, new Option<object>(), underlyingType, null, ( _, v ) => setter( v ) );
+            return new ThriftField( id, name, isRequired, new Option<object>(), typeInfo, null, ( _, v ) => setter( v ) );
         }
 
         /// <summary>
@@ -84,24 +85,25 @@ namespace ThriftSharp.Internals
             var retFields = new List<ThriftField>();
             var retValContainer = new Container();
 
-            if ( method.ReturnType != typeof( void ) )
+            if ( method.ReturnTypeInfo.AsType() != typeof( void ) )
             {
                 if ( method.ReturnValueConverter == null )
                 {
-                    var retType = ThriftSerializer.FromType( method.ReturnType );
-                    retFields.Add( SetOnlyField( 0, "", true, method.ReturnType, v => retValContainer.Value = v ) );
+                    var retType = ThriftSerializer.FromTypeInfo( method.ReturnTypeInfo );
+                    retFields.Add( SetOnlyField( 0, "", true, method.ReturnTypeInfo, v => retValContainer.Value = v ) );
                 }
                 else
                 {
-                    var retType = ThriftSerializer.FromType( method.ReturnValueConverter.FromType );
-                    retFields.Add( SetOnlyField( 0, "", true, method.ReturnValueConverter.FromType,
+                    var retTypeInfo = method.ReturnValueConverter.FromType.GetTypeInfo();
+                    var retType = ThriftSerializer.FromTypeInfo( retTypeInfo );
+                    retFields.Add( SetOnlyField( 0, "", true, retTypeInfo,
                                                  v => retValContainer.Value = method.ReturnValueConverter.Convert( v ) ) );
                 }
             }
 
             foreach ( var e in method.Exceptions )
             {
-                retFields.Add( SetOnlyField( e.Id, e.Name, false, e.ExceptionType, v => { throw (Exception) v; } ) );
+                retFields.Add( SetOnlyField( e.Id, e.Name, false, e.ExceptionTypeInfo, v => { throw (Exception) v; } ) );
             }
 
             return Tuple.Create( new ThriftStruct( new ThriftStructHeader( "" ), retFields ), retValContainer );
@@ -110,21 +112,21 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Reads a protocol exception from the specified protocol.
         /// </summary>
-        private static ThriftProtocolException ReadException( IThriftProtocol protocol )
+        private static async Task<ThriftProtocolException> ReadExceptionAsync( IThriftProtocol protocol )
         {
             // Server exception (not a declared one)
-            var exceptionType = typeof( ThriftProtocolException );
-            var exception = ThriftSerializer.FromType( exceptionType ).Read( protocol, exceptionType );
-            protocol.ReadMessageEnd();
+            var exceptionTypeInfo = typeof( ThriftProtocolException ).GetTypeInfo();
+            var exception = await ThriftSerializer.FromTypeInfo( exceptionTypeInfo ).ReadAsync( protocol, exceptionTypeInfo );
+            await protocol.ReadMessageEndAsync();
             return (ThriftProtocolException) exception;
         }
 
         /// <summary>
         /// Reads a ThriftMessage returned by the specified ThriftMethod on the specified ThriftProtocol.
         /// </summary>
-        private static object ReadMessage( IThriftProtocol protocol, ThriftMethod method )
+        private static async Task<object> ReadMessageAsync( IThriftProtocol protocol, ThriftMethod method )
         {
-            var header = protocol.ReadMessageHeader();
+            var header = await protocol.ReadMessageHeaderAsync();
 
             if ( !EnumEx.GetValues<ThriftMessageType>().Contains( header.MessageType ) )
             {
@@ -132,12 +134,12 @@ namespace ThriftSharp.Internals
             }
             if ( header.MessageType == ThriftMessageType.Exception )
             {
-                throw ReadException( protocol );
+                throw await ReadExceptionAsync( protocol );
             }
 
             var retStAndVal = MakeReturnStruct( method );
-            ThriftSerializer.ReadStruct( protocol, retStAndVal.Item1, null );
-            protocol.ReadMessageEnd();
+            await ThriftSerializer.ReadStructAsync( protocol, retStAndVal.Item1, null );
+            await protocol.ReadMessageEndAsync();
             // Dispose of it now that we have finished reading and writing
             // using() is quite dangerous in this case because of async stuff happening
             protocol.Dispose();
@@ -147,21 +149,12 @@ namespace ThriftSharp.Internals
 
 
         /// <summary>
-        /// Sends a Thrift message representing the specified method call with the specified arguments on the specified protocol.
+        /// Sends a Thrift message representing the specified method call with the specified arguments on the specified protocol, and gets the result.
         /// </summary>
-        private static object SendMessage( IThriftProtocol protocol, ThriftMethod method, params object[] args )
+        private static Task<object> SendMessageAsync( IThriftProtocol protocol, ThriftMethod method, params object[] args )
         {
-            Func<object> action = () =>
-            {
-                CallMethod( protocol, method, args );
-                return ReadMessage( protocol, method );
-            };
-
-            if ( method.IsAsync )
-            {
-                return Task.Factory.StartNew( action );
-            }
-            return action();
+            CallMethod( protocol, method, args );
+            return ReadMessageAsync( protocol, method );
         }
 
 
@@ -173,7 +166,7 @@ namespace ThriftSharp.Internals
         /// <param name="methodName">The underlying method name.</param>
         /// <param name="args">The method arguments.</param>
         /// <returns>The method result.</returns>
-        public static object CallMethod( ThriftCommunication communication, ThriftService service, string methodName, params object[] args )
+        public static async Task<T> CallMethodAsync<T>( ThriftCommunication communication, ThriftService service, string methodName, params object[] args )
         {
             var protocol = communication.CreateProtocol();
             var method = service.Methods.FirstOrDefault( m => m.UnderlyingName == methodName );
@@ -181,7 +174,7 @@ namespace ThriftSharp.Internals
             {
                 throw new ArgumentException( string.Format( "Invalid method name ({0})", methodName ) );
             }
-            return SendMessage( protocol, method, args );
+            return (T) await SendMessageAsync( protocol, method, args );
         }
 
 

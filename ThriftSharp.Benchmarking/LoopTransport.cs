@@ -3,6 +3,7 @@
 // Redistributions of this source code must retain the above copyright notice.
 
 using System.IO;
+using System.Threading.Tasks;
 using ThriftSharp.Transport;
 
 namespace ThriftSharp.Benchmarking
@@ -12,22 +13,23 @@ namespace ThriftSharp.Benchmarking
     /// </summary>
     public sealed class LoopTransport : IThriftTransport
     {
+        private static readonly Task CompletedTask = Task.FromResult( 0 );
+
         private MemoryStream _memory;
         private bool _isReading = true;
 
-
-        public byte ReadByte()
+        public Task<byte> ReadByteAsync()
         {
             CheckRead();
-            return (byte) _memory.ReadByte();
+            return Task.FromResult( (byte) _memory.ReadByte() );
         }
 
-        public byte[] ReadBytes( int length )
+        public Task<byte[]> ReadBytesAsync( int length )
         {
             CheckRead();
             byte[] buffer = new byte[length];
             _memory.Read( buffer, 0, length );
-            return buffer;
+            return Task.FromResult( buffer );
         }
 
         public void WriteByte( byte b )
@@ -40,6 +42,11 @@ namespace ThriftSharp.Benchmarking
         {
             CheckWrite();
             _memory.Write( bytes, 0, bytes.Length );
+        }
+
+        public Task FlushAsync()
+        {
+            return CompletedTask;
         }
 
         public void Dispose() { }
