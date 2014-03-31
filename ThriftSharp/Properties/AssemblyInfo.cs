@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2013 Solal Pirelli
+﻿// Copyright (c) 2014 Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details).
 // Redistributions of this source code must retain the above copyright notice.
 
@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: AssemblyTitle( "Thrift#" )]
 [assembly: AssemblyDescription( "An attribute-based, IDL-less Thrift client for .NET" )]
-[assembly: AssemblyCopyright( "Copyright © Solal Pirelli 2013" )]
+[assembly: AssemblyCopyright( "Copyright © Solal Pirelli 2014" )]
 [assembly: NeutralResourcesLanguage( "en" )]
 
 [assembly: AssemblyVersion( "1.0.9.*" )]
