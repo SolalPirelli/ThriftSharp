@@ -36,6 +36,7 @@ namespace ThriftSharp.Transport
         /// Initializes a new instance of the ThriftHttpClientTransport class using the specified  URL.
         /// </summary>
         /// <param name="url">The URL, including the port if necessary.</param>
+        /// <param name="token">The cancellation token that will cancel asynchronous tasks.</param>
         /// <param name="headers">The HTTP headers to include with every request.</param>
         /// <param name="timeout">The timeout in milliseconds (or -1 for an infinite timeout).</param>
         public ThriftHttpTransport( string url, CancellationToken token, IDictionary<string, string> headers, int timeout )
