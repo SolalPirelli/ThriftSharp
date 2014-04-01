@@ -18,9 +18,9 @@ namespace ThriftSharp.Benchmarking
      * Very complex person 00:00:00.0003622
      * 
      * Thrift# v1.0.9-async (i7-3612QM)
-     * Simple person       00:00:00.0000088
-     * Complex person      00:00:00.0001413
-     * Very complex person 00:00:00.0005167
+     * Simple person       00:00:00.0000085
+     * Complex person      00:00:00.0001390
+     * Very complex person 00:00:00.0004950
      * +50%
      */
 

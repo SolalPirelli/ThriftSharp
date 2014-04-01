@@ -248,5 +248,10 @@ namespace ThriftSharp.Protocols
         /// </summary>
         /// <param name="value">The array of signed bytes.</param>
         void WriteBinary( sbyte[] value );
+
+        /// <summary>
+        /// Asynchronously flushes the written data.
+        /// </summary>
+        Task FlushAsync();
     }
 }

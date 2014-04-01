@@ -29,7 +29,11 @@ let (==>) data (checker: 'a -> unit) = run <| async {
 
 let throwsOnRead<'S, 'T when 'T :> exn> data = run <| async {
     let m = MemoryProtocol(data)
-    do! throwsAsync<'T> (fun () -> readAsync<'S> m |> Async.Ignore) |> Async.Ignore
+    do! throwsAsync<'T> (fun () -> 
+        async { 
+            let! res = readAsync<'S> m
+            return box res 
+        }) |> Async.Ignore
 }
 
 

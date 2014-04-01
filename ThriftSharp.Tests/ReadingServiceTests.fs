@@ -46,7 +46,7 @@ let (==>) (data, methodName) (checker: 'a -> unit) = run <| async {
 
 let (=//=>) (data, methodName) (checker: 'a -> unit) = run <| async {
     let m = MemoryProtocol(data)
-    return! throwsAsync<'a> (fun () -> readMsgAsync<Service> m methodName |> Async.Ignore)
+    return! throwsAsync<'a> (fun () -> readMsgAsync<Service> m methodName)
 }
 
 

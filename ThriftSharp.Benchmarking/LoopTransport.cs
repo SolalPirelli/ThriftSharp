@@ -49,7 +49,10 @@ namespace ThriftSharp.Benchmarking
             return CompletedTask;
         }
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+            _memory.Dispose();
+        }
 
         private void CheckWrite()
         {

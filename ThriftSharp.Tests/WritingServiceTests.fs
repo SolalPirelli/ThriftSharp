@@ -31,12 +31,18 @@ type Service =
 
 let (--) a b = a,b
 
-let (==>) (methodName, args) data =
-    let m = writeMsg<Service> methodName (Array.ofSeq args)
+let (==>) (methodName, args) data = run <| async {
+    let! m = writeMsgAsync<Service> methodName (Array.ofSeq args)
     m.WrittenValues <===> data
+}
 
-let throwsOnWrite<'T when 'T :> System.Exception> methodName args =
-    throws<'T> (fun () -> writeMsg<Service> methodName (Array.ofSeq args) |> ignore) |> ignore
+let throwsOnWrite<'T when 'T :> System.Exception> methodName args = run <| async {
+    do! throwsAsync<'T> (fun () -> 
+        async {
+            let! res = writeMsgAsync<Service> methodName (Array.ofSeq args)
+            return box res
+        }) |> Async.Ignore
+}
 
 
 [<TestContainer>]

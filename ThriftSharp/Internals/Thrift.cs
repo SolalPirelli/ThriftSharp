@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using ThriftSharp.Protocols;
 using ThriftSharp.Utilities;
@@ -58,7 +59,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Calls the specified ThriftMethod on the specified protocol with the specified arguments.
         /// </summary>
-        internal static void CallMethod( IThriftProtocol protocol, ThriftMethod method, object[] args )
+        private static Task CallMethodAsync( IThriftProtocol protocol, ThriftMethod method, object[] args )
         {
             var msg = new ThriftMessageHeader( 0, method.Name, method.IsOneWay ? ThriftMessageType.OneWay : ThriftMessageType.Call );
             var paramSt = MakeParametersStruct( method, args );
@@ -66,6 +67,7 @@ namespace ThriftSharp.Internals
             protocol.WriteMessageHeader( msg );
             ThriftSerializer.WriteStruct( protocol, paramSt, null );
             protocol.WriteMessageEnd();
+            return protocol.FlushAsync();
         }
 
 
@@ -151,10 +153,10 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Sends a Thrift message representing the specified method call with the specified arguments on the specified protocol, and gets the result.
         /// </summary>
-        private static Task<object> SendMessageAsync( IThriftProtocol protocol, ThriftMethod method, params object[] args )
+        private static async Task<object> SendMessageAsync( IThriftProtocol protocol, ThriftMethod method, params object[] args )
         {
-            CallMethod( protocol, method, args );
-            return ReadMessageAsync( protocol, method );
+            await CallMethodAsync( protocol, method, args );
+            return await ReadMessageAsync( protocol, method );
         }
 
 
@@ -168,13 +170,18 @@ namespace ThriftSharp.Internals
         /// <returns>The method result.</returns>
         public static async Task<T> CallMethodAsync<T>( ThriftCommunication communication, ThriftService service, string methodName, params object[] args )
         {
-            var protocol = communication.CreateProtocol();
             var method = service.Methods.FirstOrDefault( m => m.UnderlyingName == methodName );
             if ( method == null )
             {
                 throw new ArgumentException( string.Format( "Invalid method name ({0})", methodName ) );
             }
-            return (T) await SendMessageAsync( protocol, method, args );
+
+            var token = args.OfType<CancellationToken>().FirstOrDefault();
+            var protocol = communication.CreateProtocol( token );
+
+            var methodArgs = args.Where( a => !( a is CancellationToken ) ).ToArray();
+
+            return (T) await SendMessageAsync( protocol, method, methodArgs );
         }
 
 

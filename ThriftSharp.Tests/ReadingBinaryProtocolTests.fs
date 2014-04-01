@@ -21,7 +21,11 @@ let (<==>) (data, selector) value =
 
 let (=//=>) (data, selector) (check: 'a -> unit) = run <| async {
     let trans = MemoryTransport(data |> List.map byte)
-    let! ex = throwsAsync<'a> (fun () -> selector(new ThriftBinaryProtocol(trans)) |> Async.AwaitTask |> Async.Ignore)
+    let! ex = throwsAsync<'a> (fun () -> 
+        async {
+            let! res = selector(new ThriftBinaryProtocol(trans)) |> Async.AwaitTask
+            return box res
+        })
     check(ex)
 }
 

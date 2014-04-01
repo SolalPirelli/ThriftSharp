@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using ThriftSharp.Utilities;
 
@@ -19,7 +20,10 @@ namespace ThriftSharp.Transport
         private const string ThriftContentType = "application/x-thrift";
         private const string ThriftHttpMethod = "POST";
 
+        private static readonly byte[] OneByteBuffer = new byte[1];
+
         private readonly string _url;
+        private readonly CancellationToken _token;
         private readonly IDictionary<string, string> _headers;
         private readonly int _timeout;
 
@@ -34,9 +38,10 @@ namespace ThriftSharp.Transport
         /// <param name="url">The URL, including the port if necessary.</param>
         /// <param name="headers">The HTTP headers to include with every request.</param>
         /// <param name="timeout">The timeout in milliseconds (or -1 for an infinite timeout).</param>
-        public ThriftHttpTransport( string url, IDictionary<string, string> headers, int timeout )
+        public ThriftHttpTransport( string url, CancellationToken token, IDictionary<string, string> headers, int timeout )
         {
             _url = url;
+            _token = token;
             _headers = headers;
             _timeout = timeout;
 
@@ -48,14 +53,13 @@ namespace ThriftSharp.Transport
         /// Asynchronously eads an unsigned byte.
         /// </summary>
         /// <returns>An unsigned byte.</returns>
-        public Task<byte> ReadByteAsync()
+        public async Task<byte> ReadByteAsync()
         {
-            int retVal = _inputStream.ReadByte();
-            if ( retVal == -1 )
+            if ( await _inputStream.ReadAsync( OneByteBuffer, 0, 1, _token ) != 1 )
             {
                 throw new InvalidOperationException( "There are no bytes left to be read." );
             }
-            return Task.FromResult( (byte) retVal );
+            return OneByteBuffer[0];
         }
 
         /// <summary>
@@ -66,7 +70,7 @@ namespace ThriftSharp.Transport
         public async Task<byte[]> ReadBytesAsync( int length )
         {
             byte[] buffer = new byte[length];
-            if ( await _inputStream.ReadAsync( buffer, 0, length ) != length )
+            if ( await _inputStream.ReadAsync( buffer, 0, length, _token ) != length )
             {
                 throw new InvalidOperationException( "There are not enough bytes to be read." );
             }
@@ -97,6 +101,8 @@ namespace ThriftSharp.Transport
         /// </summary>
         public async Task FlushAsync()
         {
+            _token.ThrowIfCancellationRequested();
+
             _request = WebRequest.CreateHttp( _url );
             _request.ContentType = _request.Accept = ThriftContentType;
             _request.Method = ThriftHttpMethod;

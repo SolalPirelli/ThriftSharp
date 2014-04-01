@@ -451,6 +451,14 @@ namespace ThriftSharp.Protocols
         }
 
         /// <summary>
+        /// Asynchronously flushes the written data.
+        /// </summary>
+        public Task FlushAsync()
+        {
+            return _transport.FlushAsync();
+        }
+
+        /// <summary>
         /// Not part of the IThriftProtocol interface.
         /// Writes the specified unsigned byte.
         /// </summary>

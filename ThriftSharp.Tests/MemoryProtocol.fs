@@ -111,6 +111,9 @@ type MemoryProtocol(toRead: ThriftProtocolValue list) =
         member x.WriteBinary(bs) =
             write (Binary bs)
 
+        member x.FlushAsync() =
+            emptyTask
+
 
         member x.ReadMessageHeaderAsync() =
             match read() with

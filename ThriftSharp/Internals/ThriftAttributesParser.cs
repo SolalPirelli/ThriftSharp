@@ -5,6 +5,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using ThriftSharp.Utilities;
 
 namespace ThriftSharp.Internals
@@ -113,6 +114,11 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static ThriftMethodParameter ParseMethodParameter( ParameterInfo info )
         {
+            if ( info.ParameterType == typeof( CancellationToken ) )
+            {
+                return null;
+            }
+
             var attr = info.GetAttribute<ThriftParameterAttribute>();
             if ( attr == null )
             {
@@ -163,6 +169,7 @@ namespace ThriftSharp.Internals
             var throwsClauses = ParseThrowsClauses( info );
             var parameters = info.GetParameters()
                                  .Select( ParseMethodParameter )
+                                 .Where( p => p != null )
                                  .ToArray();
 
             var unwrapped = ReflectionEx.UnwrapTaskIfNeeded( info.ReturnType );

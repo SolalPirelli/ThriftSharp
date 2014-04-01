@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 using ThriftSharp.Protocols;
 using ThriftSharp.Transport;
 using ThriftSharp.Utilities;
@@ -33,7 +34,7 @@ namespace ThriftSharp
     public sealed class ThriftCommunication : IThriftTransportPicker, IFluent
     {
         private readonly Func<IThriftTransport, IThriftProtocol> _protocolCreator;
-        private readonly Func<IThriftTransport> _transportFactory;
+        private readonly Func<CancellationToken, IThriftTransport> _transportFactory;
 
         /// <summary>
         /// Initializes a new instance of the ThriftCommunication class with the specified protocol creator.
@@ -47,7 +48,7 @@ namespace ThriftSharp
         /// Initializes a new instance of the ThriftCommunication class 
         /// as a second part of the build step with the specified transport factory.
         /// </summary>
-        private ThriftCommunication( ThriftCommunication comm, Func<IThriftTransport> transportFactory )
+        private ThriftCommunication( ThriftCommunication comm, Func<CancellationToken, IThriftTransport> transportFactory )
         {
             _protocolCreator = comm._protocolCreator;
             _transportFactory = transportFactory;
@@ -64,7 +65,7 @@ namespace ThriftSharp
         internal ThriftCommunication( IThriftProtocol protocol )
         {
             _protocolCreator = _ => protocol;
-            _transportFactory = () => null;
+            _transportFactory = _ => null;
         }
 
         /// <summary>
@@ -86,16 +87,16 @@ namespace ThriftSharp
         {
             Validation.IsNeitherNullNorWhitespace( url, () => url );
 
-            return new ThriftCommunication( this, () => new ThriftHttpTransport( url, headers ?? new Dictionary<string, string>(), timeout ) );
+            return new ThriftCommunication( this, token => new ThriftHttpTransport( url, token, headers ?? new Dictionary<string, string>(), timeout ) );
         }
 
 
         /// <summary>
         /// Creates a single-use IThriftProtocol object.
         /// </summary>
-        internal IThriftProtocol CreateProtocol()
+        internal IThriftProtocol CreateProtocol( CancellationToken token )
         {
-            return _protocolCreator( _transportFactory() );
+            return _protocolCreator( _transportFactory( token ) );
         }
 
         #region Static object methods hiding
