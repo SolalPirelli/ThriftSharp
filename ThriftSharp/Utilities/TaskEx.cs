@@ -16,29 +16,36 @@ namespace ThriftSharp.Utilities
         /// <summary>
         /// Creates a Task from the old .NET async model, with a timeout.
         /// </summary>
-        public static Task<TResult> FromAsync<TResult>( Func<AsyncCallback, object, IAsyncResult> beginMethod, Func<IAsyncResult, TResult> endMethod, int millisecondsTimeout )
+        public static Task<TResult> FromAsync<TResult>( Func<AsyncCallback, object, IAsyncResult> beginMethod, Func<IAsyncResult, TResult> endMethod, int millisecondsTimeout, CancellationToken token )
         {
-            return Task.Factory.FromAsync( beginMethod, res => endMethod( res ), null ).TimeoutAfter( millisecondsTimeout );
+            return Task.Factory.FromAsync( beginMethod, res => endMethod( res ), null ).TimeoutAfter( millisecondsTimeout, token );
         }
 
         /// <summary>
         /// Returns a Task that times out after the specified timeout, 
         /// or executes the current task if it completes before the timeout occurs.
         /// </summary>
-        public static Task<TResult> TimeoutAfter<TResult>( this Task<TResult> task, int millisecondsTimeout )
+        private static Task<TResult> TimeoutAfter<TResult>( this Task<TResult> task, int millisecondsTimeout, CancellationToken token )
         {
-            var tokenSource = new CancellationTokenSource();
-            return Task.WhenAny( task, Task.Delay( millisecondsTimeout, tokenSource.Token )
-                                           .ContinueWith( _ => default( TResult ) ) )
+            var timeoutSource = new CancellationTokenSource();
+            var tokenSource = CancellationTokenSource.CreateLinkedTokenSource( timeoutSource.Token, token );
+
+            var timeoutTask = Task.Delay( millisecondsTimeout, tokenSource.Token )
+                                  .ContinueWith( _ => default( TResult ) );
+
+            var continuationState = Tuple.Create( timeoutSource, timeoutTask );
+
+            return Task.WhenAny( task, timeoutTask )
                        .ContinueWith( ( t, s ) =>
                        {
-                           var source = (CancellationTokenSource) s;
-                           if ( source.IsCancellationRequested )
+                           var state = (Tuple<CancellationTokenSource, Task<TResult>>) s;
+
+                           if ( t.Result == state.Item2 )
                            {
-                               throw new TimeoutException();
+                               throw new OperationCanceledException();
                            }
 
-                           source.Cancel();
+                           state.Item1.Cancel();
 
                            switch ( t.Result.Status )
                            {
@@ -46,7 +53,7 @@ namespace ThriftSharp.Utilities
                                    throw t.Result.Exception;
 
                                case TaskStatus.Canceled:
-                                   throw new TimeoutException();
+                                   throw new OperationCanceledException();
 
                                case TaskStatus.RanToCompletion:
                                    return t.Result.Result;
@@ -54,7 +61,7 @@ namespace ThriftSharp.Utilities
                                default:
                                    throw new InvalidOperationException( "This should never happen." );
                            }
-                       }, tokenSource );
+                       }, continuationState );
         }
     }
 }

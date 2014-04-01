@@ -112,7 +112,7 @@ namespace ThriftSharp.Transport
                 _request.Headers[header.Key] = header.Value;
             }
 
-            using ( var requestStream = await TaskEx.FromAsync( _request.BeginGetRequestStream, _request.EndGetRequestStream, _timeout ) )
+            using ( var requestStream = await TaskEx.FromAsync( _request.BeginGetRequestStream, _request.EndGetRequestStream, _timeout, _token ) )
             {
                 _outputStream.WriteTo( requestStream );
                 requestStream.Flush();
@@ -122,7 +122,7 @@ namespace ThriftSharp.Transport
             // Silverlight (and WP8) throws a NotSupportedException otherwise.
             _outputStream.Dispose();
 
-            var response = await TaskEx.FromAsync( _request.BeginGetResponse, _request.EndGetResponse, _timeout );
+            var response = await TaskEx.FromAsync( _request.BeginGetResponse, _request.EndGetResponse, _timeout, _token );
             _inputStream = response.GetResponseStream();
         }
 
