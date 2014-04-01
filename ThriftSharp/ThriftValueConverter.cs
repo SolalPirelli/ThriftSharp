@@ -10,7 +10,7 @@ namespace ThriftSharp
     /// Converter between types, used to serialize and deserialize complex objects into Thrift types.
     /// </summary>
     /// <remarks>
-    /// Consumers should use the <see cref="ThriftValueConverter{TFrom, TTo}" /> abstract class instead of directly inheriting from this interface.
+    /// Consumers should implement the <see cref="ThriftValueConverter{TFrom, TTo}" /> abstract class instead of directly inheriting from this interface.
     /// </remarks>
     public interface IThriftValueConverter
     {
