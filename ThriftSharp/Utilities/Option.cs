@@ -12,9 +12,9 @@ namespace ThriftSharp.Utilities
     /// <remarks>
     /// Similar to Nullable, but works with reference types too.
     /// </remarks>
-    internal sealed class Option<T>
+    internal sealed class Option
     {
-        private readonly T _value;
+        private readonly object _value;
 
         /// <summary>
         /// Gets a value indicating whether the option has a value.
@@ -24,7 +24,7 @@ namespace ThriftSharp.Utilities
         /// <summary>
         /// Gets the option value, or throws an exception if there is none.
         /// </summary>
-        public T Value
+        public object Value
         {
             get
             {
@@ -44,29 +44,22 @@ namespace ThriftSharp.Utilities
         /// <summary>
         /// Initializes a new instance of the Option class with the specified value.
         /// </summary>
-        public Option( T value )
+        public Option( object value )
         {
             _value = value;
             HasValue = true;
         }
-    }
 
-    /// <summary>
-    /// Utility class to help with type inference when creating Options.
-    /// </summary>
-    internal static class Option
-    {
         /// <summary>
         /// Returns the optional value of a field, depending on whether the first parameter is null.
         /// </summary>
-        public static Option<U> Get<T, U>( T obj, Func<T, U> selector )
-            where T : class
+        public static Option Get<T>( T obj, Func<T, object> selector )
         {
             if ( obj == null )
             {
-                return new Option<U>();
+                return new Option();
             }
-            return new Option<U>( selector( obj ) );
+            return new Option( selector( obj ) );
         }
     }
 }

@@ -77,9 +77,8 @@ type __() =
 
         let trans = CircularTransport()
         let prot = ThriftBinaryProtocol(trans)
-        let ti = typeof<ComplexStruct>.GetTypeInfo()
-        ThriftSerializer.FromTypeInfo(ti).Write(prot, o)
-        let! o2 = ThriftSerializer.FromTypeInfo(ti).ReadAsync(prot, ti) |> Async.AwaitTask
+        write prot o
+        let! o2 = readAsync<ComplexStruct> prot
 
-        (o2 :?> ComplexStruct) <=> o
+        o2 <=> o
     }

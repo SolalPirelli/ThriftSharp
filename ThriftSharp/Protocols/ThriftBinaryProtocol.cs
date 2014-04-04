@@ -109,7 +109,7 @@ namespace ThriftSharp.Protocols
             }
 
             short id = await ReadInt16Async();
-            return new ThriftFieldHeader( id, "", (ThriftType) tid );
+            return new ThriftFieldHeader( id, "", (ThriftTypeId) tid );
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace ThriftSharp.Protocols
         {
             byte tid = await _transport.ReadByteAsync();
             int count = await ReadInt32Async();
-            return new ThriftCollectionHeader( count, (ThriftType) tid );
+            return new ThriftCollectionHeader( count, (ThriftTypeId) tid );
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace ThriftSharp.Protocols
         {
             byte tid = await _transport.ReadByteAsync();
             int count = await ReadInt32Async();
-            return new ThriftCollectionHeader( count, (ThriftType) tid );
+            return new ThriftCollectionHeader( count, (ThriftTypeId) tid );
         }
 
         /// <summary>
@@ -170,7 +170,7 @@ namespace ThriftSharp.Protocols
             var keyTypeId = await _transport.ReadByteAsync();
             var valueTypeId = await _transport.ReadByteAsync();
             int count = await ReadInt32Async();
-            return new ThriftMapHeader( count, (ThriftType) keyTypeId, (ThriftType) valueTypeId );
+            return new ThriftMapHeader( count, (ThriftTypeId) keyTypeId, (ThriftTypeId) valueTypeId );
         }
 
         /// <summary>
@@ -312,7 +312,7 @@ namespace ThriftSharp.Protocols
         /// <param name="header">The header</param>
         public void WriteFieldHeader( ThriftFieldHeader header )
         {
-            WriteByte( (byte) header.FieldType );
+            WriteByte( (byte) header.FieldTypeId );
             WriteInt16( header.Id );
         }
 
@@ -335,7 +335,7 @@ namespace ThriftSharp.Protocols
         /// <param name="header">The header.</param>
         public void WriteListHeader( ThriftCollectionHeader header )
         {
-            WriteByte( (byte) header.ElementType );
+            WriteByte( (byte) header.ElementTypeId );
             WriteInt32( header.Count );
         }
 
@@ -350,7 +350,7 @@ namespace ThriftSharp.Protocols
         /// <param name="header">The header.</param>
         public void WriteSetHeader( ThriftCollectionHeader header )
         {
-            WriteByte( (byte) header.ElementType );
+            WriteByte( (byte) header.ElementTypeId );
             WriteInt32( header.Count );
         }
 
@@ -365,8 +365,8 @@ namespace ThriftSharp.Protocols
         /// <param name="header">The header.</param>
         public void WriteMapHeader( ThriftMapHeader header )
         {
-            WriteByte( (byte) header.KeyType );
-            WriteByte( (byte) header.ValueType );
+            WriteByte( (byte) header.KeyTypeId );
+            WriteByte( (byte) header.ValueTypeId );
             WriteInt32( header.Count );
         }
 

@@ -51,13 +51,15 @@ let throwsAsync<'T when 'T :> Exception> func = async {
 let run x = x |> Async.Ignore |> Async.RunSynchronously
 
 let readAsync<'T> prot = async {
-    let! retVal = ThriftSerializer.FromTypeInfo(typeof<'T>.GetTypeInfo())
-                                  .ReadAsync(prot, typeof<'T>.GetTypeInfo())
+    let thriftStruct = ThriftAttributesParser.ParseStruct(typeof<'T>.GetTypeInfo())
+    let! retVal = ThriftReader.ReadAsync(thriftStruct, prot)
                |> Async.AwaitTask
     return retVal :?> 'T
 }
 
-let write prot obj = ThriftSerializer.FromTypeInfo(obj.GetType().GetTypeInfo()).Write(prot, obj)
+let write prot obj =
+    let thriftStruct = ThriftAttributesParser.ParseStruct(obj.GetType().GetTypeInfo())
+    ThriftWriter.Write(thriftStruct, obj, prot)
 
 let readMsgAsync<'T> prot name = async {
     let svc = ThriftAttributesParser.ParseService(typeof<'T>.GetTypeInfo())

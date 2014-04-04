@@ -117,7 +117,7 @@ type __()  =
         fun header ->
             header.Id <=> 10s
             header.Name <=> ""
-            header.FieldType <=> ThriftType.String
+            header.FieldTypeId <=> ThriftTypeId.Binary
 
     [<Test>]
     member __.``FieldEnd``() =
@@ -140,7 +140,7 @@ type __()  =
         ==>
         fun header ->
             header.Count <=> 20
-            header.ElementType <=> ThriftType.Int32
+            header.ElementTypeId <=> ThriftTypeId.Int32
 
     [<Test>]
     member __.``ListEnd``() =
@@ -155,7 +155,7 @@ type __()  =
         ==>
         fun header ->
             header.Count <=> 0
-            header.ElementType <=> ThriftType.Double
+            header.ElementTypeId <=> ThriftTypeId.Double
 
     [<Test>]
     member __.``SetEnd``() =
@@ -171,8 +171,8 @@ type __()  =
         ==>
         fun header ->
             header.Count <=> 256
-            header.KeyType <=> ThriftType.Int16
-            header.ValueType <=> ThriftType.Int64
+            header.KeyTypeId <=> ThriftTypeId.Int16
+            header.ValueTypeId <=> ThriftTypeId.Int64
 
     [<Test>]
     member __.``MapEnd``() =

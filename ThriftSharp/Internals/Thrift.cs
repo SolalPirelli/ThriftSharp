@@ -24,7 +24,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static ThriftField ReadOnlyField( short id, string name, TypeInfo typeInfo, object value )
         {
-            return new ThriftField( id, name, true, new Option<object>(), typeInfo, _ => value, null );
+            return new ThriftField( id, name, true, new Option(), typeInfo, _ => value, null );
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace ThriftSharp.Internals
             for ( int n = 0; n < method.Parameters.Count; n++ )
             {
                 var param = method.Parameters[n];
-                var type = ThriftSerializer.FromTypeInfo( param.TypeInfo );
+                var type = new ThriftType( param.TypeInfo.AsType() );
 
                 if ( param.Converter == null )
                 {
@@ -53,7 +53,7 @@ namespace ThriftSharp.Internals
                 }
             }
 
-            return new ThriftStruct( new ThriftStructHeader( "" ), paramFields );
+            return new ThriftStruct( new ThriftStructHeader( "" ), paramFields, typeof( object ).GetTypeInfo() );
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace ThriftSharp.Internals
             var paramSt = MakeParametersStruct( method, args );
 
             protocol.WriteMessageHeader( msg );
-            ThriftSerializer.WriteStruct( protocol, paramSt, null );
+            ThriftWriter.Write( paramSt, null, protocol );
             protocol.WriteMessageEnd();
             return protocol.FlushAsync();
         }
@@ -76,7 +76,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static ThriftField SetOnlyField( short id, string name, bool isRequired, TypeInfo typeInfo, Action<object> setter )
         {
-            return new ThriftField( id, name, isRequired, new Option<object>(), typeInfo, null, ( _, v ) => setter( v ) );
+            return new ThriftField( id, name, isRequired, new Option(), typeInfo, null, ( _, v ) => setter( v ) );
         }
 
         /// <summary>
@@ -91,13 +91,13 @@ namespace ThriftSharp.Internals
             {
                 if ( method.ReturnValueConverter == null )
                 {
-                    var retType = ThriftSerializer.FromTypeInfo( method.ReturnTypeInfo );
+                    var retType = new ThriftType( method.ReturnTypeInfo.AsType() );
                     retFields.Add( SetOnlyField( 0, "", true, method.ReturnTypeInfo, v => retValContainer.Value = v ) );
                 }
                 else
                 {
                     var retTypeInfo = method.ReturnValueConverter.FromType.GetTypeInfo();
-                    var retType = ThriftSerializer.FromTypeInfo( retTypeInfo );
+                    var retType = new ThriftType( retTypeInfo.AsType() );
                     retFields.Add( SetOnlyField( 0, "", true, retTypeInfo,
                                                  v => retValContainer.Value = method.ReturnValueConverter.Convert( v ) ) );
                 }
@@ -108,7 +108,7 @@ namespace ThriftSharp.Internals
                 retFields.Add( SetOnlyField( e.Id, e.Name, false, e.ExceptionTypeInfo, v => { throw (Exception) v; } ) );
             }
 
-            return Tuple.Create( new ThriftStruct( new ThriftStructHeader( "" ), retFields ), retValContainer );
+            return Tuple.Create( new ThriftStruct( new ThriftStructHeader( "" ), retFields, typeof( object ).GetTypeInfo() ), retValContainer );
         }
 
         /// <summary>
@@ -117,8 +117,8 @@ namespace ThriftSharp.Internals
         private static async Task<ThriftProtocolException> ReadExceptionAsync( IThriftProtocol protocol )
         {
             // Server exception (not a declared one)
-            var exceptionTypeInfo = typeof( ThriftProtocolException ).GetTypeInfo();
-            var exception = await ThriftSerializer.FromTypeInfo( exceptionTypeInfo ).ReadAsync( protocol, exceptionTypeInfo );
+            var exceptionStruct = ThriftAttributesParser.ParseStruct( typeof( ThriftProtocolException ).GetTypeInfo() );
+            var exception = await ThriftReader.ReadAsync( exceptionStruct, protocol );
             await protocol.ReadMessageEndAsync();
             return (ThriftProtocolException) exception;
         }
@@ -140,7 +140,7 @@ namespace ThriftSharp.Internals
             }
 
             var retStAndVal = MakeReturnStruct( method );
-            await ThriftSerializer.ReadStructAsync( protocol, retStAndVal.Item1, null );
+            await ThriftReader.ReadAsync( retStAndVal.Item1, protocol );
             await protocol.ReadMessageEndAsync();
             // Dispose of it now that we have finished reading and writing
             // using() is quite dangerous in this case because of async stuff happening

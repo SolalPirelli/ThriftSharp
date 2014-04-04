@@ -40,6 +40,10 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Internals\ThriftReader.cs" />
+    <Compile Include="Internals\ThriftTypeId.cs" />
+    <Compile Include="Internals\ThriftWriter.cs" />
+    <Compile Include="Internals\TypeInfos.cs" />
     <Compile Include="ThriftCommunication.cs" />
     <Compile Include="ThriftDateConverters.cs" />
     <Compile Include="ThriftValueConverter.cs" />
@@ -57,7 +61,6 @@
     <Compile Include="Internals\Thrift.cs" />
     <Compile Include="ThriftServiceImplementation.cs" />
     <Compile Include="Internals\ThriftType.cs" />
-    <Compile Include="Internals\ThriftSerializers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocols\IThriftProtocol.cs" />
     <Compile Include="Utilities\ReflectionEx.cs" />

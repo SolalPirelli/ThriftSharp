@@ -61,12 +61,14 @@ namespace ThriftSharp.Utilities
         }
 
         /// <summary>
-        /// Gets the "Add" method of the specified collection interface type on the specified type.
+        /// Gets the interface property with the specified name.
         /// </summary>
-        public static MethodInfo GetAddMethod( TypeInfo typeInfo, Type interfaceType )
+        public static PropertyInfo GetInterfaceProperty( this TypeInfo typeInfo, string name )
         {
-            // TODO: Edge case: Class has an "Add" method not from the interface
-            return typeInfo.GetDeclaredMethod( "Add" );
+            return typeInfo.ImplementedInterfaces
+                           .Concat( new[] { typeInfo.AsType() } )
+                           .Select( i => i.GetTypeInfo().GetDeclaredProperty( name ) )
+                           .First( p => p != null );
         }
 
         /// <summary>

@@ -54,7 +54,7 @@ type __() =
 
     [<Test>]
     member __.``FieldHeader``() =
-        fun p -> p.WriteFieldHeader(ThriftFieldHeader(10s, "field", ThriftType.String))
+        fun p -> p.WriteFieldHeader(ThriftFieldHeader(10s, "field", ThriftTypeId.Binary))
         ==>
         [11 // type (byte)
          0; 10] // ID (Int16)
@@ -73,7 +73,7 @@ type __() =
 
     [<Test>]
     member __.``ListHeader``() =
-        fun p -> p.WriteListHeader(ThriftCollectionHeader(20, ThriftType.Int32))
+        fun p -> p.WriteListHeader(ThriftCollectionHeader(20, ThriftTypeId.Int32))
         ==>
         [8 // element type (byte)
          0; 0; 0; 20] // size (int32)
@@ -86,7 +86,7 @@ type __() =
 
     [<Test>]
     member __.``SetHeader``() =
-        fun p -> p.WriteSetHeader(ThriftCollectionHeader(0, ThriftType.Double))
+        fun p -> p.WriteSetHeader(ThriftCollectionHeader(0, ThriftTypeId.Double))
         ==>
         [4 // element type (byte)
          0; 0; 0; 0] // size (int32)
@@ -99,7 +99,7 @@ type __() =
 
     [<Test>]
     member __.``MapHeader``() =
-        fun p -> p.WriteMapHeader(ThriftMapHeader(256, ThriftType.Int16, ThriftType.Int64))
+        fun p -> p.WriteMapHeader(ThriftMapHeader(256, ThriftTypeId.Int16, ThriftTypeId.Int64))
         ==>
         [6 // key type (byte)
          10 // element type (byte)

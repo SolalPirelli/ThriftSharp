@@ -12,12 +12,18 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the number of elements in the collection.
         /// </summary>
-        public int Count { get; private set; }
+        public readonly int Count;
 
         /// <summary>
         /// Gets the collection elements' Thrift type.
         /// </summary>
-        public ThriftType ElementType { get; private set; }
+        public readonly ThriftType ElementType;
+
+
+        /// <summary>
+        /// Gets the collection element's Thrift type ID.
+        /// </summary>
+        public readonly ThriftTypeId ElementTypeId;
 
 
         /// <summary>
@@ -29,6 +35,18 @@ namespace ThriftSharp.Internals
         {
             Count = count;
             ElementType = elementType;
+            ElementTypeId = elementType.Id;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ThriftCollectionHeader class with the specified values.
+        /// </summary>
+        /// <param name="count">The number of elements.</param>
+        /// <param name="elementTypeId">The elements' Thrift type ID.</param>
+        public ThriftCollectionHeader( int count, ThriftTypeId elementTypeId )
+        {
+            Count = count;
+            ElementTypeId = elementTypeId;
         }
 
 
@@ -37,7 +55,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         public override string ToString()
         {
-            return string.Format( "{0} [{1}]", Count, ElementType );
+            return string.Format( "{0} [{1}]", Count, ElementTypeId );
         }
     }
 
@@ -49,17 +67,27 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the number of elements in the map.
         /// </summary>
-        public int Count { get; private set; }
+        public readonly int Count;
 
         /// <summary>
         /// Gets the map keys' Thrift type.
         /// </summary>
-        public ThriftType KeyType { get; private set; }
+        public readonly ThriftType KeyType;
+
+        /// <summary>
+        /// Gets the map keys' Thrift type ID.
+        /// </summary>
+        public readonly ThriftTypeId KeyTypeId;
 
         /// <summary>
         /// Gets the map values' Thrift type.
         /// </summary>
-        public ThriftType ValueType { get; private set; }
+        public readonly ThriftType ValueType;
+
+        /// <summary>
+        /// Gets the map values' Thrift type ID.
+        /// </summary>
+        public readonly ThriftTypeId ValueTypeId;
 
 
         /// <summary>
@@ -72,16 +100,30 @@ namespace ThriftSharp.Internals
         {
             Count = count;
             KeyType = keyType;
+            KeyTypeId = keyType.Id;
             ValueType = valueType;
+            ValueTypeId = valueType.Id;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the ThriftMapHeader class with the specified values.
+        /// </summary>
+        /// <param name="count">The number of elements.</param>
+        /// <param name="keyTypeId">The keys' Thrift type ID.</param>
+        /// <param name="valueTypeId">The values' Thrift type ID.</param>
+        public ThriftMapHeader( int count, ThriftTypeId keyTypeId, ThriftTypeId valueTypeId )
+        {
+            Count = count;
+            KeyTypeId = keyTypeId;
+            ValueTypeId = valueTypeId;
+        }
 
         /// <summary>
         /// Returns a string representation of this object.
         /// </summary>
         public override string ToString()
         {
-            return string.Format( "{0} [{1} -> {2}]", Count, KeyType, ValueType );
+            return string.Format( "{0} [{1} -> {2}]", Count, KeyTypeId, ValueTypeId );
         }
     }
 
@@ -98,18 +140,22 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the field's ID.
         /// </summary>
-        public short Id { get; private set; }
+        public readonly short Id;
 
         /// <summary>
         /// Gets the field's name.
         /// </summary>
-        public string Name { get; private set; }
+        public readonly string Name;
 
         /// <summary>
         /// Gets the field's Thrift type.
         /// </summary>
-        public ThriftType FieldType { get; private set; }
+        public readonly ThriftType FieldType;
 
+        /// <summary>
+        /// Gets the field's Thrift type ID.
+        /// </summary>
+        public readonly ThriftTypeId FieldTypeId;
 
         /// <summary>
         /// Initializes a new instance of the ThriftFieldHeader class with the specified values.
@@ -122,6 +168,20 @@ namespace ThriftSharp.Internals
             Id = id;
             Name = name;
             FieldType = fieldType;
+            FieldTypeId = fieldType.Id;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ThriftFieldHeader class with the specified values.
+        /// </summary>
+        /// <param name="id">The field ID.</param>
+        /// <param name="name">The field name.</param>
+        /// <param name="fieldTypeId">The field type ID.</param>
+        public ThriftFieldHeader( short id, string name, ThriftTypeId fieldTypeId )
+        {
+            Id = id;
+            Name = name;
+            FieldTypeId = fieldTypeId;
         }
 
 
@@ -130,7 +190,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         public override string ToString()
         {
-            return string.Format( "{0}: {2} {1}", Id, Name, FieldType );
+            return string.Format( "{0}: {2} {1}", Id, Name, FieldTypeId );
         }
     }
 
@@ -142,7 +202,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the struct's name.
         /// </summary>
-        public string Name { get; private set; }
+        public readonly string Name;
 
 
         /// <summary>
@@ -172,20 +232,17 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the message's ID.
         /// </summary>
-        /// <remarks>
-        /// Usage is not clear.
-        /// </remarks>
-        public int Id { get; private set; }
+        public readonly int Id;
 
         /// <summary>
         /// Gets the message's name.
         /// </summary>
-        public string Name { get; private set; }
+        public readonly string Name;
 
         /// <summary>
         /// Gets the message's type.
         /// </summary>
-        public ThriftMessageType MessageType { get; private set; }
+        public readonly ThriftMessageType MessageType;
 
 
         /// <summary>

@@ -2,66 +2,85 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 // Redistributions of this source code must retain the above copyright notice.
 
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using ThriftSharp.Utilities;
+
 namespace ThriftSharp.Internals
 {
-    /// <summary>
-    /// The types supported by Thrift.
-    /// </summary>
-    internal enum ThriftType : byte
+    internal sealed class ThriftType
     {
-        /// <summary>
-        /// Boolean.
-        /// </summary>
-        Bool = 2,
+        public readonly ThriftTypeId Id;
+        public readonly TypeInfo TypeInfo;
 
-        /// <summary>
-        /// Signed byte.
-        /// </summary>
-        Byte = 3,
+        public readonly bool IsPrimitive;
 
-        /// <summary>
-        /// IEEE754 double-precision floating-point number.
-        /// </summary>
-        Double = 4,
+        public readonly bool IsSet;
+        public readonly TypeInfo CollectionTypeInfo;
+        public readonly ThriftType ElementType;
 
-        /// <summary>
-        /// 16-bit signed integer.
-        /// </summary>
-        Int16 = 6,
+        public readonly TypeInfo MapTypeInfo;
+        public readonly ThriftType KeyType;
+        public readonly ThriftType ValueType;
 
-        /// <summary>
-        /// 32-bit signed integer.
-        /// </summary>
-        Int32 = 8,
+        public readonly ThriftStruct StructType;
 
-        /// <summary>
-        /// 64-bit signed integer.
-        /// </summary>
-        Int64 = 10,
 
-        /// <summary>
-        /// String.
-        /// </summary>
-        String = 11,
+        public ThriftType( Type type )
+        {
+            TypeInfo = type.GetTypeInfo();
 
-        /// <summary>
-        /// User-defined class.
-        /// </summary>
-        Struct = 12,
+            if ( PrimitiveIds.ContainsKey( type ) )
+            {
+                Id = PrimitiveIds[type];
+                IsPrimitive = true;
+                return;
+            }
 
-        /// <summary>
-        /// Key-value map.
-        /// </summary>
-        Map = 13,
+            var mapInterface = TypeInfo.GetGenericInterface( typeof( IDictionary<,> ) );
+            if ( mapInterface != null )
+            {
+                Id = ThriftTypeId.Map;
+                MapTypeInfo = mapInterface.GetTypeInfo();
+                KeyType = new ThriftType( mapInterface.GenericTypeArguments[0] );
+                ValueType = new ThriftType( mapInterface.GenericTypeArguments[1] );
+                return;
+            }
 
-        /// <summary>
-        /// Unordered set.
-        /// </summary>
-        Set = 14,
+            var setInterface = TypeInfo.GetGenericInterface( typeof( ISet<> ) );
+            if ( setInterface != null )
+            {
+                Id = ThriftTypeId.Set;
+                IsSet = true;
+                CollectionTypeInfo = setInterface.GetTypeInfo();
+                ElementType = new ThriftType( setInterface.GenericTypeArguments[0] );
+                return;
+            }
 
-        /// <summary>
-        /// Ordered list.
-        /// </summary>
-        List = 15
+            var collectionInterface = TypeInfo.GetGenericInterface( typeof( ICollection<> ) );
+            if ( collectionInterface != null )
+            {
+                Id = ThriftTypeId.List;
+                CollectionTypeInfo = collectionInterface.GetTypeInfo();
+                ElementType = new ThriftType( collectionInterface.GenericTypeArguments[0] );
+                return;
+            }
+
+            Id = ThriftTypeId.Struct;
+            StructType = ThriftAttributesParser.ParseStruct( TypeInfo );
+        }
+
+        private static readonly IDictionary<Type, ThriftTypeId> PrimitiveIds = new Dictionary<Type, ThriftTypeId>
+        {
+            { typeof(bool), ThriftTypeId.Boolean },
+            { typeof(sbyte), ThriftTypeId.SByte },
+            { typeof(double), ThriftTypeId.Double },
+            { typeof(short), ThriftTypeId.Int16 },
+            { typeof(int), ThriftTypeId.Int32 },
+            { typeof(long), ThriftTypeId.Int64 },
+            { typeof(string), ThriftTypeId.Binary },
+            { typeof(sbyte[]), ThriftTypeId.Binary }
+        };
     }
 }

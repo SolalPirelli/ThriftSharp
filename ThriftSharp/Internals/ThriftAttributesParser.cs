@@ -3,6 +3,7 @@
 // Redistributions of this source code must retain the above copyright notice.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -15,6 +16,8 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftAttributesParser
     {
+        private static readonly IDictionary<TypeInfo, ThriftStruct> _knownStructs = new Dictionary<TypeInfo, ThriftStruct>();
+
         /// <summary>
         /// Parses a Thrift enum member from the specified FieldInfo.
         /// </summary>
@@ -90,22 +93,28 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static ThriftStruct ParseStruct( TypeInfo typeInfo )
         {
-            if ( !typeInfo.IsClass && !typeInfo.IsValueType )
+            if ( !_knownStructs.ContainsKey( typeInfo ) )
             {
-                throw ThriftParsingException.NotAStruct( typeInfo );
+                if ( !typeInfo.IsClass && !typeInfo.IsValueType )
+                {
+                    throw ThriftParsingException.NotAStruct( typeInfo );
+                }
+
+                var attr = typeInfo.GetAttribute<ThriftStructAttribute>();
+                if ( attr == null )
+                {
+                    throw ThriftParsingException.StructWithoutAttribute( typeInfo );
+                }
+
+                var fields = typeInfo.DeclaredProperties
+                                     .Select( ParseField )
+                                     .Where( f => f != null )
+                                     .ToArray();
+
+                _knownStructs.Add( typeInfo, new ThriftStruct( new ThriftStructHeader( attr.Name ), fields, typeInfo ) );
             }
 
-            var attr = typeInfo.GetAttribute<ThriftStructAttribute>();
-            if ( attr == null )
-            {
-                throw ThriftParsingException.StructWithoutAttribute( typeInfo );
-            }
-
-            var fields = typeInfo.DeclaredProperties
-                                 .Select( ParseField )
-                                 .Where( f => f != null )
-                                 .ToArray();
-            return new ThriftStruct( new ThriftStructHeader( attr.Name ), fields );
+            return _knownStructs[typeInfo];
         }
 
 

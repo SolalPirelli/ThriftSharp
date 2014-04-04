@@ -15,10 +15,13 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal sealed class ThriftField
     {
+        private readonly Func<object, object> _getter;
+        private readonly Action<object, object> _setter;
+
         /// <summary>
         /// Gets the field's header.
         /// </summary>
-        public ThriftFieldHeader Header { get; private set; }
+        public readonly ThriftFieldHeader Header;
 
         /// <summary>
         /// Gets a value indicating whether the field is required.
@@ -26,41 +29,43 @@ namespace ThriftSharp.Internals
         /// <remarks>
         /// If the field is required, an exception should be thrown if it is not present during deserialization.
         /// </remarks>
-        public bool IsRequired { get; private set; }
+        public readonly bool IsRequired;
 
         /// <summary>
         /// Gets the field's default value, if any.
         /// </summary>
-        public Option<object> DefaultValue { get; private set; }
+        public readonly Option DefaultValue;
 
-        /// <summary>
-        /// Gets the field's underlying TypeInfo.
-        /// </summary>
-        public TypeInfo TypeInfo { get; private set; }
-
-        /// <summary>
-        /// Gets a get method that takes an instance and returns the field's value for that instance, if the field is not write-only.
-        /// </summary>
-        public Func<object, object> Getter { get; private set; }
-
-        /// <summary>
-        /// Gets a set method that takes an instance and a value and sets the field's value on that instance, if the field is not read-only.
-        /// </summary>
-        public Action<object, object> Setter { get; private set; }
 
 
         /// <summary>
         /// Initializes a new instance of the ThriftField class with the specified values.
         /// </summary>
-        public ThriftField( short id, string name, bool isRequired, Option<object> defaultValue,
+        public ThriftField( short id, string name, bool isRequired, Option defaultValue,
                             TypeInfo typeInfo, Func<object, object> getter, Action<object, object> setter )
         {
-            Header = new ThriftFieldHeader( id, name, ThriftSerializer.FromTypeInfo( typeInfo ).GetThriftType( typeInfo.AsType() ).Value );
+            _getter = getter;
+            _setter = setter;
+
+            Header = new ThriftFieldHeader( id, name, new ThriftType( typeInfo.AsType() ) );
             IsRequired = isRequired;
             DefaultValue = defaultValue;
-            TypeInfo = typeInfo;
-            Getter = getter;
-            Setter = setter;
+        }
+
+        /// <summary>
+        /// Takes an instance and returns the field's value for that instance.
+        /// </summary>
+        public object GetValue( object instance )
+        {
+            return _getter( instance );
+        }
+
+        /// <summary>
+        /// Takes an instance and a value and sets the field's value on that instance.
+        /// </summary>
+        public void SetValue( object instance, object value )
+        {
+            _setter( instance, value );
         }
     }
 
@@ -72,7 +77,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the member's name.
         /// </summary>
-        public string Name { get; private set; }
+        public readonly string Name;
 
         /// <summary>
         /// Gets the member's value.
@@ -80,12 +85,12 @@ namespace ThriftSharp.Internals
         /// <remarks>
         /// Thrift enums are always Int32s.
         /// </remarks>
-        public int Value { get; private set; }
+        public readonly int Value;
 
         /// <summary>
         /// Gets the member's underlying field.
         /// </summary>
-        public FieldInfo UnderlyingField { get; private set; }
+        public readonly FieldInfo UnderlyingField;
 
 
         /// <summary>
@@ -107,12 +112,12 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the enum's name.
         /// </summary>
-        public string Name { get; private set; }
+        public readonly string Name;
 
         /// <summary>
         /// Gets the enum's members.
         /// </summary>
-        public ReadOnlyCollection<ThriftEnumMember> Members { get; private set; }
+        public readonly ReadOnlyCollection<ThriftEnumMember> Members;
 
 
         /// <summary>
@@ -133,21 +138,27 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the struct's header.
         /// </summary>
-        public ThriftStructHeader Header { get; private set; }
+        public readonly ThriftStructHeader Header;
 
         /// <summary>
         /// Gets the struct's fields.
         /// </summary>
-        public ReadOnlyCollection<ThriftField> Fields { get; private set; }
+        public readonly ReadOnlyCollection<ThriftField> Fields;
+
+        /// <summary>
+        /// Gets the struct's underlying TypeInfo.
+        /// </summary>
+        public readonly TypeInfo TypeInfo;
 
 
         /// <summary>
         /// Initializes a new instance of the ThriftStructHeader class with the specified values.
         /// </summary>
-        public ThriftStruct( ThriftStructHeader header, IList<ThriftField> fields )
+        public ThriftStruct( ThriftStructHeader header, IList<ThriftField> fields, TypeInfo typeInfo )
         {
             Header = header;
             Fields = fields.CopyAsReadOnly();
+            TypeInfo = typeInfo;
         }
     }
 
@@ -159,17 +170,17 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the clause's ID.
         /// </summary>
-        public short Id { get; private set; }
+        public readonly short Id;
 
         /// <summary>
         /// Gets the clause's name.
         /// </summary>
-        public string Name { get; private set; }
+        public readonly string Name;
 
         /// <summary>
         /// Gets the clause's exception TypeInfo.
         /// </summary>
-        public TypeInfo ExceptionTypeInfo { get; private set; }
+        public readonly TypeInfo ExceptionTypeInfo;
 
 
         /// <summary>
@@ -191,22 +202,22 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the parameter's ID.
         /// </summary>
-        public short Id { get; private set; }
+        public readonly short Id;
 
         /// <summary>
         /// Gets the parameter's name.
         /// </summary>
-        public string Name { get; private set; }
+        public readonly string Name;
 
         /// <summary>
         /// Gets the parameter's underlying TypeInfo.
         /// </summary>
-        public TypeInfo TypeInfo { get; private set; }
+        public readonly TypeInfo TypeInfo;
 
         /// <summary>
         /// Gets the parameter's converter, if any.
         /// </summary>
-        public IThriftValueConverter Converter { get; private set; }
+        public readonly IThriftValueConverter Converter;
 
 
         /// <summary>
@@ -229,12 +240,12 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the method's name.
         /// </summary>
-        public string Name { get; private set; }
+        public readonly string Name;
 
         /// <summary>
         /// Gets the method's return type.
         /// </summary>
-        public TypeInfo ReturnTypeInfo { get; private set; }
+        public readonly TypeInfo ReturnTypeInfo;
 
         /// <summary>
         /// Gets a value indicating whether the method is one-way.
@@ -242,22 +253,22 @@ namespace ThriftSharp.Internals
         /// <remarks>
         /// If it is, no reply should be read.
         /// </remarks>
-        public bool IsOneWay { get; private set; }
+        public readonly bool IsOneWay;
 
         /// <summary>
         /// Gets the converter used to convert the method's return type, if any.
         /// </summary>
-        public IThriftValueConverter ReturnValueConverter { get; private set; }
+        public readonly IThriftValueConverter ReturnValueConverter;
 
         /// <summary>
         /// Gets the method's parameters.
         /// </summary>
-        public ReadOnlyCollection<ThriftMethodParameter> Parameters { get; private set; }
+        public readonly ReadOnlyCollection<ThriftMethodParameter> Parameters;
 
         /// <summary>
         /// Gets the method's "throws" clauses.
         /// </summary>
-        public ReadOnlyCollection<ThriftThrowsClause> Exceptions { get; private set; }
+        public readonly ReadOnlyCollection<ThriftThrowsClause> Exceptions;
 
         /// <summary>
         /// Gets the method's underlying name.
@@ -265,7 +276,7 @@ namespace ThriftSharp.Internals
         /// <remarks>
         /// This is only used to identify methods in client code.
         /// </remarks>
-        public string UnderlyingName { get; private set; }
+        public readonly string UnderlyingName;
 
 
         /// <summary>
@@ -294,12 +305,12 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the service's name.
         /// </summary>
-        public string Name { get; private set; }
+        public readonly string Name;
 
         /// <summary>
         /// Gets the service's methods.
         /// </summary>
-        public ReadOnlyCollection<ThriftMethod> Methods { get; private set; }
+        public readonly ReadOnlyCollection<ThriftMethod> Methods;
 
 
         /// <summary>

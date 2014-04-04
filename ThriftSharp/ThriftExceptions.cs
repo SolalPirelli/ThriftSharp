@@ -111,7 +111,20 @@ namespace ThriftSharp
     }
 
     /// <summary>
-    /// Occurs when a problem occurs during the transport of Thrift data.
+    /// Raised when a serialization error occurs.
+    /// </summary>
+    public sealed class ThriftSerializationException : Exception
+    {
+        private ThriftSerializationException( string message, params string[] args ) : base( string.Format( message, args ) ) { }
+
+        public static ThriftSerializationException CannotWriteNull( string structName, string fieldName )
+        {
+            return new ThriftSerializationException( "Field '{0}' of struct '{1}' is a required field and cannot be null when writing it.", structName, fieldName );
+        }
+    }
+
+    /// <summary>
+    /// Raised when a problem occurs during the transport of Thrift data.
     /// </summary>
     public sealed class ThriftTransportException : Exception
     {

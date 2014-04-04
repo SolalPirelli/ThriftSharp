@@ -10,19 +10,20 @@ open ThriftSharp
 open ThriftSharp.Protocols
 open ThriftSharp.Internals
 
+[<NoComparison>]
 type ThriftProtocolValue =
     | MessageHeader of int * string * ThriftMessageType
     | MessageEnd
     | StructHeader of string
     | StructEnd
-    | FieldHeader of int16 * string * ThriftType
+    | FieldHeader of int16 * string * ThriftTypeId
     | FieldEnd
     | FieldStop
-    | MapHeader of int * ThriftType * ThriftType
+    | MapHeader of int * ThriftTypeId * ThriftTypeId
     | MapEnd
-    | ListHeader of int * ThriftType
+    | ListHeader of int * ThriftTypeId
     | ListEnd
-    | SetHeader of int * ThriftType
+    | SetHeader of int * ThriftTypeId
     | SetEnd
     | Bool of bool
     | SByte of sbyte
@@ -61,7 +62,7 @@ type MemoryProtocol(toRead: ThriftProtocolValue list) =
             write StructEnd
 
         member x.WriteFieldHeader(h) =
-            write (FieldHeader (h.Id, h.Name, h.FieldType))
+            write (FieldHeader (h.Id, h.Name, h.FieldTypeId))
 
         member x.WriteFieldEnd() =
             write FieldEnd
@@ -70,19 +71,19 @@ type MemoryProtocol(toRead: ThriftProtocolValue list) =
             write FieldStop
 
         member x.WriteMapHeader(h) =
-            write (MapHeader (h.Count, h.KeyType, h.ValueType))
+            write (MapHeader (h.Count, h.KeyTypeId, h.ValueTypeId))
 
         member x.WriteMapEnd() =
             write MapEnd
 
         member x.WriteListHeader(h) =
-            write (ListHeader (h.Count, h.ElementType))
+            write (ListHeader (h.Count, h.ElementTypeId))
 
         member x.WriteListEnd() =
             write ListEnd
 
         member x.WriteSetHeader(h) =
-            write (SetHeader (h.Count, h.ElementType))
+            write (SetHeader (h.Count, h.ElementTypeId))
 
         member x.WriteSetEnd() =
             write SetEnd

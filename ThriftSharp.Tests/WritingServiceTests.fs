@@ -67,7 +67,7 @@ type __() =
         ==>
         [MessageHeader (0, "oneParameter", ThriftMessageType.Call)
          StructHeader ""
-         FieldHeader (1s, "p1", ThriftType.Int32)
+         FieldHeader (1s, "p1", ThriftTypeId.Int32)
          Int32 123
          FieldEnd
          FieldStop
@@ -82,13 +82,13 @@ type __() =
         ==>
         [MessageHeader (0, "manyParameters", ThriftMessageType.Call)
          StructHeader ""
-         FieldHeader (1s, "p1", ThriftType.Int32)
+         FieldHeader (1s, "p1", ThriftTypeId.Int32)
          Int32 16
          FieldEnd
-         FieldHeader (2s, "p2", ThriftType.String)
+         FieldHeader (2s, "p2", ThriftTypeId.Binary)
          String "Sayid"
          FieldEnd
-         FieldHeader (10s, "p10", ThriftType.String)
+         FieldHeader (10s, "p10", ThriftTypeId.Binary)
          String "Jarrah"
          FieldEnd
          FieldStop
@@ -115,7 +115,7 @@ type __() =
         ==>
         [MessageHeader (0, "withUnixDateParam", ThriftMessageType.Call)
          StructHeader ""
-         FieldHeader (1s, "date", ThriftType.Int32)
+         FieldHeader (1s, "date", ThriftTypeId.Int32)
          Int32 787708800
          FieldEnd
          FieldStop

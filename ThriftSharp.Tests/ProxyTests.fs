@@ -52,7 +52,7 @@ type __() =
     member __.``Asynchronous call``() =
         [MessageHeader (0, "", ThriftMessageType.Reply)
          StructHeader ""
-         FieldHeader (0s, "", ThriftType.Int32)
+         FieldHeader (0s, "", tid 8uy)
          Int32 123
          FieldEnd
          FieldStop
@@ -65,7 +65,7 @@ type __() =
         ==>
         [MessageHeader (0, "Async", ThriftMessageType.Call)
          StructHeader ""
-         FieldHeader (1s, "arg", ThriftType.Int32)
+         FieldHeader (1s, "arg", tid 8uy)
          Int32 2
          FieldEnd
          FieldStop
@@ -92,8 +92,8 @@ type __() =
     member __.``Complex call``() =
         [MessageHeader (0, "", ThriftMessageType.Reply)
          StructHeader ""
-         FieldHeader (0s, "", ThriftType.List)
-         ListHeader (3, ThriftType.String)
+         FieldHeader (0s, "", tid 15uy)
+         ListHeader (3, tid 11uy)
          String "the cake"
          String "is"
          String "a lie"
@@ -109,14 +109,14 @@ type __() =
         ==>
         [MessageHeader (0, "Complex", ThriftMessageType.Call)
          StructHeader ""
-         FieldHeader (1s, "arg1", ThriftType.String)
+         FieldHeader (1s, "arg1", tid 11uy)
          String "abc"
          FieldEnd
-         FieldHeader (2s, "arg2", ThriftType.Double)
+         FieldHeader (2s, "arg2", tid 4uy)
          Double 123.4
          FieldEnd
-         FieldHeader (3s, "arg3", ThriftType.List)
-         ListHeader (2, ThriftType.Int32)
+         FieldHeader (3s, "arg3", tid 15uy)
+         ListHeader (2, tid 8uy)
          Int32 1
          Int32 2
          ListEnd

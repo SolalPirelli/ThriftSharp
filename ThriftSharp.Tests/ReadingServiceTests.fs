@@ -85,10 +85,10 @@ type __() =
     member __.``No reply expected, but a server error was received``() =
         [MessageHeader (0, "noReply", ThriftMessageType.Exception)
          StructHeader "TApplicationException"
-         FieldHeader (1s, "message", ThriftType.String)
+         FieldHeader (1s, "message", tid 11uy)
          String "An error occured."
          FieldEnd
-         FieldHeader (2s, "type", ThriftType.Int32)
+         FieldHeader (2s, "type", tid 8uy)
          Int32 6
          FieldEnd
          FieldStop
@@ -118,9 +118,9 @@ type __() =
     member __.``No reply with exception declared, but another one was received``() = 
         [MessageHeader (0, "noReplyWithException", ThriftMessageType.Reply)
          StructHeader ""
-         FieldHeader (10s, "exn", ThriftType.Struct)
+         FieldHeader (10s, "exn", tid 13uy)
          StructHeader "MyException"
-         FieldHeader (1s, "message", ThriftType.String)
+         FieldHeader (1s, "message", tid 12uy)
          String "Error."
          FieldEnd
          FieldStop
@@ -139,9 +139,9 @@ type __() =
     member __.``No reply with exception declared and received``() =
         [MessageHeader (0, "noReplyWithException", ThriftMessageType.Reply)
          StructHeader ""
-         FieldHeader (1s, "exn", ThriftType.Struct)
+         FieldHeader (1s, "exn", tid 12uy)
          StructHeader "MyException"
-         FieldHeader (1s, "stuff", ThriftType.String)
+         FieldHeader (1s, "stuff", tid 11uy)
          String "Everything went wrong."
          FieldEnd
          FieldStop
@@ -173,7 +173,7 @@ type __() =
     member __.``Reply expected and received``() =
         [MessageHeader (0, "noException", ThriftMessageType.Reply)
          StructHeader ""
-         FieldHeader (0s, "", ThriftType.Int32)
+         FieldHeader (0s, "", tid 8uy)
          Int32 101
          FieldEnd
          FieldStop
@@ -189,9 +189,9 @@ type __() =
     member __.``Reply expected, but an undeclared exception was received``() =
         [MessageHeader (0, "noException", ThriftMessageType.Reply)
          StructHeader ""
-         FieldHeader (1s, "exn", ThriftType.Struct)
+         FieldHeader (1s, "exn", tid 12uy)
          StructHeader "MyException"
-         FieldHeader (1s, "stuff", ThriftType.String)
+         FieldHeader (1s, "stuff", tid 11uy)
          String "Everything went wrong."
          FieldEnd
          FieldStop
@@ -210,7 +210,7 @@ type __() =
     member __.``Reply or exception expected, reply received``() =
         [MessageHeader (0, "withException", ThriftMessageType.Reply)
          StructHeader ""
-         FieldHeader (0s, "", ThriftType.Int32)
+         FieldHeader (0s, "", tid 8uy)
          Int32 007
          FieldEnd
          FieldStop
@@ -226,9 +226,9 @@ type __() =
     member __.``Reply or exception expected, exception received``() =
         [MessageHeader (0, "withException", ThriftMessageType.Reply)
          StructHeader ""
-         FieldHeader (1s, "exn", ThriftType.Struct)
+         FieldHeader (1s, "exn", tid 12uy)
          StructHeader "MyException"
-         FieldHeader (1s, "stuff", ThriftType.String)
+         FieldHeader (1s, "stuff", tid 11uy)
          String "Everything went wrong."
          FieldEnd
          FieldStop
@@ -247,7 +247,7 @@ type __() =
     member __.``UnixDate return type``() =
         [MessageHeader (0, "withUnixDateReturnValue", ThriftMessageType.Reply)
          StructHeader ""
-         FieldHeader (0s, "", ThriftType.Int32)
+         FieldHeader (0s, "", tid 8uy)
          Int32 787708800
          FieldEnd
          FieldStop
