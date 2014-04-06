@@ -16,7 +16,8 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftAttributesParser
     {
-        private static readonly IDictionary<TypeInfo, ThriftStruct> _knownStructs = new Dictionary<TypeInfo, ThriftStruct>();
+        private static readonly Dictionary<TypeInfo, ThriftStruct> _knownStructs = new Dictionary<TypeInfo, ThriftStruct>();
+
 
         /// <summary>
         /// Parses a Thrift field from the specified PropertyInfo.
@@ -32,7 +33,8 @@ namespace ThriftSharp.Internals
                 return null;
             }
 
-            var defaultValue = Option.Get( info.GetAttribute<ThriftDefaultValueAttribute>(), a => a.Value );
+            var defaultValueAttr = info.GetAttribute<ThriftDefaultValueAttribute>();
+            var defaultValue = defaultValueAttr == null ? new Option() : new Option( defaultValueAttr.Value );
             var converterAttr = info.GetAttribute<ThriftConverterAttribute>();
 
             if ( converterAttr == null )
@@ -134,7 +136,7 @@ namespace ThriftSharp.Internals
                 return null;
             }
 
-            var converterAttr = info.GetAttribute<ThriftConverterAttribute>();
+            var converterAttr = info.ReturnParameter.GetAttribute<ThriftConverterAttribute>();
             var converter = converterAttr == null ? null : converterAttr.Converter;
 
             var throwsClauses = ParseThrowsClauses( info );

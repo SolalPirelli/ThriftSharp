@@ -246,10 +246,10 @@ namespace ThriftSharp
 
 
     /// <summary>
-    /// Optional attribute for Thrift fields, methods (applied to the return type) and method parameters.
+    /// Optional attribute for Thrift fields, method return values and method parameters.
     /// Specifies a converter to be used when serializing the value.
     /// </summary>
-    [AttributeUsage( AttributeTargets.Property | AttributeTargets.Parameter | AttributeTargets.Method )]
+    [AttributeUsage( AttributeTargets.Property | AttributeTargets.Parameter | AttributeTargets.ReturnValue )]
     public sealed class ThriftConverterAttribute : Attribute
     {
         /// <summary>

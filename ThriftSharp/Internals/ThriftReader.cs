@@ -12,10 +12,17 @@ using ThriftSharp.Utilities;
 
 namespace ThriftSharp.Internals
 {
+    /// <summary>
+    /// Reads Thrift structs.
+    /// </summary>
     internal static class ThriftReader
     {
         // TODO during struct parsing ensure it's one of these or a concrete type with a parameterless ctor
-        private static readonly IDictionary<Type, Type> KnownImplementations = new Dictionary<Type, Type>
+        // TODO maybe support readonly collections?
+        // TODO see if actual generics are possible to avoid boxing
+
+        // Known interface collection implementations
+        private static readonly Dictionary<Type, Type> KnownCollectionImplementations = new Dictionary<Type, Type>
         {
             { typeof( ISet<> ), typeof( HashSet<> ) },
             { typeof( ICollection<> ), typeof( List<> ) },
@@ -23,15 +30,23 @@ namespace ThriftSharp.Internals
             { typeof( IDictionary<,> ), typeof( Dictionary<,> ) }
         };
 
+
+        /// <summary>
+        /// Gets a TypeInfo for the concrete type matching the specified collection TypeInfo.
+        /// </summary>
         private static TypeInfo GetCollectionTypeInfo( TypeInfo typeInfo )
         {
             if ( typeInfo.IsInterface )
             {
-                return KnownImplementations[typeInfo.GetGenericTypeDefinition()].MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo();
+                return KnownCollectionImplementations[typeInfo.GetGenericTypeDefinition()]
+                            .MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo();
             }
             return typeInfo;
         }
 
+        /// <summary>
+        /// Asynchronously skips the specified Thrift type ID from the specified protocol.
+        /// </summary>
         private static async Task SkipAsync( ThriftTypeId thriftTypeId, IThriftProtocol protocol )
         {
             switch ( thriftTypeId )
@@ -109,6 +124,9 @@ namespace ThriftSharp.Internals
             }
         }
 
+        /// <summary>
+        /// Asynchronously reads the specified struct from the specified protocol.
+        /// </summary>
         private static async Task<object> ReadStructAsync( ThriftStruct thriftStruct, IThriftProtocol protocol )
         {
             var structInstance = ReflectionEx.Create( thriftStruct.TypeInfo );
@@ -157,6 +175,9 @@ namespace ThriftSharp.Internals
             return structInstance;
         }
 
+        /// <summary>
+        /// Asynchronously reads the specified Thrift type from the specified protocol.
+        /// </summary>
         private static async Task<object> ReadAsync( ThriftType thriftType, IThriftProtocol protocol )
         {
             if ( thriftType.IsPrimitive )
@@ -272,6 +293,10 @@ namespace ThriftSharp.Internals
             return await ReadStructAsync( thriftStruct, protocol );
         }
 
+
+        /// <summary>
+        /// Asynchronously reads the specified struct from the specified protocol.
+        /// </summary>
         public static Task<object> ReadAsync( ThriftStruct thriftStruct, IThriftProtocol protocol )
         {
             return ReadStructAsync( thriftStruct, protocol );

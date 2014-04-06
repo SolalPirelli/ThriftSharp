@@ -14,7 +14,7 @@ namespace ThriftSharp.Utilities
     /// </remarks>
     internal sealed class Option
     {
-        private readonly object _value;
+        private object _value;
 
         /// <summary>
         /// Gets a value indicating whether the option has a value.
@@ -34,6 +34,11 @@ namespace ThriftSharp.Utilities
                 }
                 throw new InvalidOperationException( "Cannot get the value of an empty option" );
             }
+            set
+            {
+                _value = value;
+                HasValue = true;
+            }
         }
 
         /// <summary>
@@ -48,18 +53,6 @@ namespace ThriftSharp.Utilities
         {
             _value = value;
             HasValue = true;
-        }
-
-        /// <summary>
-        /// Returns the optional value of a field, depending on whether the first parameter is null.
-        /// </summary>
-        public static Option Get<T>( T obj, Func<T, object> selector )
-        {
-            if ( obj == null )
-            {
-                return new Option();
-            }
-            return new Option( selector( obj ) );
         }
     }
 }

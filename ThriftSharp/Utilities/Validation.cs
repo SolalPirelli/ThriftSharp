@@ -36,17 +36,6 @@ namespace ThriftSharp.Utilities
         }
 
         /// <summary>
-        /// Ensures the specified number is positive.
-        /// </summary>
-        public static void IsPositive<T>( int num, Expression<Func<T>> paramGet )
-        {
-            if ( num < 0 )
-            {
-                throw new ArgumentException( string.Format( "Parameter {0} be positive. It was '{1}'.", GetName( paramGet ), num ) );
-            }
-        }
-
-        /// <summary>
         /// Utility method to get the name of a value returned by a Func expression, e.g. () => abc.
         /// </summary>
         private static string GetName<T>( Expression<Func<T>> paramGet )

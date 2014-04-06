@@ -11,15 +11,15 @@ using ThriftSharp.Protocols;
 
 namespace ThriftSharp.Benchmarking
 {
-    /* v 1.0.9 (i7-3612QM)
+    /* v1.0.9 (i7-3612QM)
      * Simple person       00:00:00.0000060
      * Complex person      00:00:00.0001019
      * Very complex person 00:00:00.0003622
      * 
      * v2.0 (i7-3612QM)
-     * Simple person       00:00:00.0000058 | 97%
-     * Complex person      00:00:00.0000131 | 13%
-     * Very complex person 00:00:00.0000379 | 11%
+     * Simple person       00:00:00.0000055 | 92%
+     * Complex person      00:00:00.0000125 | 12%
+     * Very complex person 00:00:00.0000364 | 10%
      */
 
     public sealed class Program

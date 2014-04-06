@@ -46,6 +46,7 @@ namespace ThriftSharp.Utilities
                            }
 
                            state.Item1.Cancel();
+                           state.Item1.Dispose();
 
                            switch ( t.Result.Status )
                            {

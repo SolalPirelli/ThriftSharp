@@ -31,8 +31,7 @@ type Service =
     abstract WithException: unit -> Task<int>
 
     [<ThriftMethod("withUnixDateReturnValue")>]
-    [<ThriftConverter(typeof<ThriftUnixDateConverter>)>]
-    abstract WithUnixDateReturnValue: unit -> Task<System.DateTime>
+    abstract WithUnixDateReturnValue: unit -> [<ThriftConverter(typeof<ThriftUnixDateConverter>)>] Task<System.DateTime>
 
 
 let (--) a b = a,b

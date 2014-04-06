@@ -133,16 +133,4 @@ namespace ThriftSharp
             return new ThriftSerializationException( "Field '{0}' of struct '{1}' is a required field, but was not present.", structName, fieldName );
         }
     }
-
-    /// <summary>
-    /// Raised when a problem occurs during the transport of Thrift data.
-    /// </summary>
-    public sealed class ThriftTransportException : Exception
-    {
-        /// <summary>
-        /// Initializes a new instance of the ThriftTransportException class with the specified message.
-        /// </summary>
-        /// <param name="message">The exception message.</param>
-        internal ThriftTransportException( string message ) : base( message ) { }
-    }
 }

@@ -40,13 +40,14 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Internals\ThriftMessageReader.cs" />
+    <Compile Include="Internals\ThriftMessageWriter.cs" />
     <Compile Include="Internals\ThriftReader.cs" />
     <Compile Include="Internals\ThriftTypeId.cs" />
     <Compile Include="Internals\ThriftWriter.cs" />
     <Compile Include="ThriftCommunication.cs" />
     <Compile Include="ThriftDateConverters.cs" />
     <Compile Include="ThriftValueConverter.cs" />
-    <Compile Include="Utilities\EnumEx.cs" />
     <Compile Include="Utilities\IFluent.cs" />
     <Compile Include="Utilities\ListExtensions.cs" />
     <Compile Include="Utilities\Option.cs" />

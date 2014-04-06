@@ -45,30 +45,11 @@ namespace ThriftSharp.Utilities
         }
 
         /// <summary>
-        /// Gets the value of the enum member.
-        /// </summary>
-        public static int GetEnumMemberValue( this FieldInfo info )
-        {
-            return (int) info.GetValue( null );
-        }
-
-        /// <summary>
         /// Gets the specified generic interface definition on the TypeInfo, if it implements it.
         /// </summary>
         public static Type GetGenericInterface( this TypeInfo typeInfo, Type interfaceType )
         {
             return typeInfo.ImplementedInterfaces.FirstOrDefault( i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == interfaceType );
-        }
-
-        /// <summary>
-        /// Gets the interface property with the specified name.
-        /// </summary>
-        public static PropertyInfo GetInterfaceProperty( this TypeInfo typeInfo, string name )
-        {
-            return typeInfo.ImplementedInterfaces
-                           .Concat( new[] { typeInfo.AsType() } )
-                           .Select( i => i.GetTypeInfo().GetDeclaredProperty( name ) )
-                           .First( p => p != null );
         }
 
         /// <summary>
@@ -90,7 +71,7 @@ namespace ThriftSharp.Utilities
         }
 
         /// <summary>
-        /// Creates a new instance of the specified TypeInfo, using a public constructor.
+        /// Creates a new instance of the specified TypeInfo, using a public parameterless constructor.
         /// </summary>
         public static object Create( TypeInfo typeInfo )
         {

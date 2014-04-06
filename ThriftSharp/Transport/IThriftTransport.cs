@@ -13,19 +13,6 @@ namespace ThriftSharp.Transport
     internal interface IThriftTransport : IDisposable
     {
         /// <summary>
-        /// Asynchronously reads an unsigned byte.
-        /// </summary>
-        /// <returns>An unsigned byte.</returns>
-        Task<byte> ReadByteAsync();
-
-        /// <summary>
-        /// Asynchronously reads an array of unsigned bytes of the specified length.
-        /// </summary>
-        /// <param name="length">The length.</param>
-        /// <returns>An array of unsigned bytes.</returns>
-        Task<byte[]> ReadBytesAsync( int length );
-
-        /// <summary>
         /// Writes the specified unsigned byte.
         /// </summary>
         /// <param name="b">The unsigned byte.</param>
@@ -41,5 +28,18 @@ namespace ThriftSharp.Transport
         /// Asynchronously flushes the written bytes.
         /// </summary>
         Task FlushAsync();
+
+        /// <summary>
+        /// Asynchronously reads an unsigned byte.
+        /// </summary>
+        /// <returns>An unsigned byte.</returns>
+        Task<byte> ReadByteAsync();
+
+        /// <summary>
+        /// Asynchronously reads an array of unsigned bytes of the specified length.
+        /// </summary>
+        /// <param name="length">The length.</param>
+        /// <returns>An array of unsigned bytes.</returns>
+        Task<byte[]> ReadBytesAsync( int length );
     }
 }

@@ -29,7 +29,6 @@ namespace ThriftSharp.Transport
 
         private readonly MemoryStream _outputStream;
         private Stream _inputStream;
-        private HttpWebRequest _request;
 
 
         /// <summary>
@@ -104,16 +103,16 @@ namespace ThriftSharp.Transport
         {
             _token.ThrowIfCancellationRequested();
 
-            _request = WebRequest.CreateHttp( _url );
-            _request.ContentType = _request.Accept = ThriftContentType;
-            _request.Method = ThriftHttpMethod;
+            var request = WebRequest.CreateHttp( _url );
+            request.ContentType = request.Accept = ThriftContentType;
+            request.Method = ThriftHttpMethod;
 
             foreach ( var header in _headers )
             {
-                _request.Headers[header.Key] = header.Value;
+                request.Headers[header.Key] = header.Value;
             }
 
-            using ( var requestStream = await TaskEx.FromAsync( _request.BeginGetRequestStream, _request.EndGetRequestStream, _timeout, _token ) )
+            using ( var requestStream = await TaskEx.FromAsync( request.BeginGetRequestStream, request.EndGetRequestStream, _timeout, _token ) )
             {
                 _outputStream.WriteTo( requestStream );
                 requestStream.Flush();
@@ -123,7 +122,7 @@ namespace ThriftSharp.Transport
             // Silverlight (and WP8) throws a NotSupportedException otherwise.
             _outputStream.Dispose();
 
-            var response = await TaskEx.FromAsync( _request.BeginGetResponse, _request.EndGetResponse, _timeout, _token );
+            var response = await TaskEx.FromAsync( request.BeginGetResponse, request.EndGetResponse, _timeout, _token );
             _inputStream = response.GetResponseStream();
         }
 

@@ -107,11 +107,11 @@ namespace ThriftSharp.Internals
                     gen.Emit( OpCodes.Pop );
                 }
                 // Cast its wrapped return value
-                var wrapped = ReflectionEx.UnwrapTask( m.ReturnType );
-                if ( wrapped != typeof( void ) )
+                var unwrapped = ReflectionEx.UnwrapTask( m.ReturnType );
+                if ( unwrapped != typeof( void ) )
                 {
                     // Create a method that converts a Task<object> into its Result type casted correctly
-                    var dynMeth = new DynamicMethod( "_TaskCast_" + m.Name, wrapped, new[] { typeof( Task<object> ) } );
+                    var dynMeth = new DynamicMethod( "_TaskCast_" + m.Name, unwrapped, new[] { typeof( Task<object> ) } );
                     // Generate another set of IL instructions. Yay!
                     var mGen = dynMeth.GetILGenerator();
                     // Load the first argument
@@ -119,11 +119,11 @@ namespace ThriftSharp.Internals
                     // Get the "Result" property
                     mGen.Emit( OpCodes.Callvirt, typeof( Task<object> ).GetProperty( "Result" ).GetGetMethod() );
                     // If it's a value type, unbox it; otherwise cast it (same opcode)
-                    mGen.Emit( OpCodes.Unbox_Any, wrapped );
+                    mGen.Emit( OpCodes.Unbox_Any, unwrapped );
                     // Return the casted value
                     mGen.Emit( OpCodes.Ret );
                     // Build the method delegate type
-                    var dynDelType = typeof( Func<,> ).MakeGenericType( typeof( Task<object> ), wrapped );
+                    var dynDelType = typeof( Func<,> ).MakeGenericType( typeof( Task<object> ), unwrapped );
                     // Finish creating the method
                     var dynDel = dynMeth.CreateDelegate( dynDelType );
                     // Create a field with the dynamic method
@@ -142,7 +142,7 @@ namespace ThriftSharp.Internals
                                                                        // first param's first generic param is generic
                                                                        // i.e. it's the overload taking a Func<Task<...>,...>
                                                                         && mi.GetParameters()[0].ParameterType.GetGenericArguments()[0].IsGenericType )
-                                                                   .MakeGenericMethod( wrapped );
+                                                                   .MakeGenericMethod( unwrapped );
                     // Call the "ContinueWith" method with the delegate
                     gen.Emit( OpCodes.Callvirt, continueWithMethod );
                 }

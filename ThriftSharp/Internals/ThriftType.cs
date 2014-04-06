@@ -9,23 +9,68 @@ using ThriftSharp.Utilities;
 
 namespace ThriftSharp.Internals
 {
+    /// <summary>
+    /// Thrift type, either a primitive, a collection, a map or a struct.
+    /// </summary>
     internal sealed class ThriftType
     {
+        /// <summary>
+        /// Gets the type's ID.
+        /// </summary>
         public readonly ThriftTypeId Id;
+
+        /// <summary>
+        /// Gets the TypeInfo of the underlying type.
+        /// </summary>
         public readonly TypeInfo TypeInfo;
 
+
+        /// <summary>
+        /// Gets a value indicating whether the type is a primitive.
+        /// </summary>
         public readonly bool IsPrimitive;
+
+        /// <summary>
+        /// Gets a value indicating whether the underlying type is a nullable type.
+        /// </summary>
         public readonly bool IsNullable;
+
+        /// <summary>
+        /// Gets a value indicating whether the underlying type is an enum.
+        /// </summary>
         public readonly bool IsEnum;
 
+
+        /// <summary>
+        /// Gets the TypeInfo of the type as a collection, if it is a collection.
+        /// </summary>
         public readonly TypeInfo CollectionTypeInfo;
+
+        /// <summary>
+        /// Gets the type of the collection elements, if the type is a collection.
+        /// </summary>
         public readonly ThriftType ElementType;
 
+
+        /// <summary>
+        /// Gets the TypeInfo of the type as a map, if it is a map.
+        /// </summary>
         public readonly TypeInfo MapTypeInfo;
+
+        /// <summary>
+        /// Gets the type of the map keys, if the type is a map.
+        /// </summary>
         public readonly ThriftType KeyType;
+
+        /// <summary>
+        /// Gets the type of the map values, if the type is a map.
+        /// </summary>
         public readonly ThriftType ValueType;
 
 
+        /// <summary>
+        /// Creates a new instance of ThriftType from the specified .NET type.
+        /// </summary>
         public ThriftType( Type type )
         {
             TypeInfo = type.GetTypeInfo();
@@ -93,7 +138,9 @@ namespace ThriftSharp.Internals
             Id = ThriftTypeId.Struct;
         }
 
-        private static readonly IDictionary<Type, ThriftTypeId> PrimitiveIds = new Dictionary<Type, ThriftTypeId>
+
+        // Maps .NET types to Thrift type IDs for the Thrift primitive types
+        private static readonly Dictionary<Type, ThriftTypeId> PrimitiveIds = new Dictionary<Type, ThriftTypeId>
         {
             { typeof(bool), ThriftTypeId.Boolean },
             { typeof(sbyte), ThriftTypeId.SByte },
