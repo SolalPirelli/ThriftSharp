@@ -15,28 +15,10 @@ namespace ThriftSharp.Internals
         public readonly int Count;
 
         /// <summary>
-        /// Gets the collection elements' Thrift type.
-        /// </summary>
-        public readonly ThriftType ElementType;
-
-
-        /// <summary>
         /// Gets the collection element's Thrift type ID.
         /// </summary>
         public readonly ThriftTypeId ElementTypeId;
 
-
-        /// <summary>
-        /// Initializes a new instance of the ThriftCollectionHeader class with the specified values.
-        /// </summary>
-        /// <param name="count">The number of elements.</param>
-        /// <param name="elementType">The elements' Thrift type.</param>
-        public ThriftCollectionHeader( int count, ThriftType elementType )
-        {
-            Count = count;
-            ElementType = elementType;
-            ElementTypeId = elementType.Id;
-        }
 
         /// <summary>
         /// Initializes a new instance of the ThriftCollectionHeader class with the specified values.
@@ -70,40 +52,15 @@ namespace ThriftSharp.Internals
         public readonly int Count;
 
         /// <summary>
-        /// Gets the map keys' Thrift type.
-        /// </summary>
-        public readonly ThriftType KeyType;
-
-        /// <summary>
         /// Gets the map keys' Thrift type ID.
         /// </summary>
         public readonly ThriftTypeId KeyTypeId;
-
-        /// <summary>
-        /// Gets the map values' Thrift type.
-        /// </summary>
-        public readonly ThriftType ValueType;
 
         /// <summary>
         /// Gets the map values' Thrift type ID.
         /// </summary>
         public readonly ThriftTypeId ValueTypeId;
 
-
-        /// <summary>
-        /// Initializes a new instance of the ThriftMapHeader class with the specified values.
-        /// </summary>
-        /// <param name="count">The number of elements.</param>
-        /// <param name="keyType">The keys' Thrift type.</param>
-        /// <param name="valueType">The values' Thrift type.</param>
-        public ThriftMapHeader( int count, ThriftType keyType, ThriftType valueType )
-        {
-            Count = count;
-            KeyType = keyType;
-            KeyTypeId = keyType.Id;
-            ValueType = valueType;
-            ValueTypeId = valueType.Id;
-        }
 
         /// <summary>
         /// Initializes a new instance of the ThriftMapHeader class with the specified values.
@@ -117,6 +74,7 @@ namespace ThriftSharp.Internals
             KeyTypeId = keyTypeId;
             ValueTypeId = valueTypeId;
         }
+
 
         /// <summary>
         /// Returns a string representation of this object.

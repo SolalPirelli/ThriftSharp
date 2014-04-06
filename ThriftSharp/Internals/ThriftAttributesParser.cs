@@ -143,7 +143,7 @@ namespace ThriftSharp.Internals
                                  .Where( p => p != null )
                                  .ToArray();
 
-            var unwrapped = ReflectionEx.UnwrapTaskIfNeeded( info.ReturnType );
+            var unwrapped = ReflectionEx.UnwrapTask( info.ReturnType );
             if ( unwrapped == null )
             {
                 throw ThriftParsingException.NotAsync( info );

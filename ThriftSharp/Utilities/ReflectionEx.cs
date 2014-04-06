@@ -75,16 +75,16 @@ namespace ThriftSharp.Utilities
         /// Unwraps a Task if the Type is one, or returns null.
         /// Returns typeof(void) if the Task is not a generic one.
         /// </summary>
-        public static TypeInfo UnwrapTaskIfNeeded( Type type )
+        public static Type UnwrapTask( Type type )
         {
             var typeInfo = type.GetTypeInfo();
             if ( typeof( Task ).GetTypeInfo().IsAssignableFrom( typeInfo ) )
             {
                 if ( typeInfo.IsGenericType )
                 {
-                    return typeInfo.GenericTypeArguments[0].GetTypeInfo();
+                    return typeInfo.GenericTypeArguments[0];
                 }
-                return typeof( void ).GetTypeInfo();
+                return typeof( void );
             }
             return null;
         }

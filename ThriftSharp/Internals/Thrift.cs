@@ -87,12 +87,12 @@ namespace ThriftSharp.Internals
             var retFields = new List<ThriftField>();
             var retValContainer = new Container();
 
-            if ( method.ReturnTypeInfo.AsType() != typeof( void ) )
+            if ( method.ReturnType != typeof( void ) )
             {
                 if ( method.ReturnValueConverter == null )
                 {
-                    var retType = new ThriftType( method.ReturnTypeInfo.AsType() );
-                    retFields.Add( SetOnlyField( 0, "", false, method.ReturnTypeInfo, v => retValContainer.Value = v ) );
+                    var retType = new ThriftType( method.ReturnType );
+                    retFields.Add( SetOnlyField( 0, "", false, method.ReturnType.GetTypeInfo(), v => retValContainer.Value = v ) );
                 }
                 else
                 {
@@ -146,9 +146,13 @@ namespace ThriftSharp.Internals
             // using() is quite dangerous in this case because of async stuff happening
             protocol.Dispose();
 
-            if ( retStAndVal.Item2.IsSet || method.ReturnTypeInfo.AsType() == typeof( void ) )
+            if ( retStAndVal.Item2.IsSet )
             {
                 return retStAndVal.Item2.Value;
+            }
+            if ( method.ReturnType == typeof( void ) )
+            {
+                return null;
             }
             throw new ThriftProtocolException( ThriftProtocolExceptionType.MissingResult, "The result is missing." );
         }

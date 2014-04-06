@@ -78,7 +78,7 @@ namespace ThriftSharp.Internals
                         Expression.New(
                             Cache.CollectionHeaderConstructor,
                             Expression.Property( getter, countPropertyName ),
-                            Expression.Constant( thriftType.ElementType )
+                            Expression.Constant( thriftType.ElementType.Id )
                         )
                     );
 
@@ -127,8 +127,8 @@ namespace ThriftSharp.Internals
                         Expression.New(
                            Cache.MapHeaderConstructor,
                            Expression.Property( getter, "Count" ),
-                           Expression.Constant( thriftType.KeyType ),
-                           Expression.Constant( thriftType.ValueType )
+                           Expression.Constant( thriftType.KeyType.Id ),
+                           Expression.Constant( thriftType.ValueType.Id )
                         )
                     );
 

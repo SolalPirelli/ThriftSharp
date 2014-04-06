@@ -107,7 +107,7 @@ namespace ThriftSharp.Internals
                     gen.Emit( OpCodes.Pop );
                 }
                 // Cast its wrapped return value
-                var wrapped = ReflectionEx.UnwrapTaskIfNeeded( m.ReturnType );
+                var wrapped = ReflectionEx.UnwrapTask( m.ReturnType );
                 if ( wrapped != typeof( void ) )
                 {
                     // Create a method that converts a Task<object> into its Result type casted correctly

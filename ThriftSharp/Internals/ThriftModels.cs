@@ -52,6 +52,7 @@ namespace ThriftSharp.Internals
             DefaultValue = defaultValue;
         }
 
+
         /// <summary>
         /// Takes an instance and returns the field's value for that instance.
         /// </summary>
@@ -184,7 +185,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the method's return type.
         /// </summary>
-        public readonly TypeInfo ReturnTypeInfo;
+        public readonly Type ReturnType;
 
         /// <summary>
         /// Gets a value indicating whether the method is one-way.
@@ -221,13 +222,13 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Initializes a new instance of the ThriftMethod class with the specified values.
         /// </summary>
-        public ThriftMethod( string name, TypeInfo returnTypeInfo, bool isOneWay,
+        public ThriftMethod( string name, Type returnType, bool isOneWay,
                              IThriftValueConverter returnValueConverter,
                              IList<ThriftMethodParameter> parameters, IList<ThriftThrowsClause> exceptions,
                              string underlyingName )
         {
             Name = name;
-            ReturnTypeInfo = returnTypeInfo;
+            ReturnType = returnType;
             IsOneWay = isOneWay;
             ReturnValueConverter = returnValueConverter;
             Parameters = parameters.CopyAsReadOnly();
