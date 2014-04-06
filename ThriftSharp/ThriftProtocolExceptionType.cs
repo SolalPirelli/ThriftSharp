@@ -7,7 +7,7 @@ namespace ThriftSharp
     /// <summary>
     /// The Thrift protocol exception types.
     /// </summary>
-    [ThriftEnum( "ExceptionType" )]
+    [ThriftEnum]
     public enum ThriftProtocolExceptionType
     {
         /// <summary>

@@ -2,37 +2,63 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 // Redistributions of this source code must retain the above copyright notice.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using ThriftSharp.Protocols;
 using ThriftSharp.Utilities;
 
-// TODO support enums
-
 namespace ThriftSharp.Internals
 {
     internal static class ThriftWriter
     {
-        private static readonly IDictionary<ThriftStruct, dynamic> _knownWriters
-            = new Dictionary<ThriftStruct, dynamic>();
+        private static class Cache
+        {
+            public static ConstructorInfo CollectionHeaderConstructor =
+                typeof( ThriftCollectionHeader ).GetTypeInfo().DeclaredConstructors.First();
+
+            public static ConstructorInfo MapHeaderConstructor =
+                typeof( ThriftMapHeader ).GetTypeInfo().DeclaredConstructors.First();
+
+            public static PropertyInfo FieldItem =
+                typeof( ReadOnlyCollection<ThriftField> ).GetTypeInfo().GetDeclaredProperty( "Item" );
+
+            public static MethodInfo IEnumeratorMoveNext =
+                    typeof( IEnumerator ).GetTypeInfo().GetDeclaredMethod( "MoveNext" );
+        }
+
+        private static readonly Type[] EmptyTypes = new Type[0];
+
+
+        private static readonly IDictionary<ThriftStruct, Action<ThriftStruct, object, IThriftProtocol>> _knownWriters
+            = new Dictionary<ThriftStruct, Action<ThriftStruct, object, IThriftProtocol>>();
 
 
         private static Expression CreateWriter( ParameterExpression protocolParam, ThriftType thriftType, Expression getter )
         {
             if ( thriftType.IsPrimitive )
             {
+                if ( thriftType.IsNullable )
+                {
+                    getter = Expression.Property( getter, "Value" );
+                }
+                if ( thriftType.IsEnum )
+                {
+                    getter = Expression.Convert( getter, typeof( int ) );
+                }
+
                 string methodName = "Write" + ( thriftType.TypeInfo.AsType() == typeof( string ) ? "String" : thriftType.Id.ToString() );
-                return Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( methodName ),
-                                            getter );
+                return Expression.Call( protocolParam, methodName, EmptyTypes, getter );
             }
 
             if ( thriftType.CollectionTypeInfo != null )
             {
                 string writeHeader, writeEnd;
-                if ( thriftType.IsSet )
+                if ( thriftType.Id == ThriftTypeId.Set )
                 {
                     writeHeader = "WriteSetHeader";
                     writeEnd = "WriteSetEnd";
@@ -43,152 +69,157 @@ namespace ThriftSharp.Internals
                     writeEnd = "WriteListEnd";
                 }
 
-                var countProp = thriftType.CollectionTypeInfo.GetInterfaceProperty( "Count" );
+                string countPropertyName = thriftType.CollectionTypeInfo.IsArray ? "Length" : "Count";
 
                 var writeHeaderExpr =
-                    Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( writeHeader ),
-                                         Expression.New(
-                                             TypeInfos.CollectionHeader.DeclaredConstructors.First(),
-                                             Expression.Property( getter, countProp ),
-                                             Expression.Constant( thriftType.ElementType )
-                                         )
+                    Expression.Call(
+                        protocolParam,
+                        writeHeader, EmptyTypes,
+                        Expression.New(
+                            Cache.CollectionHeaderConstructor,
+                            Expression.Property( getter, countPropertyName ),
+                            Expression.Constant( thriftType.ElementType )
+                        )
+                    );
+
+                var enumerableTypeInfo = thriftType.CollectionTypeInfo
+                                                   .GetGenericInterface( typeof( IEnumerable<> ) )
+                                                   .GetTypeInfo();
+                var enumeratorType = enumerableTypeInfo.GetDeclaredMethod( "GetEnumerator" ).ReturnType;
+
+                var enumeratorVar = Expression.Variable( enumeratorType, "enumerator" );
+                var enumeratorAssign =
+                    Expression.Assign(
+                        enumeratorVar,
+                    // Can't use the string-taking Call() overload because we need the generic GetEnumerator
+                        Expression.Call( getter, enumerableTypeInfo.GetDeclaredMethod( "GetEnumerator" ) )
                     );
 
                 var endOfLoop = Expression.Label();
-                var enumerableInterface = thriftType.CollectionTypeInfo.GetGenericInterface( typeof( IEnumerable<> ) );
-                var enumeratorVar = Expression.Variable( typeof( IEnumerator ), "enumerator" );
-                var enumeratorAssign =
-                    Expression.Assign( enumeratorVar,
-                        Expression.Convert(
-                            Expression.Call(
-                                getter,
-                                enumerableInterface.GetTypeInfo().GetDeclaredMethod( "GetEnumerator" )
-                            ),
-                            typeof( IEnumerator )
-                        )
-                    );
                 var loopExpr = Expression.Loop(
                     Expression.IfThenElse(
                         Expression.IsTrue(
-                            Expression.Call( enumeratorVar, TypeInfos.IEnumerator.GetDeclaredMethod( "MoveNext" ) )
+                            Expression.Call( enumeratorVar, Cache.IEnumeratorMoveNext )
                         ),
-                        CreateWriter( protocolParam, thriftType.ElementType,
-                                          Expression.Convert(
-                                              Expression.Property( enumeratorVar, TypeInfos.IEnumerator.GetDeclaredProperty( "Current" ) ),
-                                              thriftType.ElementType.TypeInfo.AsType()
-                                          )
+                        CreateWriter(
+                            protocolParam, thriftType.ElementType,
+                            Expression.Property( enumeratorVar, "Current" )
                         ),
                         Expression.Break( endOfLoop )
                     ),
                     endOfLoop
                 );
-                var writeEndExpr = Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( writeEnd ) );
+                var writeEndExpr = Expression.Call( protocolParam, writeEnd, EmptyTypes );
 
                 return Expression.Block( new[] { enumeratorVar }, writeHeaderExpr, enumeratorAssign, loopExpr, writeEndExpr );
             }
 
             if ( thriftType.MapTypeInfo != null )
             {
-                var enumerableInterface = thriftType.MapTypeInfo.GetGenericInterface( typeof( IEnumerable<> ) );
-                var countProp = thriftType.MapTypeInfo.GetInterfaceProperty( "Count" );
-
-                var pairTypeInfo = enumerableInterface.GenericTypeArguments[0].GetTypeInfo();
-
+                var enumerableTypeInfo = thriftType.MapTypeInfo
+                                               .GetGenericInterface( typeof( IEnumerable<> ) )
+                                               .GetTypeInfo();
+                var enumeratorType = enumerableTypeInfo.GetDeclaredMethod( "GetEnumerator" )
+                                                      .ReturnType;
                 var writeHeaderExpr =
-                    Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( "WriteMapHeader" ),
-                                         Expression.New(
-                                            TypeInfos.MapHeader.DeclaredConstructors.First(),
-                                            Expression.Property( getter, countProp ),
-                                            Expression.Constant( thriftType.KeyType ),
-                                            Expression.Constant( thriftType.ValueType )
-                                         )
+                    Expression.Call(
+                        protocolParam, "WriteMapHeader", EmptyTypes,
+                        Expression.New(
+                           Cache.MapHeaderConstructor,
+                           Expression.Property( getter, "Count" ),
+                           Expression.Constant( thriftType.KeyType ),
+                           Expression.Constant( thriftType.ValueType )
+                        )
                     );
 
                 var endOfLoop = Expression.Label();
-                var enumeratorVar = Expression.Variable( typeof( IEnumerator ), "enumerator" );
-                var enumeratorCurrentExpr =
-                    Expression.Convert(
-                        Expression.Property( enumeratorVar, TypeInfos.IEnumerator.GetDeclaredProperty( "Current" ) ),
-                        pairTypeInfo.AsType()
-                    );
+                var enumeratorVar = Expression.Variable( enumeratorType, "enumerator" );
+                var enumeratorCurrentExpr = Expression.Property( enumeratorVar, "Current" );
 
                 var enumeratorAssign =
-                    Expression.Assign( enumeratorVar,
-                        Expression.Call( getter, TypeInfos.IEnumerable.GetDeclaredMethod( "GetEnumerator" ) )
+                    Expression.Assign(
+                        enumeratorVar,
+                        Expression.Call( getter, enumerableTypeInfo.GetDeclaredMethod( "GetEnumerator" ) )
                     );
 
                 var loopExpr = Expression.Loop(
                     Expression.IfThenElse(
                         Expression.IsTrue(
-                            Expression.Call( enumeratorVar, TypeInfos.IEnumerator.GetDeclaredMethod( "MoveNext" ) )
+                    // Can't use the string-using Call() overload because MoveNext is only declared on the non-generic IEnumerator
+                            Expression.Call( enumeratorVar, Cache.IEnumeratorMoveNext )
                         ),
                         Expression.Block(
                             CreateWriter( protocolParam, thriftType.KeyType,
-                                              Expression.Property( enumeratorCurrentExpr, pairTypeInfo.GetDeclaredProperty( "Key" ) )
+                                              Expression.Property( enumeratorCurrentExpr, "Key" )
                             ),
                             CreateWriter( protocolParam, thriftType.ValueType,
-                                              Expression.Property( enumeratorCurrentExpr, pairTypeInfo.GetDeclaredProperty( "Value" ) )
+                                              Expression.Property( enumeratorCurrentExpr, "Value" )
                             )
                         ),
                         Expression.Break( endOfLoop )
                     ),
                     endOfLoop
                 );
-                var writeEndExpr = Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( "WriteMapEnd" ) );
+                var writeEndExpr = Expression.Call( protocolParam, "WriteMapEnd", EmptyTypes );
 
                 return Expression.Block( new[] { enumeratorVar }, writeHeaderExpr, enumeratorAssign, loopExpr, writeEndExpr );
             }
 
-            return Expression.Call( TypeInfos.Writer.GetDeclaredMethod( "Write2" ),
-                                        getter, protocolParam
+            return Expression.Call( typeof( ThriftWriter ),
+                                    "WriteValue",
+                                    EmptyTypes,
+                                    getter, protocolParam
                    );
         }
 
-        private static dynamic CreateCompiledWriter( ThriftStruct thriftStruct )
+        private static Action<ThriftStruct, object, IThriftProtocol> CreateCompiledWriter( ThriftStruct thriftStruct )
         {
             var structParam = Expression.Parameter( typeof( ThriftStruct ), "struct" );
-            var valueParam = Expression.Parameter( thriftStruct.TypeInfo.AsType(), "value" );
+            var valueParam = Expression.Parameter( typeof( object ), "value" );
             var protocolParam = Expression.Parameter( typeof( IThriftProtocol ), "param" );
 
             var methodContents = new List<Expression>();
 
             methodContents.Add(
-                Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( "WriteStructHeader" ),
-                                     Expression.Constant( thriftStruct.Header ) )
+                Expression.Call( protocolParam,
+                                 "WriteStructHeader", EmptyTypes,
+                                 Expression.Constant( thriftStruct.Header )
+                )
             );
 
             for ( int n = 0; n < thriftStruct.Fields.Count; n++ )
             {
                 var field = thriftStruct.Fields[n];
-                var fieldExpr = Expression.MakeIndex( Expression.Field( structParam, TypeInfos.Struct.GetDeclaredField( "Fields" ) ),
-                                                      TypeInfos.FieldCollection.GetDeclaredProperty( "Item" ),
+                var fieldExpr = Expression.MakeIndex( Expression.Field( structParam, "Fields" ),
+                                                      Cache.FieldItem,
                                                       new[] { Expression.Constant( n ) } );
+                var fieldType = field.Header.FieldType;
                 var getFieldExpr =
                     Expression.Convert(
-                        Expression.Call( fieldExpr, TypeInfos.Field.GetDeclaredMethod( "GetValue" ), valueParam ),
-                        field.Header.FieldType.TypeInfo.AsType()
+                        Expression.Call( fieldExpr, "GetValue", EmptyTypes, valueParam ),
+                        fieldType.TypeInfo.AsType()
                     );
 
                 var writingExpr = Expression.Block(
-                    Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( "WriteFieldHeader" ),
-                                         Expression.Constant( field.Header ) ),
-                    CreateWriter( protocolParam, field.Header.FieldType,
+                    Expression.Call( protocolParam,
+                                     "WriteFieldHeader",
+                                     EmptyTypes,
+                                     Expression.Constant( field.Header )
+                    ),
+                    CreateWriter( protocolParam, fieldType,
                                       getFieldExpr
                     ),
-                    Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( "WriteFieldEnd" ) )
+                    Expression.Call( protocolParam, "WriteFieldEnd", EmptyTypes )
                 );
 
-                if ( field.DefaultValue.HasValue )
+                if ( field.DefaultValue.HasValue || fieldType.IsNullable || !fieldType.IsPrimitive )
                 {
-                    var isDefaultExpr =
-                        Expression.Equal(
-                            Expression.Constant( field.DefaultValue.Value ),
-                            getFieldExpr
-                        );
+                    var defaultExpr = Expression.Constant( field.DefaultValue.HasValue ? field.DefaultValue.Value : null );
+                    var isDefaultExpr = Expression.Equal( defaultExpr, getFieldExpr );
 
                     methodContents.Add( Expression.IfThenElse( isDefaultExpr, Expression.Empty(), writingExpr ) );
                 }
-                else if ( field.IsRequired && !field.Header.FieldType.TypeInfo.IsValueType )
+                else if ( field.IsRequired && ( fieldType.IsNullable || !fieldType.IsPrimitive ) )
                 {
                     var isDefaultExpr =
                         Expression.Equal(
@@ -198,9 +229,10 @@ namespace ThriftSharp.Internals
 
                     var exceptionExpr =
                         Expression.Throw(
-                            Expression.Call( TypeInfos.SerializationError.GetDeclaredMethod( "CannotWriteNull" ),
-                                                 Expression.Constant( thriftStruct.Header.Name ),
-                                                 Expression.Constant( field.Header.Name )
+                            Expression.Call( typeof( ThriftSerializationException ),
+                                             "CannotWriteNull", EmptyTypes,
+                                             Expression.Constant( thriftStruct.Header.Name ),
+                                             Expression.Constant( field.Header.Name )
                             )
                         );
 
@@ -213,16 +245,25 @@ namespace ThriftSharp.Internals
             }
 
             methodContents.Add(
-                Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( "WriteFieldStop" ) )
+                Expression.Call( protocolParam, "WriteFieldStop", EmptyTypes )
             );
 
             methodContents.Add(
-                Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( "WriteStructEnd" ) )
+                Expression.Call( protocolParam, "WriteStructEnd", EmptyTypes )
             );
 
             var methodBlock = Expression.Block( methodContents );
 
-            return Expression.Lambda( methodBlock, structParam, valueParam, protocolParam ).Compile();
+            return (Action<ThriftStruct, object, IThriftProtocol>)
+                Expression.Lambda<Action<ThriftStruct, object, IThriftProtocol>>(
+                    methodBlock, structParam, valueParam, protocolParam
+                ).Compile();
+        }
+
+        private static void WriteValue( object value, IThriftProtocol protocol )
+        {
+            var thriftStruct = ThriftAttributesParser.ParseStruct( value.GetType().GetTypeInfo() );
+            Write( thriftStruct, value, protocol );
         }
 
         public static void Write( ThriftStruct thriftStruct, object value, IThriftProtocol protocol )
@@ -232,13 +273,7 @@ namespace ThriftSharp.Internals
                 _knownWriters.Add( thriftStruct, CreateCompiledWriter( thriftStruct ) );
             }
 
-            _knownWriters[thriftStruct].DynamicInvoke( thriftStruct, value, protocol );
-        }
-
-        private static void Write2( object value, IThriftProtocol protocol )
-        {
-            var thriftStruct = ThriftAttributesParser.ParseStruct( value.GetType().GetTypeInfo() );
-            Write( thriftStruct, value, protocol );
+            _knownWriters[thriftStruct]( thriftStruct, value, protocol );
         }
     }
 }

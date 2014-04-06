@@ -15,8 +15,9 @@ namespace ThriftSharp.Internals
         public readonly TypeInfo TypeInfo;
 
         public readonly bool IsPrimitive;
+        public readonly bool IsNullable;
+        public readonly bool IsEnum;
 
-        public readonly bool IsSet;
         public readonly TypeInfo CollectionTypeInfo;
         public readonly ThriftType ElementType;
 
@@ -24,17 +25,31 @@ namespace ThriftSharp.Internals
         public readonly ThriftType KeyType;
         public readonly ThriftType ValueType;
 
-        public readonly ThriftStruct StructType;
-
 
         public ThriftType( Type type )
         {
             TypeInfo = type.GetTypeInfo();
 
+            if ( TypeInfo.IsGenericType && TypeInfo.GetGenericTypeDefinition() == typeof( Nullable<> ) )
+            {
+                IsNullable = true;
+                IsPrimitive = true;
+                Id = PrimitiveIds[TypeInfo.GenericTypeArguments[0]];
+                return;
+            }
+
             if ( PrimitiveIds.ContainsKey( type ) )
             {
-                Id = PrimitiveIds[type];
                 IsPrimitive = true;
+                Id = PrimitiveIds[type];
+                return;
+            }
+
+            if ( TypeInfo.IsEnum )
+            {
+                IsEnum = true;
+                IsPrimitive = true;
+                Id = ThriftTypeId.Int32;
                 return;
             }
 
@@ -52,7 +67,6 @@ namespace ThriftSharp.Internals
             if ( setInterface != null )
             {
                 Id = ThriftTypeId.Set;
-                IsSet = true;
                 CollectionTypeInfo = setInterface.GetTypeInfo();
                 ElementType = new ThriftType( setInterface.GenericTypeArguments[0] );
                 return;
@@ -62,13 +76,21 @@ namespace ThriftSharp.Internals
             if ( collectionInterface != null )
             {
                 Id = ThriftTypeId.List;
-                CollectionTypeInfo = collectionInterface.GetTypeInfo();
-                ElementType = new ThriftType( collectionInterface.GenericTypeArguments[0] );
+
+                if ( TypeInfo.IsArray )
+                {
+                    CollectionTypeInfo = TypeInfo;
+                    ElementType = new ThriftType( TypeInfo.GetElementType() );
+                }
+                else
+                {
+                    CollectionTypeInfo = collectionInterface.GetTypeInfo();
+                    ElementType = new ThriftType( collectionInterface.GenericTypeArguments[0] );
+                }
                 return;
             }
 
             Id = ThriftTypeId.Struct;
-            StructType = ThriftAttributesParser.ParseStruct( TypeInfo );
         }
 
         private static readonly IDictionary<Type, ThriftTypeId> PrimitiveIds = new Dictionary<Type, ThriftTypeId>

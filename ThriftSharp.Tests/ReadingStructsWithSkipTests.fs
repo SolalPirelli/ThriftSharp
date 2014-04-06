@@ -38,8 +38,8 @@ type __() =
     member __.``Many fields for a struct with one primitive fields``() =
         check<StructWithOneField>
             [StructHeader "OneField"
-             FieldHeader (3s, "Field3", tid 11uy)
-             String "abc"
+             FieldHeader (3s, "Field3", tid 2uy)
+             Bool true
              FieldEnd
              FieldHeader (1s, "Field", tid 8uy)
              Int32 42
@@ -72,8 +72,8 @@ type __() =
              FieldHeader (6s, "Int64Field", tid 10uy)
              Int64 -1L
              FieldEnd
-             FieldHeader (7s, "StringField", tid 11uy)
-             String "xyzzy"
+             FieldHeader (7s, "BinaryField", tid 11uy)
+             Binary [| 1y; 2y; 42y; |]
              FieldEnd
              FieldStop
              StructEnd]
@@ -95,11 +95,11 @@ type __() =
              SetEnd
              FieldEnd
              FieldHeader (3s, "MapField", tid 13uy)
-             MapHeader (2, tid 8uy, tid 11uy)
+             MapHeader (2, tid 8uy, tid 10uy)
              Int32 5
-             String "Five"
+             Int64 555L
              Int32 6
-             String "Six"
+             Int64 666L
              MapEnd
              FieldEnd
              FieldStop

@@ -12,7 +12,7 @@ open ThriftSharp.Internals
 type MyException() =
     inherit System.Exception()
     [<ThriftField(1s, true, "stuff")>]
-    member val Stuff = "" with get, set
+    member val Code = 0 with get, set
 
 [<ThriftService("Service")>]
 type Service =
@@ -118,10 +118,10 @@ type __() =
     member __.``No reply with exception declared, but another one was received``() = 
         [MessageHeader (0, "noReplyWithException", ThriftMessageType.Reply)
          StructHeader ""
-         FieldHeader (10s, "exn", tid 13uy)
+         FieldHeader (10s, "exn", tid 12uy)
          StructHeader "MyException"
-         FieldHeader (1s, "message", tid 12uy)
-         String "Error."
+         FieldHeader (1s, "code", tid 8uy)
+         Int32 123
          FieldEnd
          FieldStop
          StructEnd
@@ -141,8 +141,8 @@ type __() =
          StructHeader ""
          FieldHeader (1s, "exn", tid 12uy)
          StructHeader "MyException"
-         FieldHeader (1s, "stuff", tid 11uy)
-         String "Everything went wrong."
+         FieldHeader (1s, "code", tid 8uy)
+         Int32 456
          FieldEnd
          FieldStop
          StructEnd
@@ -154,7 +154,7 @@ type __() =
         "NoReplyWithException"
         =//=>
         fun (ex: MyException) ->
-            ex.Stuff <=> "Everything went wrong."
+            ex.Code <=> 456
 
     [<Test>]
     member __.``Reply expected, but none was received``() =
@@ -191,8 +191,8 @@ type __() =
          StructHeader ""
          FieldHeader (1s, "exn", tid 12uy)
          StructHeader "MyException"
-         FieldHeader (1s, "stuff", tid 11uy)
-         String "Everything went wrong."
+         FieldHeader (1s, "code", tid 8uy)
+         Int32 12345
          FieldEnd
          FieldStop
          StructEnd
@@ -228,8 +228,8 @@ type __() =
          StructHeader ""
          FieldHeader (1s, "exn", tid 12uy)
          StructHeader "MyException"
-         FieldHeader (1s, "stuff", tid 11uy)
-         String "Everything went wrong."
+         FieldHeader (1s, "code", tid 8uy)
+         Int32 4224
          FieldEnd
          FieldStop
          StructEnd
@@ -241,7 +241,7 @@ type __() =
         "WithException" 
         =//=>
         fun (ex: MyException) ->
-            ex.Stuff <=> "Everything went wrong."
+            ex.Code <=> 4224
 
     [<Test>]
     member __.``UnixDate return type``() =

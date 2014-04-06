@@ -54,7 +54,7 @@ type __() =
 
     [<Test>]
     member __.``Missing required field``() =
-        throwsOnRead<StructWithOptionalFields, ThriftProtocolException>
+        throwsOnRead<StructWithOptionalFields, ThriftSerializationException>
             [StructHeader "OptionalFields"
              FieldHeader (2s, "Optional", tid 8uy)
              Int32 10

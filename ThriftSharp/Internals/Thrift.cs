@@ -92,13 +92,13 @@ namespace ThriftSharp.Internals
                 if ( method.ReturnValueConverter == null )
                 {
                     var retType = new ThriftType( method.ReturnTypeInfo.AsType() );
-                    retFields.Add( SetOnlyField( 0, "", true, method.ReturnTypeInfo, v => retValContainer.Value = v ) );
+                    retFields.Add( SetOnlyField( 0, "", false, method.ReturnTypeInfo, v => retValContainer.Value = v ) );
                 }
                 else
                 {
                     var retTypeInfo = method.ReturnValueConverter.FromType.GetTypeInfo();
                     var retType = new ThriftType( retTypeInfo.AsType() );
-                    retFields.Add( SetOnlyField( 0, "", true, retTypeInfo,
+                    retFields.Add( SetOnlyField( 0, "", false, retTypeInfo,
                                                  v => retValContainer.Value = method.ReturnValueConverter.Convert( v ) ) );
                 }
             }
@@ -146,7 +146,11 @@ namespace ThriftSharp.Internals
             // using() is quite dangerous in this case because of async stuff happening
             protocol.Dispose();
 
-            return retStAndVal.Item2.Value;
+            if ( retStAndVal.Item2.IsSet || method.ReturnTypeInfo.AsType() == typeof( void ) )
+            {
+                return retStAndVal.Item2.Value;
+            }
+            throw new ThriftProtocolException( ThriftProtocolExceptionType.MissingResult, "The result is missing." );
         }
 
 
@@ -190,7 +194,18 @@ namespace ThriftSharp.Internals
         /// </summary>
         private sealed class Container
         {
-            public object Value { get; set; }
+            public bool IsSet { get; private set; }
+
+            private object _value;
+            public object Value
+            {
+                get { return _value; }
+                set
+                {
+                    _value = value;
+                    IsSet = true;
+                }
+            }
         }
     }
 }

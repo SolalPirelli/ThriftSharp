@@ -48,10 +48,10 @@ type StructWithStructField() =
     [<ThriftField(1s, true, "StructField")>]
     member val Struct = StructWithOneField() with get, set
 
-[<ThriftEnum("Enum")>]
+[<ThriftEnum>]
 type Enum =
     | A = 1
-    | [<ThriftEnumMember("B", 3)>] B = 2
+    | B = 2
 
 [<ThriftStruct("EnumFields")>]
 type StructWithEnumFields() =
@@ -59,8 +59,6 @@ type StructWithEnumFields() =
     member val Field1 = Enum.A with get, set
     [<ThriftField(2s, true, "Field2")>]
     member val Field2 = Enum.A with get, set
-    [<ThriftField(3s, true, "Field3")>]
-    member val Field3 = Enum.A with get, set
 
 [<ThriftStruct("ArrayFields")>]
 type StructWithArrayFields() =
@@ -212,18 +210,14 @@ type __() =
          Int32 2
          FieldEnd
          FieldHeader (1s, "Field1", tid 8uy)
-         Int32 3
-         FieldEnd
-         FieldHeader (3s, "Field3", tid 8uy)
          Int32 1
          FieldEnd
          FieldStop
          StructEnd]
         ==>
         fun (inst: StructWithEnumFields) ->
-            inst.Field1 <=> Enum.B
-            inst.Field2 <=> LanguagePrimitives.EnumOfValue(0)
-            inst.Field3 <=> Enum.A
+            inst.Field1 <=> Enum.A
+            inst.Field2 <=> Enum.B
 
     [<Test>]
     member __.``Array fields``() =

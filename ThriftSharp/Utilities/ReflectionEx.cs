@@ -21,7 +21,7 @@ namespace ThriftSharp.Utilities
         public static T GetAttribute<T>( this MemberInfo info )
             where T : Attribute
         {
-            return (T) info.GetCustomAttributes( typeof( T ), true ).FirstOrDefault();
+            return (T) info.GetCustomAttributes( typeof( T ) ).FirstOrDefault();
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace ThriftSharp.Utilities
         public static T GetAttribute<T>( this ParameterInfo info )
             where T : Attribute
         {
-            return (T) info.GetCustomAttributes( typeof( T ), true ).FirstOrDefault();
+            return (T) info.GetCustomAttributes( typeof( T ) ).FirstOrDefault();
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace ThriftSharp.Utilities
         /// </summary>
         public static IEnumerable<T> GetAttributes<T>( this MemberInfo info )
         {
-            return info.GetCustomAttributes( typeof( T ), true ).Cast<T>();
+            return info.GetCustomAttributes( typeof( T ) ).Cast<T>();
         }
 
         /// <summary>

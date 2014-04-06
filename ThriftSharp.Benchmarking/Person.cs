@@ -141,22 +141,13 @@ namespace ThriftSharp.Benchmarking
         }
 
 
-        [ThriftEnum( "Hobby" )]
+        [ThriftEnum]
         public enum Hobby
         {
-            [ThriftEnumMember( "Painting", 1 )]
             Painting,
-
-            [ThriftEnumMember( "Programming", 2 )]
             Programming,
-
-            [ThriftEnumMember( "Sports", 3 )]
             Sports,
-
-            [ThriftEnumMember( "Sleeping", 4 )]
             Sleeping,
-
-            [ThriftEnumMember( "Dancing", 5 )]
             Dancing
         }
     }

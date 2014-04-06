@@ -70,67 +70,6 @@ namespace ThriftSharp.Internals
     }
 
     /// <summary>
-    /// Thrift enum members.
-    /// </summary>
-    internal sealed class ThriftEnumMember
-    {
-        /// <summary>
-        /// Gets the member's name.
-        /// </summary>
-        public readonly string Name;
-
-        /// <summary>
-        /// Gets the member's value.
-        /// </summary>
-        /// <remarks>
-        /// Thrift enums are always Int32s.
-        /// </remarks>
-        public readonly int Value;
-
-        /// <summary>
-        /// Gets the member's underlying field.
-        /// </summary>
-        public readonly FieldInfo UnderlyingField;
-
-
-        /// <summary>
-        /// Initializes a new instance of the ThriftEnumMember class with the specified values.
-        /// </summary>
-        public ThriftEnumMember( string name, int value, FieldInfo underlyingField )
-        {
-            Name = name;
-            Value = value;
-            UnderlyingField = underlyingField;
-        }
-    }
-
-    /// <summary>
-    /// Thrift enums.
-    /// </summary>
-    internal sealed class ThriftEnum
-    {
-        /// <summary>
-        /// Gets the enum's name.
-        /// </summary>
-        public readonly string Name;
-
-        /// <summary>
-        /// Gets the enum's members.
-        /// </summary>
-        public readonly ReadOnlyCollection<ThriftEnumMember> Members;
-
-
-        /// <summary>
-        /// Initializes a new instance of the ThriftEnum class with the specified values.
-        /// </summary>
-        public ThriftEnum( string name, IList<ThriftEnumMember> members )
-        {
-            Name = name;
-            Members = members.CopyAsReadOnly();
-        }
-    }
-
-    /// <summary>
     /// Thrift struct.
     /// </summary>
     internal sealed class ThriftStruct

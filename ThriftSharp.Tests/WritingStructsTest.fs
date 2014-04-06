@@ -48,10 +48,10 @@ type StructWithStructField() =
     [<ThriftField(1s, true, "StructField")>]
     member val Struct = StructWithOneField() with get, set
 
-[<ThriftEnum("Enum")>]
+[<ThriftEnum>]
 type Enum =
     | A = 1
-    | [<ThriftEnumMember("B", 3)>] B = 2
+    | B = 3
 
 [<ThriftStruct("EnumFields")>]
 type StructWithEnumFields() =

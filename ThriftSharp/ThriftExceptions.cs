@@ -117,9 +117,20 @@ namespace ThriftSharp
     {
         private ThriftSerializationException( string message, params string[] args ) : base( string.Format( message, args ) ) { }
 
-        public static ThriftSerializationException CannotWriteNull( string structName, string fieldName )
+        /// <summary>
+        /// Creates a ThriftSerializationException indicating a required field was null during serialization.
+        /// </summary>
+        internal static ThriftSerializationException RequiredFieldIsNull( string structName, string fieldName )
         {
             return new ThriftSerializationException( "Field '{0}' of struct '{1}' is a required field and cannot be null when writing it.", structName, fieldName );
+        }
+
+        /// <summary>
+        /// Creates a ThriftSerializationException indicating a required field was null during deserialization.
+        /// </summary>
+        internal static ThriftSerializationException MissingRequiredField( string structName, string fieldName )
+        {
+            return new ThriftSerializationException( "Field '{0}' of struct '{1}' is a required field, but was not present.", structName, fieldName );
         }
     }
 

@@ -5,292 +5,276 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using ThriftSharp.Protocols;
+using ThriftSharp.Utilities;
 
 namespace ThriftSharp.Internals
 {
     internal static class ThriftReader
     {
-        private static readonly MethodInfo NonGenericTaskContinueWith = TypeInfos.Task.GetDeclaredMethods( "ContinueWith" )
-            .First( m => m.IsGenericMethodDefinition && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof( Func<,> ) );
-
-        // TODO during struct parsing ensure it's one of these or a type with a ctor and no args
+        // TODO during struct parsing ensure it's one of these or a concrete type with a parameterless ctor
         private static readonly IDictionary<Type, Type> KnownImplementations = new Dictionary<Type, Type>
         {
             { typeof( ISet<> ), typeof( HashSet<> ) },
             { typeof( ICollection<> ), typeof( List<> ) },
+            { typeof( IList<> ), typeof( List<> ) },
             { typeof( IDictionary<,> ), typeof( Dictionary<,> ) }
         };
-
-        private static readonly IDictionary<ThriftStruct, Func<ThriftStruct, IThriftProtocol, Task<object>>> _knownReaders
-            = new Dictionary<ThriftStruct, Func<ThriftStruct, IThriftProtocol, Task<object>>>();
 
         private static TypeInfo GetCollectionTypeInfo( TypeInfo typeInfo )
         {
             if ( typeInfo.IsInterface )
             {
-                return KnownImplementations[typeInfo.MakeGenericType()].MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo();
+                return KnownImplementations[typeInfo.GetGenericTypeDefinition()].MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo();
             }
             return typeInfo;
         }
 
-        private static Expression ContinueTaskExpressionWith( Expression task, LambdaExpression continuation )
+        private static async Task SkipAsync( ThriftTypeId thriftTypeId, IThriftProtocol protocol )
         {
-            var taskParam = Expression.Parameter( typeof( Task ), "task" );
-            return Expression.Call( task, NonGenericTaskContinueWith,
-                Expression.Lambda(
-                    Expression.Switch( Expression.Property( taskParam, TypeInfos.Task.GetDeclaredProperty( "Status" ) ),
-                        Expression.SwitchCase(
-                            Expression.Call( continuation.Compile().GetMethodInfo() ),
-                            Expression.Constant( TaskStatus.RanToCompletion ) ),
-                        Expression.SwitchCase(
-                            Expression.Throw(
-                                Expression.Property(
-                                    Expression.Property( taskParam, TypeInfos.Task.GetDeclaredProperty( "Exception" ) ),
-                                    TypeInfos.AggregateException.GetDeclaredMethod( "InnerException" ) ) ),
-                            Expression.Constant( TaskStatus.Faulted ) ),
-                        Expression.SwitchCase(
-                            Expression.Throw(
-                                Expression.New( TypeInfos.TaskCanceledException.DeclaredConstructors.First( c => c.GetParameters().Length == 0 ) ) ),
-                            Expression.Constant( TaskStatus.Canceled ) ) ),
-                    taskParam ) );
+            switch ( thriftTypeId )
+            {
+                case ThriftTypeId.Boolean:
+                    await protocol.ReadBooleanAsync();
+                    return;
+
+                case ThriftTypeId.SByte:
+                    await protocol.ReadSByteAsync();
+                    return;
+
+                case ThriftTypeId.Double:
+                    await protocol.ReadDoubleAsync();
+                    return;
+
+                case ThriftTypeId.Int16:
+                    await protocol.ReadInt16Async();
+                    return;
+
+                case ThriftTypeId.Int32:
+                    await protocol.ReadInt32Async();
+                    return;
+
+                case ThriftTypeId.Int64:
+                    await protocol.ReadInt64Async();
+                    return;
+
+                case ThriftTypeId.Binary:
+                    await protocol.ReadBinaryAsync();
+                    return;
+
+                case ThriftTypeId.List:
+                    var listHeader = await protocol.ReadListHeaderAsync();
+                    for ( int n = 0; n < listHeader.Count; n++ )
+                    {
+                        await SkipAsync( listHeader.ElementTypeId, protocol );
+                    }
+                    await protocol.ReadListEndAsync();
+                    return;
+
+                case ThriftTypeId.Set:
+                    var setHeader = await protocol.ReadSetHeaderAsync();
+                    for ( int n = 0; n < setHeader.Count; n++ )
+                    {
+                        await SkipAsync( setHeader.ElementTypeId, protocol );
+                    }
+                    await protocol.ReadSetEndAsync();
+                    return;
+
+                case ThriftTypeId.Map:
+                    var mapHeader = await protocol.ReadMapHeaderAsync();
+                    for ( int n = 0; n < mapHeader.Count; n++ )
+                    {
+                        await SkipAsync( mapHeader.KeyTypeId, protocol );
+                        await SkipAsync( mapHeader.ValueTypeId, protocol );
+                    }
+                    await protocol.ReadMapEndAsync();
+                    return;
+
+                case ThriftTypeId.Struct:
+                    await protocol.ReadStructHeaderAsync();
+                    while ( true )
+                    {
+                        var fieldHeader = await protocol.ReadFieldHeaderAsync();
+                        if ( fieldHeader == null )
+                        {
+                            break;
+                        }
+                        await SkipAsync( fieldHeader.FieldTypeId, protocol );
+                        await protocol.ReadFieldEndAsync();
+                    }
+                    await protocol.ReadStructEndAsync();
+                    return;
+            }
         }
 
-        private static Expression ContinueGenericTaskExpressionWith( Expression task, Type parameterType, LambdaExpression continuation )
+        private static async Task<object> ReadStructAsync( ThriftStruct thriftStruct, IThriftProtocol protocol )
         {
-            var taskType = typeof( Task<> ).MakeGenericType( parameterType );
-            var taskParam = Expression.Parameter( taskType, "task" );
-            return Expression.Call( task, NonGenericTaskContinueWith,
-                Expression.Lambda(
-                    Expression.Switch( Expression.Property( taskParam, TypeInfos.Task.GetDeclaredProperty( "Status" ) ),
-                        Expression.SwitchCase(
-                            Expression.Call( continuation.Compile().GetMethodInfo(), Expression.Property( taskParam, taskType.GetTypeInfo().GetDeclaredProperty( "Result" ) ) ),
-                            Expression.Constant( TaskStatus.RanToCompletion ) ),
-                        Expression.SwitchCase(
-                            Expression.Throw(
-                                Expression.Property(
-                                    Expression.Property( taskParam, TypeInfos.Task.GetDeclaredProperty( "Exception" ) ),
-                                    TypeInfos.AggregateException.GetDeclaredMethod( "InnerException" ) ) ),
-                            Expression.Constant( TaskStatus.Faulted ) ),
-                        Expression.SwitchCase(
-                            Expression.Throw(
-                                Expression.New( TypeInfos.TaskCanceledException.DeclaredConstructors.First( c => c.GetParameters().Length == 0 ) ) ),
-                            Expression.Constant( TaskStatus.Canceled ) ) ),
-                    taskParam ) );
+            var structInstance = ReflectionEx.Create( thriftStruct.TypeInfo );
+            var readIds = new HashSet<short>();
+
+            await protocol.ReadStructHeaderAsync(); // ignore return value
+            while ( true )
+            {
+                var header = await protocol.ReadFieldHeaderAsync();
+                if ( header == null )
+                {
+                    break;
+                }
+
+                readIds.Add( header.Id );
+
+                var field = thriftStruct.Fields.FirstOrDefault( f => f.Header.Id == header.Id );
+                if ( field == null )
+                {
+                    await SkipAsync( header.FieldTypeId, protocol );
+                }
+                else
+                {
+                    var fieldValue = await ReadAsync( field.Header.FieldType, protocol );
+                    field.SetValue( structInstance, fieldValue );
+                }
+                await protocol.ReadFieldEndAsync();
+            }
+            await protocol.ReadStructEndAsync();
+
+            foreach ( var field in thriftStruct.Fields )
+            {
+                if ( !readIds.Contains( field.Header.Id ) )
+                {
+                    if ( field.IsRequired )
+                    {
+                        throw ThriftSerializationException.MissingRequiredField( thriftStruct.Header.Name, field.Header.Name );
+                    }
+                    if ( field.DefaultValue.HasValue )
+                    {
+                        field.SetValue( structInstance, field.DefaultValue.Value );
+                    }
+                }
+            }
+
+            return structInstance;
         }
 
-
-        private static Expression CreateAsyncReader( ParameterExpression protocolParam, ThriftType thriftType )
+        private static async Task<object> ReadAsync( ThriftType thriftType, IThriftProtocol protocol )
         {
             if ( thriftType.IsPrimitive )
             {
-                return Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( "Read" + thriftType.TypeInfo.Name + "Async" ) );
+                if ( thriftType.IsEnum )
+                {
+                    return Enum.ToObject( thriftType.TypeInfo.AsType(), await protocol.ReadInt32Async() );
+                }
+                if ( thriftType.IsNullable )
+                {
+                    var nestedType = new ThriftType( thriftType.TypeInfo.GenericTypeArguments[0] );
+                    var ctor = thriftType.TypeInfo.DeclaredConstructors.First( c => c.GetParameters().Length == 1 );
+                    return ctor.Invoke( new[] { await ReadAsync( nestedType, protocol ) } );
+                }
+
+                switch ( thriftType.Id )
+                {
+                    case ThriftTypeId.Boolean:
+                        return await protocol.ReadBooleanAsync();
+
+                    case ThriftTypeId.SByte:
+                        return await protocol.ReadSByteAsync();
+
+                    case ThriftTypeId.Double:
+                        return await protocol.ReadDoubleAsync();
+
+                    case ThriftTypeId.Int16:
+                        return await protocol.ReadInt16Async();
+
+                    case ThriftTypeId.Int32:
+                        return await protocol.ReadInt32Async();
+
+                    case ThriftTypeId.Int64:
+                        return await protocol.ReadInt64Async();
+
+                    case ThriftTypeId.Binary:
+                        if ( thriftType.TypeInfo.AsType() == typeof( string ) )
+                        {
+                            return await protocol.ReadStringAsync();
+                        }
+                        return await protocol.ReadBinaryAsync();
+
+                    default:
+                        throw new InvalidOperationException( "Assertion error: ThriftType.IsPrimitive must mean ThriftType.Id is a primitive ID." );
+                }
             }
 
             if ( thriftType.CollectionTypeInfo != null )
             {
-                string readHeader, readEnd;
-                if ( thriftType.IsSet )
+                bool isArray = thriftType.CollectionTypeInfo.IsArray;
+
+                if ( isArray )
                 {
-                    readHeader = "ReadSetHeaderAsync";
-                    readEnd = "ReadSetEndAsync";
+                    var header = await protocol.ReadListHeaderAsync();
+                    var array = Array.CreateInstance( thriftType.ElementType.TypeInfo.AsType(), header.Count );
+                    for ( int n = 0; n < header.Count; n++ )
+                    {
+                        object obj = await ReadAsync( thriftType.ElementType, protocol );
+                        array.SetValue( obj, n );
+                    }
+                    await protocol.ReadListEndAsync();
+
+                    return array;
                 }
                 else
                 {
-                    readHeader = "ReadListHeaderAsync";
-                    readEnd = "ReadListEndAsync";
+                    var concreteTypeInfo = GetCollectionTypeInfo( thriftType.CollectionTypeInfo );
+                    var instance = ReflectionEx.Create( concreteTypeInfo );
+                    var setter = concreteTypeInfo.GetDeclaredMethod( "Add" );
+
+                    var header = thriftType.Id == ThriftTypeId.List ? await protocol.ReadListHeaderAsync()
+                                                                    : await protocol.ReadSetHeaderAsync();
+
+                    for ( int n = 0; n < header.Count; n++ )
+                    {
+                        object obj = await ReadAsync( thriftType.ElementType, protocol );
+                        setter.Invoke( instance, new[] { obj } );
+                    }
+
+                    if ( thriftType.Id == ThriftTypeId.List )
+                    {
+                        await protocol.ReadListEndAsync();
+                    }
+                    else
+                    {
+                        await protocol.ReadSetEndAsync();
+                    }
+
+                    return instance;
                 }
-
-                bool isArray = thriftType.CollectionTypeInfo.IsArray;
-                var collectionTypeInfo = isArray ? thriftType.CollectionTypeInfo : GetCollectionTypeInfo( thriftType.CollectionTypeInfo );
-
-                var headerParam = Expression.Parameter( typeof( ThriftCollectionHeader ), "header" );
-                var elementParam = Expression.Parameter( thriftType.ElementType.TypeInfo.AsType(), "element" );
-                var counterVar = Expression.Variable( typeof( int ), "counter" );
-                var collectionVar = Expression.Variable( collectionTypeInfo.AsType(), "collection" );
-                var loopLabel = Expression.Label();
-                var endLabel = Expression.Label();
-                // TODO check that the expected and actual element types match
-                return ContinueGenericTaskExpressionWith(
-                    Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( readHeader ) ),
-                    typeof( ThriftCollectionHeader ),
-                    Expression.Lambda<Func<ThriftCollectionHeader>>(
-                        Expression.Block( new[] { counterVar, collectionVar },
-                            Expression.Assign( counterVar, Expression.Constant( -1 ) ),
-                            Expression.Assign( collectionVar,
-                                isArray ? Expression.NewArrayBounds( collectionTypeInfo.AsType(), Expression.Property( headerParam, TypeInfos.CollectionHeader.GetDeclaredProperty( "Count" ) ) )
-                                        : (Expression) Expression.New( collectionTypeInfo.DeclaredConstructors.First( c => c.GetParameters().Length == 0 ) ) ),
-                            Expression.Label( loopLabel ),
-                            Expression.Increment( counterVar ),
-                            Expression.IfThen( Expression.Equal(
-                                                   counterVar,
-                                                   Expression.Add(
-                                                       Expression.Property( headerParam, TypeInfos.CollectionHeader.GetDeclaredProperty( "Count" ) ),
-                                                       Expression.Constant( -1 )
-                                                   )
-                                               ),
-                                               Expression.Goto( endLabel ) ),
-                            ContinueGenericTaskExpressionWith(
-                                CreateAsyncReader( protocolParam, thriftType.ElementType ),
-                                thriftType.ElementType.TypeInfo.AsType(),
-                                Expression.Lambda(
-                                    Expression.Block(
-                                        isArray ? Expression.Assign( Expression.ArrayAccess( collectionVar, counterVar ), elementParam )
-                                                : (Expression) Expression.Call( collectionVar, collectionTypeInfo.GetDeclaredMethod( "Add" ), elementParam ),
-                                        Expression.Goto( loopLabel )
-                                    ),
-                                    elementParam
-                                )
-                            ),
-                            Expression.Label( endLabel ),
-                            Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( readEnd ) )
-                        ),
-                        headerParam ) );
             }
 
             if ( thriftType.MapTypeInfo != null )
             {
-                var collectionTypeInfo = GetCollectionTypeInfo( thriftType.MapTypeInfo );
+                var header = await protocol.ReadMapHeaderAsync();
 
-                var headerParam = Expression.Parameter( typeof( ThriftMapHeader ), "header" );
-                var keyParam = Expression.Parameter( thriftType.KeyType.TypeInfo.AsType(), "key" );
-                var valueParam = Expression.Parameter( thriftType.ValueType.TypeInfo.AsType(), "value" );
-                var counterVar = Expression.Variable( typeof( int ), "counter" );
-                var collectionVar = Expression.Variable( collectionTypeInfo.AsType(), "collection" );
-                var loopLabel = Expression.Label();
-                var endLabel = Expression.Label();
-                // TODO check that the expected and actual key/value types match
-                return ContinueGenericTaskExpressionWith(
-                    Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( "ReadMapHeaderAsync" ) ),
-                    typeof( ThriftCollectionHeader ),
-                    Expression.Lambda<Func<ThriftCollectionHeader>>(
-                        Expression.Block( new[] { counterVar, collectionVar },
-                            Expression.Assign( counterVar, Expression.Constant( 0 ) ),
-                            Expression.Assign( collectionVar, Expression.New( collectionTypeInfo.DeclaredConstructors.First( c => c.GetParameters().Length == 0 ) ) ),
-                            Expression.Label( loopLabel ),
-                            Expression.Increment( counterVar ),
-                            Expression.IfThen( Expression.Equal( counterVar, Expression.Property( headerParam, TypeInfos.MapHeader.GetDeclaredProperty( "Count" ) ) ),
-                                               Expression.Goto( endLabel ) ),
-                            ContinueGenericTaskExpressionWith(
-                                CreateAsyncReader( protocolParam, thriftType.KeyType ),
-                                thriftType.KeyType.TypeInfo.AsType(),
-                                Expression.Lambda(
-                                    ContinueGenericTaskExpressionWith(
-                                        CreateAsyncReader( protocolParam, thriftType.ValueType ),
-                                        thriftType.ValueType.TypeInfo.AsType(),
-                                        Expression.Lambda(
-                                            Expression.Block(
-                                                Expression.Call( collectionVar, collectionTypeInfo.GetDeclaredMethod( "Add" ), keyParam, valueParam ),
-                                                Expression.Goto( loopLabel )
-                                            ),
-                                            valueParam
-                                        )
-                                    ),
-                                    keyParam
-                                )
-                            ),
-                            Expression.Label( endLabel ),
-                            Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( "ReadMapEndAsync" ) )
-                        ),
-                        headerParam ) );
+                var concreteTypeInfo = GetCollectionTypeInfo( thriftType.MapTypeInfo );
+                var instance = ReflectionEx.Create( concreteTypeInfo );
+                var setter = concreteTypeInfo.GetDeclaredMethod( "Add" );
+
+                for ( int n = 0; n < header.Count; n++ )
+                {
+                    object key = await ReadAsync( thriftType.KeyType, protocol );
+                    object value = await ReadAsync( thriftType.ValueType, protocol );
+                    setter.Invoke( instance, new[] { key, value } );
+                }
+                await protocol.ReadMapEndAsync();
+
+                return instance;
             }
 
-            return Expression.Call( TypeInfos.Reader.GetDeclaredMethod( "ReadAsync" ),
-                                        Expression.Constant( thriftType.StructType ), protocolParam
-                );
+            var thriftStruct = ThriftAttributesParser.ParseStruct( thriftType.TypeInfo );
+            return await ReadStructAsync( thriftStruct, protocol );
         }
-
-        private static Func<ThriftStruct, IThriftProtocol, Task<object>> CreateCompiledAsyncReader( ThriftStruct thriftStruct )
-        {
-            var structParam = Expression.Parameter( typeof( ThriftStruct ), "thriftStruct" );
-            var protocolParam = Expression.Parameter( typeof( IThriftProtocol ), "protocol" );
-
-            var structHeaderParam = Expression.Parameter( typeof( ThriftStructHeader ), "structHeader" );
-            var fieldHeaderParam = Expression.Parameter( typeof( ThriftFieldHeader ), "fieldHeader" );
-
-            var objVar = Expression.Variable( thriftStruct.TypeInfo.AsType(), "obj" );
-
-            var loopLabel = Expression.Label();
-            var endLabel = Expression.Label();
-
-            return Expression.Lambda<Func<ThriftStruct, IThriftProtocol, Task<object>>>(
-                Expression.Block(
-                    new[] { objVar },
-                    Expression.Assign(
-                        objVar,
-                        Expression.New( thriftStruct.TypeInfo.DeclaredConstructors.First( c => c.GetParameters().Length == 0 ) )
-                    ),
-                    ContinueGenericTaskExpressionWith(
-                        Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( "ReadStructHeaderAsync" ) ),
-                        typeof( ThriftStructHeader ),
-                        Expression.Lambda(
-                            Expression.Block(
-                                Expression.Label( loopLabel ),
-                                ContinueGenericTaskExpressionWith(
-                                    Expression.Call( protocolParam, TypeInfos.Protocol.GetDeclaredMethod( "ReadFieldHeaderAsync" ) ),
-                                    typeof( ThriftFieldHeader ),
-                                    Expression.Lambda(
-                                        Expression.Block(
-                                            Expression.IfThen(
-                                                Expression.Equal(
-                                                    fieldHeaderParam,
-                                                    Expression.Constant( null )
-                                                ),
-                                                Expression.Goto( endLabel )
-                                            ),
-                                            Expression.Switch(
-                                                Expression.Property( fieldHeaderParam, TypeInfos.FieldHeader.GetDeclaredProperty( "Id" ) ),
-                                                ( from pair in thriftStruct.Fields.Select( ( f, i ) => new { Field = f, Index = i } )
-                                                  let fieldParam = Expression.Parameter( pair.Field.Header.FieldType.TypeInfo.AsType(), "fieldValue" )
-                                                  select
-                                                     Expression.SwitchCase(
-                                                         Expression.Block(
-                                                             ContinueGenericTaskExpressionWith(
-                                                                 CreateAsyncReader( protocolParam, pair.Field.Header.FieldType ),
-                                                                 pair.Field.Header.FieldType.TypeInfo.AsType(),
-                                                                 Expression.Lambda(
-                                                                     Expression.Call(
-                                                                         Expression.MakeIndex(
-                                                                             Expression.Field( structParam, TypeInfos.Struct.GetDeclaredField( "Fields" ) ),
-                                                                             TypeInfos.FieldCollection.GetDeclaredProperty( "Item" ),
-                                                                              new[] { Expression.Constant( pair.Index ) }
-                                                                         ),
-                                                                         TypeInfos.Field.GetDeclaredMethod( "SetValue" ),
-                                                                         objVar,
-                                                                         fieldParam
-                                                                     )
-                                                                 )
-                                                             ),
-                                                             Expression.Goto( loopLabel )
-                                                         ),
-                                                         Expression.Constant( pair.Field.Header.Id )
-                                                     )
-                                                ).ToArray()
-                                            )
-                                        ),
-                                        fieldHeaderParam
-                                    )
-                                )
-                            ),
-                            structHeaderParam
-                        )
-                    )
-                )
-            ).Compile();
-        }
-
 
         public static Task<object> ReadAsync( ThriftStruct thriftStruct, IThriftProtocol protocol )
         {
-            if ( !_knownReaders.ContainsKey( thriftStruct ) )
-            {
-                _knownReaders.Add( thriftStruct, null );
-            }
-
-            return _knownReaders[thriftStruct]( thriftStruct, protocol );
+            return ReadStructAsync( thriftStruct, protocol );
         }
     }
 }

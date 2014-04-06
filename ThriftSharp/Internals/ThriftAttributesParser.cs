@@ -19,43 +19,6 @@ namespace ThriftSharp.Internals
         private static readonly IDictionary<TypeInfo, ThriftStruct> _knownStructs = new Dictionary<TypeInfo, ThriftStruct>();
 
         /// <summary>
-        /// Parses a Thrift enum member from the specified FieldInfo.
-        /// </summary>
-        private static ThriftEnumMember ParseEnumMember( FieldInfo info )
-        {
-            var attr = info.GetAttribute<ThriftEnumMemberAttribute>();
-            if ( attr == null )
-            {
-                return new ThriftEnumMember( info.Name, info.GetEnumMemberValue(), info );
-            }
-            return new ThriftEnumMember( attr.Name, attr.Value, info );
-        }
-
-        /// <summary>
-        /// Attempts to parse a Thrift enum from the specified TypeInfo.
-        /// </summary>
-        public static ThriftEnum ParseEnum( TypeInfo typeInfo )
-        {
-            if ( !typeInfo.IsEnum )
-            {
-                throw ThriftParsingException.NotAnEnum( typeInfo );
-            }
-
-            var attr = typeInfo.GetAttribute<ThriftEnumAttribute>();
-            if ( attr == null )
-            {
-                throw ThriftParsingException.EnumWithoutAttribute( typeInfo );
-            }
-
-            var members = typeInfo.DeclaredFields
-                                  .Where( f => f.IsStatic )
-                                  .Select( ParseEnumMember )
-                                  .ToArray();
-            return new ThriftEnum( attr.Name, members );
-        }
-
-
-        /// <summary>
         /// Parses a Thrift field from the specified PropertyInfo.
         /// </summary>
         /// <remarks>
@@ -69,23 +32,22 @@ namespace ThriftSharp.Internals
                 return null;
             }
 
-            var defaultValAttr = info.GetAttribute<ThriftDefaultValueAttribute>();
-            var defaultValue = Option.Get( defaultValAttr, a => a.Value );
-
+            var defaultValue = Option.Get( info.GetAttribute<ThriftDefaultValueAttribute>(), a => a.Value );
             var converterAttr = info.GetAttribute<ThriftConverterAttribute>();
+
             if ( converterAttr == null )
             {
-                return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue, info.PropertyType.GetTypeInfo(),
+                return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue,
+                                        info.PropertyType.GetTypeInfo(),
                                         o => info.GetValue( o, null ),
                                         ( o, v ) => info.SetValue( o, v, null ) );
             }
-            else
-            {
-                var converter = converterAttr.Converter;
-                return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue, converter.FromType.GetTypeInfo(),
-                                        o => converter.ConvertBack( info.GetValue( o, null ) ),
-                                        ( o, v ) => info.SetValue( o, converter.Convert( v ), null ) );
-            }
+
+            var converter = converterAttr.Converter;
+            return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue,
+                                    converter.FromType.GetTypeInfo(),
+                                    o => converter.ConvertBack( info.GetValue( o, null ) ),
+                                    ( o, v ) => info.SetValue( o, converter.Convert( v ), null ) );
         }
 
         /// <summary>

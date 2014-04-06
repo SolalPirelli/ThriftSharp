@@ -11,17 +11,15 @@ using ThriftSharp.Protocols;
 
 namespace ThriftSharp.Benchmarking
 {
-    /*
-     * Thrift# v 1.0.9  (i7-3612QM)
+    /* v 1.0.9 (i7-3612QM)
      * Simple person       00:00:00.0000060
      * Complex person      00:00:00.0001019
      * Very complex person 00:00:00.0003622
      * 
-     * Thrift# v1.0.9-async (i7-3612QM)
-     * Simple person       00:00:00.0000085
-     * Complex person      00:00:00.0001390
-     * Very complex person 00:00:00.0004950
-     * +50%
+     * v2.0 (i7-3612QM)
+     * Simple person       00:00:00.0000058 | 97%
+     * Complex person      00:00:00.0000131 | 13%
+     * Very complex person 00:00:00.0000379 | 11%
      */
 
     public sealed class Program
@@ -50,8 +48,8 @@ namespace ThriftSharp.Benchmarking
 
         private static void WriteAndRead( Person person )
         {
-            ThriftSerializer.WriteStruct( Protocol, ThriftPerson, person );
-            ThriftSerializer.ReadStructAsync( Protocol, ThriftPerson, person ).Wait();
+            ThriftWriter.Write( ThriftPerson, person, Protocol );
+            ThriftReader.ReadAsync( ThriftPerson, Protocol ).Wait();
         }
 
         private static TimeSpan MeasureExecutionTime( Action action )

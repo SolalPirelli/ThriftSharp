@@ -43,7 +43,6 @@
     <Compile Include="Internals\ThriftReader.cs" />
     <Compile Include="Internals\ThriftTypeId.cs" />
     <Compile Include="Internals\ThriftWriter.cs" />
-    <Compile Include="Internals\TypeInfos.cs" />
     <Compile Include="ThriftCommunication.cs" />
     <Compile Include="ThriftDateConverters.cs" />
     <Compile Include="ThriftValueConverter.cs" />

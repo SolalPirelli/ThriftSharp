@@ -11,60 +11,16 @@ namespace ThriftSharp
     /// <summary>
     /// Required attribute for Thrift enums.
     /// </summary>
+    /// <remarks>
+    /// This is only a marker attribute that ensures users do not involuntarily use wrong enums.
+    /// </remarks>
     [AttributeUsage( AttributeTargets.Enum )]
     public sealed class ThriftEnumAttribute : Attribute
     {
         /// <summary>
-        /// Gets the Thrift enum's name.
+        /// Initializes a new instance of the ThriftEnumAttribute class.
         /// </summary>
-        public string Name { get; private set; }
-
-
-        /// <summary>
-        /// Initializes a new instance of the ThriftEnumAttribute class with the specified name.
-        /// </summary>
-        /// <param name="name">The name of the enum the attribute is applied to.</param>
-        public ThriftEnumAttribute( string name )
-        {
-            Validation.IsNeitherNullNorWhitespace( name, () => name );
-
-            Name = name;
-        }
-    }
-
-    /// <summary>
-    /// Optional attribute for Thrift enum members.
-    /// </summary>
-    /// <remarks>
-    /// If this attribute is not present, the .NET enum member's name and value will be used.
-    /// </remarks>
-    [AttributeUsage( AttributeTargets.Field )]
-    public sealed class ThriftEnumMemberAttribute : Attribute
-    {
-        /// <summary>
-        /// Gets the Thrift enum member's name.
-        /// </summary>
-        public string Name { get; private set; }
-
-        /// <summary>
-        /// Gets the Thrift enum member's value.
-        /// </summary>
-        public int Value { get; private set; }
-
-
-        /// <summary>
-        /// Initializes a new instance of the ThriftEnumMemberAttribute class with the specified name and value.
-        /// </summary>
-        /// <param name="name">The name of the member the attribute is applied to.</param>
-        /// <param name="value">The value of the member the attribute is applied to. Must be positive.</param>
-        public ThriftEnumMemberAttribute( string name, int value )
-        {
-            Validation.IsNeitherNullNorWhitespace( name, () => name );
-            Validation.IsPositive( value, () => value );
-
-            Name = name;
-            Value = value;
-        }
+        public ThriftEnumAttribute() { }
     }
 
     /// <summary>
