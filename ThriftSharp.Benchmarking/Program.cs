@@ -19,7 +19,7 @@ namespace ThriftSharp.Benchmarking
      * v2.0 (i7-3612QM)
      * Simple person       00:00:00.0000050 | 83%
      * Complex person      00:00:00.0000123 | 12%
-     * Very complex person 00:00:00.0000340 | 11%
+     * Very complex person 00:00:00.0000340 |  9%
      */
 
     public sealed class Program
