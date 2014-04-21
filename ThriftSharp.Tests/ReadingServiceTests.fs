@@ -98,7 +98,7 @@ type __() =
         =//=>
         fun (ex: ThriftProtocolException) ->
             ex.Message <=> "An error occured."
-            ex.ExceptionType <=> ThriftProtocolExceptionType.InternalError
+            ex.ExceptionType <=> nullable ThriftProtocolExceptionType.InternalError
 
     [<Test>]
     member __.``No reply with exception declared, nothing received``() =
@@ -166,7 +166,7 @@ type __() =
         "NoException"
         =//=>
         fun (ex: ThriftProtocolException) ->
-            ex.ExceptionType <=> ThriftProtocolExceptionType.MissingResult
+            ex.ExceptionType <=> nullable ThriftProtocolExceptionType.MissingResult
 
     [<Test>]
     member __.``Reply expected and received``() =
@@ -203,7 +203,7 @@ type __() =
         "NoException"
         =//=>
         fun (ex: ThriftProtocolException) ->
-            ex.ExceptionType <=> ThriftProtocolExceptionType.MissingResult
+            ex.ExceptionType <=> nullable ThriftProtocolExceptionType.MissingResult
 
     [<Test>]
     member __.``Reply or exception expected, reply received``() =

@@ -49,6 +49,10 @@ namespace ThriftSharp.Utilities
         /// </summary>
         public static Type GetGenericInterface( this TypeInfo typeInfo, Type interfaceType )
         {
+            if ( typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == interfaceType )
+            {
+                return typeInfo.AsType();
+            }
             return typeInfo.ImplementedInterfaces.FirstOrDefault( i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == interfaceType );
         }
 

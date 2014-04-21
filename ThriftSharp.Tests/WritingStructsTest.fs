@@ -10,10 +10,10 @@ open ThriftSharp
 [<ThriftStruct("NoFields")>]
 type StructWithoutFields() = class end
 
-[<ThriftStruct("OneField")>]
+[<ThriftStruct("OneField"); AllowNullLiteral>]
 type StructWithOneField() =
     [<ThriftField(1s, true, "Field")>]
-    member val Field = 42 with get, set
+    member val Field = 0 with get, set
 
 [<ThriftStruct("ManyPrimitiveFields")>]
 type StructWithManyPrimitiveFields() =
@@ -46,7 +46,7 @@ type StructWithCollectionFields() =
 [<ThriftStruct("StructField")>]
 type StructWithStructField() =
     [<ThriftField(1s, true, "StructField")>]
-    member val Struct = StructWithOneField() with get, set
+    member val Struct = null :> StructWithOneField with get, set
 
 [<ThriftEnum>]
 type Enum =
@@ -84,6 +84,9 @@ let (==>) obj data =
     write m obj
     m.WrittenValues <===> data
 
+let throws<'E when 'E :> System.Exception> obj =
+    throwsAsync<'E>(fun () -> async { write (MemoryProtocol()) obj; return System.Object() }) |> run
+
 
 [<TestContainer>]
 type __() =
@@ -96,8 +99,8 @@ type __() =
          StructEnd]
         
     [<Test>]
-    member __.``One field``() =
-        StructWithOneField()
+    member __.``One primitive field``() =
+        StructWithOneField( Field = 42 )
         ==>
         [StructHeader "OneField"
          FieldHeader (1s, "Field", tid 8uy)
@@ -180,6 +183,10 @@ type __() =
          FieldEnd
          FieldStop
          StructEnd]
+     
+    [<Test>]
+    member __.``Error on required but unset struct field``() =
+        throws<ThriftSerializationException> (StructWithStructField())
 
     [<Test>]
     member __.``Enum fields``() =

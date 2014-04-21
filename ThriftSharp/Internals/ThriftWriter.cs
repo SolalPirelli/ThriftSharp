@@ -51,7 +51,7 @@ namespace ThriftSharp.Internals
         {
             if ( thriftType.IsPrimitive )
             {
-                if ( thriftType.IsNullable )
+                if ( thriftType.NullableType != null )
                 {
                     value = Expression.Property( value, "Value" );
                 }
@@ -176,7 +176,7 @@ namespace ThriftSharp.Internals
             return Expression.Call(
                        typeof( ThriftWriter ),
                        "Write", EmptyTypes,
-                       Expression.Constant( ThriftAttributesParser.ParseStruct( value.Type.GetTypeInfo() ) ),
+                       Expression.Constant( thriftType.Struct ),
                        value,
                        protocolParam
                    );
@@ -228,14 +228,8 @@ namespace ThriftSharp.Internals
                     Expression.Call( protocolParam, "WriteFieldEnd", EmptyTypes )
                 );
 
-                if ( field.DefaultValue.HasValue || fieldType.IsNullable || !fieldType.IsPrimitive )
-                {
-                    var defaultExpr = Expression.Constant( field.DefaultValue.HasValue ? field.DefaultValue.Value : null );
-                    var isDefaultExpr = Expression.Equal( defaultExpr, getFieldExpr );
 
-                    methodContents.Add( Expression.IfThenElse( isDefaultExpr, Expression.Empty(), writingExpr ) );
-                }
-                else if ( field.IsRequired && ( fieldType.IsNullable || !fieldType.IsPrimitive ) )
+                if ( field.IsRequired && ( fieldType.NullableType != null || !fieldType.IsPrimitive ) )
                 {
                     var isDefaultExpr = Expression.Equal( Expression.Constant( null ), getFieldExpr );
 
@@ -243,13 +237,20 @@ namespace ThriftSharp.Internals
                         Expression.Throw(
                             Expression.Call(
                                 typeof( ThriftSerializationException ),
-                                "CannotWriteNull", EmptyTypes,
+                                "RequiredFieldIsNull", EmptyTypes,
                                 Expression.Constant( thriftStruct.Header.Name ),
                                 Expression.Constant( field.Header.Name )
                             )
                         );
 
                     methodContents.Add( Expression.IfThenElse( isDefaultExpr, exceptionExpr, writingExpr ) );
+                }
+                else if ( field.DefaultValue.HasValue || fieldType.NullableType != null || !fieldType.IsPrimitive )
+                {
+                    var defaultExpr = Expression.Constant( field.DefaultValue.HasValue ? field.DefaultValue.Value : null );
+                    var isDefaultExpr = Expression.Equal( defaultExpr, getFieldExpr );
+
+                    methodContents.Add( Expression.IfThenElse( isDefaultExpr, Expression.Empty(), writingExpr ) );
                 }
                 else
                 {

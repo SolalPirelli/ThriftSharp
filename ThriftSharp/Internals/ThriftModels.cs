@@ -47,7 +47,7 @@ namespace ThriftSharp.Internals
             _getter = getter;
             _setter = setter;
 
-            Header = new ThriftFieldHeader( id, name, new ThriftType( typeInfo.AsType() ) );
+            Header = new ThriftFieldHeader( id, name, ThriftType.Get( typeInfo.AsType() ) );
             IsRequired = isRequired;
             DefaultValue = defaultValue;
         }

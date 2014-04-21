@@ -74,7 +74,7 @@ type __()  =
         fun p -> p.ReadMessageHeaderAsync()
         =//=>
         fun (ex: ThriftProtocolException) ->
-            ex.ExceptionType <=> ThriftProtocolExceptionType.InvalidProtocol
+            ex.ExceptionType <=> nullable ThriftProtocolExceptionType.InvalidProtocol
 
     [<Test>]
     member __.``Message header - old version``() =

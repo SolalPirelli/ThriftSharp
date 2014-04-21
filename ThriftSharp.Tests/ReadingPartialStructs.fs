@@ -11,13 +11,13 @@ type StructWithOptionalFields() =
     [<ThriftField(1s, true, "Required")>]
     member val Required = 1 with get, set
     [<ThriftField(2s, false, "Optional")>]
-    member val Optional = 2 with get, set
+    member val Optional = nullable 2 with get, set
 
 [<ThriftStruct("WithDefaultValue")>]
 type StructWithDefaultValue() =
     [<ThriftField(1s, false, "Field")>]
     [<ThriftDefaultValue(456)>]
-    member val Field = 123 with get, set
+    member val Field = nullable 123 with get, set
 
 
 let (==>) data (checker: 'a -> unit) = run <| async {
@@ -50,7 +50,7 @@ type __() =
         ==>
         fun (inst: StructWithOptionalFields) ->
             inst.Required <=> 10
-            inst.Optional <=> 2
+            inst.Optional <=> nullable 2
 
     [<Test>]
     member __.``Missing required field``() =
@@ -72,7 +72,7 @@ type __() =
          StructEnd]
         ==>
         fun (inst: StructWithDefaultValue) ->
-            inst.Field <=> 789
+            inst.Field <=> nullable 789
 
     [<Test>]
     member __.``Missing optional w/ default value field``() =
@@ -81,4 +81,4 @@ type __() =
          StructEnd]
         ==>
         fun (inst: StructWithDefaultValue) ->
-            inst.Field <=> 456
+            inst.Field <=> nullable 456

@@ -55,23 +55,29 @@ type Enum =
 
 [<ThriftStruct("EnumFields")>]
 type StructWithEnumFields() =
-    [<ThriftField(1s, true, "Field1")>]
-    member val Field1 = Enum.A with get, set
-    [<ThriftField(2s, true, "Field2")>]
-    member val Field2 = Enum.A with get, set
+    [<ThriftField(1s, true, "NormalField")>]
+    member val NormalField = Enum.A with get, set
+    [<ThriftField(2s, false, "NullableField")>]
+    member val NullableField = nullable Enum.A with get, set
 
 [<ThriftStruct("ArrayFields")>]
 type StructWithArrayFields() =
-    [<ThriftField(1s, true, "Field1")>]
-    member val Field1 = [| 1 |] with get, set
-    [<ThriftField(2s, true, "Field2")>]
-    member val Field2 = [| 2 |] with get, set
+    [<ThriftField(1s, true, "Int32Array")>]
+    member val Int32Array = [| 1 |] with get, set
+    [<ThriftField(2s, true, "StringArray")>]
+    member val StringArray = [| "" |] with get, set
+    [<ThriftField(3s, true, "EnumArray")>]
+    member val EnumArray = [| Enum.B |] with get, set
 
-[<ThriftStruct("ConvertingField")>]
-type StructWithConvertingField() =
+[<ThriftStruct("ConvertedField")>]
+type StructWithConvertedField() =
     [<ThriftField(1s, true, "UnixDate")>]
     [<ThriftConverter(typeof<ThriftUnixDateConverter>)>]
     member val UnixDate = System.DateTime.Now with get, set
+
+    [<ThriftField(2s, false, "NullableUnixDate")>]
+    [<ThriftConverter(typeof<ThriftUnixDateConverter>)>]
+    member val NullableUnixDate = nullable System.DateTime.Now with get, set
 
 [<ThriftStruct("NullableField")>]
 type StructWithNullableField() =
@@ -206,51 +212,65 @@ type __() =
     [<Test>]
     member __.``Enum fields``() =
         [StructHeader "EnumFields"
-         FieldHeader (2s, "Field2", tid 8uy)
+         FieldHeader (2s, "NullableField", tid 8uy)
          Int32 2
          FieldEnd
-         FieldHeader (1s, "Field1", tid 8uy)
+         FieldHeader (1s, "NormalField", tid 8uy)
          Int32 1
          FieldEnd
          FieldStop
          StructEnd]
         ==>
         fun (inst: StructWithEnumFields) ->
-            inst.Field1 <=> Enum.A
-            inst.Field2 <=> Enum.B
+            inst.NormalField <=> Enum.A
+            inst.NullableField <=> nullable Enum.B
 
     [<Test>]
     member __.``Array fields``() =
         [StructHeader "ArrayFields"
-         FieldHeader (1s, "Field1", tid 15uy)
+         FieldHeader (1s, "Int32Array", tid 15uy)
          ListHeader (2, tid 8uy)
          Int32 23
          Int32 42
          ListEnd
          FieldEnd
-         FieldHeader (2s, "Field2", tid 15uy)
-         ListHeader (0, tid 8uy)
+         FieldHeader (2s, "StringArray", tid 15uy)
+         ListHeader (0, tid 11uy)
+         ListEnd
+         FieldEnd
+         FieldHeader (3s, "EnumArray", tid 15uy)
+         ListHeader (1, tid 8uy)
+         Int32 1
          ListEnd
          FieldEnd
          FieldStop
          StructEnd]
         ==>
         fun (inst: StructWithArrayFields) ->
-            inst.Field1 <===> [23; 42]
-            inst.Field2 <===> []
+            inst.Int32Array <===> [23; 42]
+            inst.StringArray <===> []
+            inst.EnumArray <===> [ Enum.A ]
 
     [<Test>]
-    member __.``UnixDate converter``() =
+    member __.``Converted field``() =
         [StructHeader "ConvertingField"
          FieldHeader (1s, "UnixDate", tid 8uy)
+         Int32 787708800
+         FieldEnd
+         FieldHeader (2s, "NullableUnixDate", tid 8uy)
          Int32 787708800
          FieldEnd
          FieldStop
          StructEnd]
         ==>
-        fun (inst: StructWithConvertingField) ->
+        fun (inst: StructWithConvertedField) ->
             let date = inst.UnixDate
             date.ToUniversalTime() <=> utcDate(18, 12, 1994)
+
+            let nullableDate = inst.NullableUnixDate
+            nullableDate.HasValue <=> true
+            let date2 = nullableDate.Value
+            date2.ToUniversalTime() <=> utcDate(18, 12, 1994)
 
     [<Test>]
     member __.``Nullable field, not set``() =

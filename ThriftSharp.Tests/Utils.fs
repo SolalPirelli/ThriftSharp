@@ -44,7 +44,7 @@ let throwsAsync<'T when 'T :> Exception> func = async {
             | ex when typeof<'T>.IsAssignableFrom(ex.GetType()) -> 
                 return ex :?> 'T
             | ex -> 
-                Assert.Fail(sprintf "Expected an exception of type %A, but got one of type %A" typeof<'T> (ex.GetType()))
+                Assert.Fail(sprintf "Expected an exception of type %A, but got one of type %A (message: %s)" typeof<'T> (ex.GetType()) ex.Message)
                 return Unchecked.defaultof<'T>
 }
 

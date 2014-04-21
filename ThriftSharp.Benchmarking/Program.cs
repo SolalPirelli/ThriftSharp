@@ -17,9 +17,9 @@ namespace ThriftSharp.Benchmarking
      * Very complex person 00:00:00.0003622
      * 
      * v2.0 (i7-3612QM)
-     * Simple person       00:00:00.0000055 | 92%
-     * Complex person      00:00:00.0000125 | 12%
-     * Very complex person 00:00:00.0000364 | 10%
+     * Simple person       00:00:00.0000050 | 83%
+     * Complex person      00:00:00.0000123 | 12%
+     * Very complex person 00:00:00.0000340 | 11%
      */
 
     public sealed class Program
@@ -44,6 +44,8 @@ namespace ThriftSharp.Benchmarking
                 var time = MeasureExecutionTime( pair.Value );
                 Console.WriteLine( "{0} {1}", pair.Key, time.ToString() );
             }
+
+            Console.Read();
         }
 
         private static void WriteAndRead( Person person )

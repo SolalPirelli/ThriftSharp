@@ -30,15 +30,6 @@ namespace ThriftSharp.Internals
             Count = count;
             ElementTypeId = elementTypeId;
         }
-
-
-        /// <summary>
-        /// Returns a string representation of this object.
-        /// </summary>
-        public override string ToString()
-        {
-            return string.Format( "{0} [{1}]", Count, ElementTypeId );
-        }
     }
 
     /// <summary>
@@ -73,15 +64,6 @@ namespace ThriftSharp.Internals
             Count = count;
             KeyTypeId = keyTypeId;
             ValueTypeId = valueTypeId;
-        }
-
-
-        /// <summary>
-        /// Returns a string representation of this object.
-        /// </summary>
-        public override string ToString()
-        {
-            return string.Format( "{0} [{1} -> {2}]", Count, KeyTypeId, ValueTypeId );
         }
     }
 
@@ -141,15 +123,6 @@ namespace ThriftSharp.Internals
             Name = name;
             FieldTypeId = fieldTypeId;
         }
-
-
-        /// <summary>
-        /// Returns a string representation of this object.
-        /// </summary>
-        public override string ToString()
-        {
-            return string.Format( "{0}: {2} {1}", Id, Name, FieldTypeId );
-        }
     }
 
     /// <summary>
@@ -170,15 +143,6 @@ namespace ThriftSharp.Internals
         public ThriftStructHeader( string name )
         {
             Name = name;
-        }
-
-
-        /// <summary>
-        /// Returns a string representation of this object.
-        /// </summary>
-        public override string ToString()
-        {
-            return Name;
         }
     }
 
@@ -214,15 +178,6 @@ namespace ThriftSharp.Internals
             Id = id;
             Name = name;
             MessageType = messageType;
-        }
-
-
-        /// <summary>
-        /// Returns a string representation of this object.
-        /// </summary>
-        public override string ToString()
-        {
-            return string.Format( "{0}: {1} ({2})", Id, Name, MessageType );
         }
     }
 }

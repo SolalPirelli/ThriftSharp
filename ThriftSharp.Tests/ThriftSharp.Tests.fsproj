@@ -53,6 +53,8 @@
     <Compile Include="MemoryTransport.fs" />
     <Compile Include="MemoryProtocol.fs" />
     <Compile Include="Utils.fs" />
+    <Compile Include="ParsingStructsTests.fs" />
+    <Compile Include="ParsingServicesTests.fs" />
     <Compile Include="ReadingStructsTests.fs" />
     <Compile Include="ReadingStructsWithSkipTests.fs" />
     <Compile Include="ReadingPartialStructs.fs" />

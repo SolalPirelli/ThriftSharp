@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using ThriftSharp.Protocols;
 using ThriftSharp.Utilities;
@@ -17,32 +16,7 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftReader
     {
-        // TODO during struct parsing ensure it's one of these or a concrete type with a parameterless ctor
-        // TODO maybe support readonly collections?
         // TODO see if actual generics are possible to avoid boxing
-
-        // Known interface collection implementations
-        private static readonly Dictionary<Type, Type> KnownCollectionImplementations = new Dictionary<Type, Type>
-        {
-            { typeof( ISet<> ), typeof( HashSet<> ) },
-            { typeof( ICollection<> ), typeof( List<> ) },
-            { typeof( IList<> ), typeof( List<> ) },
-            { typeof( IDictionary<,> ), typeof( Dictionary<,> ) }
-        };
-
-
-        /// <summary>
-        /// Gets a TypeInfo for the concrete type matching the specified collection TypeInfo.
-        /// </summary>
-        private static TypeInfo GetCollectionTypeInfo( TypeInfo typeInfo )
-        {
-            if ( typeInfo.IsInterface )
-            {
-                return KnownCollectionImplementations[typeInfo.GetGenericTypeDefinition()]
-                            .MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo();
-            }
-            return typeInfo;
-        }
 
         /// <summary>
         /// Asynchronously skips the specified Thrift type ID from the specified protocol.
@@ -141,6 +115,7 @@ namespace ThriftSharp.Internals
                     break;
                 }
 
+
                 readIds.Add( header.Id );
 
                 var field = thriftStruct.Fields.FirstOrDefault( f => f.Header.Id == header.Id );
@@ -150,6 +125,11 @@ namespace ThriftSharp.Internals
                 }
                 else
                 {
+                    if ( field.Header.FieldTypeId != header.FieldTypeId )
+                    {
+                        throw ThriftSerializationException.TypeIdMismatch( field.Header.FieldTypeId, header.FieldTypeId );
+                    }
+
                     var fieldValue = await ReadAsync( field.Header.FieldType, protocol );
                     field.SetValue( structInstance, fieldValue );
                 }
@@ -186,11 +166,10 @@ namespace ThriftSharp.Internals
                 {
                     return Enum.ToObject( thriftType.TypeInfo.AsType(), await protocol.ReadInt32Async() );
                 }
-                if ( thriftType.IsNullable )
+                if ( thriftType.NullableType != null )
                 {
-                    var nestedType = new ThriftType( thriftType.TypeInfo.GenericTypeArguments[0] );
                     var ctor = thriftType.TypeInfo.DeclaredConstructors.First( c => c.GetParameters().Length == 1 );
-                    return ctor.Invoke( new[] { await ReadAsync( nestedType, protocol ) } );
+                    return ctor.Invoke( new[] { await ReadAsync( thriftType.NullableType, protocol ) } );
                 }
 
                 switch ( thriftType.Id )
@@ -232,6 +211,12 @@ namespace ThriftSharp.Internals
                 if ( isArray )
                 {
                     var header = await protocol.ReadListHeaderAsync();
+
+                    if ( thriftType.ElementType.Id != header.ElementTypeId )
+                    {
+                        throw ThriftSerializationException.TypeIdMismatch( thriftType.ElementType.Id, header.ElementTypeId );
+                    }
+
                     var array = Array.CreateInstance( thriftType.ElementType.TypeInfo.AsType(), header.Count );
                     for ( int n = 0; n < header.Count; n++ )
                     {
@@ -244,12 +229,18 @@ namespace ThriftSharp.Internals
                 }
                 else
                 {
-                    var concreteTypeInfo = GetCollectionTypeInfo( thriftType.CollectionTypeInfo );
+                    var concreteTypeInfo = CollectionHelper.GetInstantiableVersion( thriftType.CollectionTypeInfo );
                     var instance = ReflectionEx.Create( concreteTypeInfo );
                     var setter = concreteTypeInfo.GetDeclaredMethod( "Add" );
 
                     var header = thriftType.Id == ThriftTypeId.List ? await protocol.ReadListHeaderAsync()
                                                                     : await protocol.ReadSetHeaderAsync();
+
+
+                    if ( thriftType.ElementType.Id != header.ElementTypeId )
+                    {
+                        throw ThriftSerializationException.TypeIdMismatch( thriftType.ElementType.Id, header.ElementTypeId );
+                    }
 
                     for ( int n = 0; n < header.Count; n++ )
                     {
@@ -274,7 +265,18 @@ namespace ThriftSharp.Internals
             {
                 var header = await protocol.ReadMapHeaderAsync();
 
-                var concreteTypeInfo = GetCollectionTypeInfo( thriftType.MapTypeInfo );
+
+                if ( thriftType.KeyType.Id != header.KeyTypeId )
+                {
+                    throw ThriftSerializationException.TypeIdMismatch( thriftType.KeyType.Id, header.KeyTypeId );
+                }
+                if ( thriftType.ValueType.Id != header.ValueTypeId )
+                {
+                    throw ThriftSerializationException.TypeIdMismatch( thriftType.ValueType.Id, header.ValueTypeId );
+                }
+
+
+                var concreteTypeInfo = CollectionHelper.GetInstantiableVersion( thriftType.MapTypeInfo );
                 var instance = ReflectionEx.Create( concreteTypeInfo );
                 var setter = concreteTypeInfo.GetDeclaredMethod( "Add" );
 
@@ -289,8 +291,7 @@ namespace ThriftSharp.Internals
                 return instance;
             }
 
-            var thriftStruct = ThriftAttributesParser.ParseStruct( thriftType.TypeInfo );
-            return await ReadStructAsync( thriftStruct, protocol );
+            return await ReadStructAsync( thriftType.Struct, protocol );
         }
 
 

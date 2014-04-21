@@ -14,6 +14,23 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal sealed class ThriftType
     {
+        // Maps .NET types to Thrift type IDs for the Thrift primitive types
+        private static readonly Dictionary<Type, ThriftTypeId> PrimitiveIds = new Dictionary<Type, ThriftTypeId>
+        {
+            { typeof(bool), ThriftTypeId.Boolean },
+            { typeof(sbyte), ThriftTypeId.SByte },
+            { typeof(double), ThriftTypeId.Double },
+            { typeof(short), ThriftTypeId.Int16 },
+            { typeof(int), ThriftTypeId.Int32 },
+            { typeof(long), ThriftTypeId.Int64 },
+            { typeof(string), ThriftTypeId.Binary },
+            { typeof(sbyte[]), ThriftTypeId.Binary }
+        };
+
+        // Known .NET types to Thrift types mappings
+        private static readonly Dictionary<Type, ThriftType> _knownTypes = new Dictionary<Type, ThriftType>();
+
+
         /// <summary>
         /// Gets the type's ID.
         /// </summary>
@@ -30,15 +47,17 @@ namespace ThriftSharp.Internals
         /// </summary>
         public readonly bool IsPrimitive;
 
-        /// <summary>
-        /// Gets a value indicating whether the underlying type is a nullable type.
-        /// </summary>
-        public readonly bool IsNullable;
 
         /// <summary>
         /// Gets a value indicating whether the underlying type is an enum.
         /// </summary>
         public readonly bool IsEnum;
+
+
+        /// <summary>
+        /// Gets the underlying type, if the type is a nullable type.
+        /// </summary>
+        public readonly ThriftType NullableType;
 
 
         /// <summary>
@@ -49,7 +68,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the type of the collection elements, if the type is a collection.
         /// </summary>
-        public readonly ThriftType ElementType;
+        public ThriftType ElementType { get; private set; }
 
 
         /// <summary>
@@ -60,26 +79,33 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the type of the map keys, if the type is a map.
         /// </summary>
-        public readonly ThriftType KeyType;
+        public ThriftType KeyType { get; private set; }
 
         /// <summary>
         /// Gets the type of the map values, if the type is a map.
         /// </summary>
-        public readonly ThriftType ValueType;
+        public ThriftType ValueType { get; private set; }
+
+
+        /// <summary>
+        /// Gets the Thrift type of the struct, if it is a struct.
+        /// </summary>
+        public ThriftStruct Struct { get; private set; }
 
 
         /// <summary>
         /// Creates a new instance of ThriftType from the specified .NET type.
         /// </summary>
-        public ThriftType( Type type )
+        private ThriftType( Type type )
         {
             TypeInfo = type.GetTypeInfo();
 
-            if ( TypeInfo.IsGenericType && TypeInfo.GetGenericTypeDefinition() == typeof( Nullable<> ) )
+            Type underlyingNullableType = Nullable.GetUnderlyingType( type );
+            if ( underlyingNullableType != null )
             {
-                IsNullable = true;
+                NullableType = ThriftType.Get( underlyingNullableType );
                 IsPrimitive = true;
-                Id = PrimitiveIds[TypeInfo.GenericTypeArguments[0]];
+                Id = NullableType.Id;
                 return;
             }
 
@@ -92,45 +118,69 @@ namespace ThriftSharp.Internals
 
             if ( TypeInfo.IsEnum )
             {
+                if ( TypeInfo.GetAttribute<ThriftEnumAttribute>() == null )
+                {
+                    throw ThriftParsingException.EnumWithoutAttribute( TypeInfo );
+                }
+                if ( Enum.GetUnderlyingType( type ) != typeof( int ) )
+                {
+                    throw ThriftParsingException.NonInt32Enum( TypeInfo );
+                }
+
                 IsEnum = true;
                 IsPrimitive = true;
                 Id = ThriftTypeId.Int32;
                 return;
             }
 
+            if ( TypeInfo.IsValueType )
+            {
+                throw ThriftParsingException.UnknownValueType( TypeInfo );
+            }
+
             var mapInterface = TypeInfo.GetGenericInterface( typeof( IDictionary<,> ) );
             if ( mapInterface != null )
             {
+                if ( !CollectionHelper.CanBeMapped( TypeInfo ) )
+                {
+                    throw ThriftParsingException.UnsupportedMap( TypeInfo );
+                }
+
                 Id = ThriftTypeId.Map;
                 MapTypeInfo = mapInterface.GetTypeInfo();
-                KeyType = new ThriftType( mapInterface.GenericTypeArguments[0] );
-                ValueType = new ThriftType( mapInterface.GenericTypeArguments[1] );
                 return;
             }
 
             var setInterface = TypeInfo.GetGenericInterface( typeof( ISet<> ) );
             if ( setInterface != null )
             {
+                if ( !CollectionHelper.CanBeMapped( TypeInfo ) )
+                {
+                    throw ThriftParsingException.UnsupportedSet( TypeInfo );
+                }
+
                 Id = ThriftTypeId.Set;
                 CollectionTypeInfo = setInterface.GetTypeInfo();
-                ElementType = new ThriftType( setInterface.GenericTypeArguments[0] );
                 return;
             }
 
             var collectionInterface = TypeInfo.GetGenericInterface( typeof( ICollection<> ) );
             if ( collectionInterface != null )
             {
+                if ( !CollectionHelper.CanBeMapped( TypeInfo ) )
+                {
+                    throw ThriftParsingException.UnsupportedList( TypeInfo );
+                }
+
                 Id = ThriftTypeId.List;
 
                 if ( TypeInfo.IsArray )
                 {
                     CollectionTypeInfo = TypeInfo;
-                    ElementType = new ThriftType( TypeInfo.GetElementType() );
                 }
                 else
                 {
                     CollectionTypeInfo = collectionInterface.GetTypeInfo();
-                    ElementType = new ThriftType( collectionInterface.GenericTypeArguments[0] );
                 }
                 return;
             }
@@ -138,18 +188,46 @@ namespace ThriftSharp.Internals
             Id = ThriftTypeId.Struct;
         }
 
-
-        // Maps .NET types to Thrift type IDs for the Thrift primitive types
-        private static readonly Dictionary<Type, ThriftTypeId> PrimitiveIds = new Dictionary<Type, ThriftTypeId>
+        /// <summary>
+        /// Gets the Thrift type associated with the specified type.
+        /// </summary>
+        public static ThriftType Get( Type type )
         {
-            { typeof(bool), ThriftTypeId.Boolean },
-            { typeof(sbyte), ThriftTypeId.SByte },
-            { typeof(double), ThriftTypeId.Double },
-            { typeof(short), ThriftTypeId.Int16 },
-            { typeof(int), ThriftTypeId.Int32 },
-            { typeof(long), ThriftTypeId.Int64 },
-            { typeof(string), ThriftTypeId.Binary },
-            { typeof(sbyte[]), ThriftTypeId.Binary }
-        };
+            if ( !_knownTypes.ContainsKey( type ) )
+            {
+                var thriftType = new ThriftType( type );
+
+                _knownTypes.Add( type, thriftType );
+
+                // This has to be done this way because otherwise self-referencing types 
+                // (e.g. type A with a field of type A) will loop since they're calling 
+                // ThriftType.Get before they were themselves added to _knownTypes
+                switch ( thriftType.Id )
+                {
+                    case ThriftTypeId.Map:
+                        thriftType.KeyType = ThriftType.Get( thriftType.MapTypeInfo.GenericTypeArguments[0] );
+                        thriftType.ValueType = ThriftType.Get( thriftType.MapTypeInfo.GenericTypeArguments[1] );
+                        break;
+
+                    case ThriftTypeId.List:
+                    case ThriftTypeId.Set:
+                        if ( thriftType.TypeInfo.IsArray )
+                        {
+                            thriftType.ElementType = ThriftType.Get( thriftType.TypeInfo.GetElementType() );
+                        }
+                        else
+                        {
+                            thriftType.ElementType = ThriftType.Get( thriftType.CollectionTypeInfo.GenericTypeArguments[0] );
+                        }
+                        break;
+
+                    case ThriftTypeId.Struct:
+                        thriftType.Struct = ThriftAttributesParser.ParseStruct( thriftType.TypeInfo );
+                        break;
+                }
+            }
+
+            return _knownTypes[type];
+        }
     }
 }

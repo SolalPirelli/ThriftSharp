@@ -4,6 +4,7 @@
 
 using System;
 using System.Reflection;
+using ThriftSharp.Internals;
 
 namespace ThriftSharp
 {
@@ -19,13 +20,6 @@ namespace ThriftSharp
         private ThriftParsingException( string message, params object[] args )
             : base( string.Format( message, args ) ) { }
 
-        /// <summary>
-        /// Creates an exception indicating a type was expected to be an enum but wasn't.
-        /// </summary>
-        internal static ThriftParsingException NotAnEnum( TypeInfo typeInfo )
-        {
-            return new ThriftParsingException( "The type '{0}' is not an enum.", typeInfo.FullName );
-        }
 
         /// <summary>
         /// Creates an exception indicating an enum type lacked the appropriate attribute.
@@ -39,11 +33,25 @@ namespace ThriftSharp
         }
 
         /// <summary>
-        /// Creates an exception indicating a type was expected to be a class or struct but wasn't.
+        /// Creates an exception indicating an enum type was of the wrong underlying type.
         /// </summary>
-        internal static ThriftParsingException NotAStruct( TypeInfo typeInfo )
+        internal static ThriftParsingException NonInt32Enum( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( "The type '{0}' is not a class or a struct.", typeInfo.FullName );
+            return new ThriftParsingException( "The enum type '{0}' has an underlying type different from Int32."
+                                             + Environment.NewLine
+                                             + "Only enums whose underlying type is Int32 are supported.",
+                                               typeInfo.FullName );
+        }
+
+        /// <summary>
+        /// Creates an exception indicating that a type for a Thrift struct was expected to be concrete but wasn't.
+        /// </summary>
+        internal static ThriftParsingException NotAConcreteType( TypeInfo typeInfo )
+        {
+            return new ThriftParsingException( "The type '{0}' is not a concrete type."
+                                             + Environment.NewLine
+                                             + "Only concrete types can be used in Thrift interfaces.",
+                                               typeInfo.FullName );
         }
 
         /// <summary>
@@ -108,6 +116,63 @@ namespace ThriftSharp
                                              + "Only asynchronous methods are supported. Please wrap the return type in a Task.",
                                                methodInfo.Name );
         }
+
+        /// <summary>
+        /// Creates an exception indicating an optional field has a value type return type.
+        /// </summary>
+        internal static ThriftParsingException OptionalValueField( PropertyInfo propertyInfo )
+        {
+            return new ThriftParsingException( "The Thrift field '{0}' is optional, but its type is a value type."
+                                             + Environment.NewLine
+                                             + "This is not supported. Please use Nullable<T> for optional value fields.",
+                                               propertyInfo.Name );
+        }
+
+        /// <summary>
+        /// Creates an exception indicating an unknown value type was encountered.
+        /// </summary>
+        internal static ThriftParsingException UnknownValueType( TypeInfo typeInfo )
+        {
+            return new ThriftParsingException( "The type '{0}' is a value type, but it is not known by Thrift#."
+                                             + Environment.NewLine
+                                             + "The only available value types are Thrift primitive types and nullable types."
+                                             + Environment.NewLine
+                                             + "If this is unintentional, change the type to a reference type.",
+                                               typeInfo.FullName );
+        }
+
+        /// <summary>
+        /// Creates an exception indicating a map type is not supported.
+        /// </summary>
+        internal static ThriftParsingException UnsupportedMap( TypeInfo typeInfo )
+        {
+            return new ThriftParsingException( "The map type '{0}' is not supported."
+                                             + Environment.NewLine
+                                             + "Supported types are IDictionary<K,V> and any concrete implementation with a parameterless constructor.",
+                                               typeInfo.FullName );
+        }
+
+        /// <summary>
+        /// Creates an exception indicating a set type is not supported.
+        /// </summary>
+        internal static ThriftParsingException UnsupportedSet( TypeInfo typeInfo )
+        {
+            return new ThriftParsingException( "The set type '{0}' is not supported."
+                                             + Environment.NewLine
+                                             + "Supported types are ISet<T> and any concrete implementation with a parameterless constructor.",
+                                               typeInfo.FullName );
+        }
+
+        /// <summary>
+        /// Creates an exception indicating a list type is not supported.
+        /// </summary>
+        internal static ThriftParsingException UnsupportedList( TypeInfo typeInfo )
+        {
+            return new ThriftParsingException( "The list type '{0}' is not supported."
+                                             + Environment.NewLine
+                                             + "Supported types are arrays, ICollection<T>, IList<T>, and any concrete implementation of ICollection<T> or IList<T> with a parameterless constructor.",
+                                               typeInfo.FullName );
+        }
     }
 
     /// <summary>
@@ -131,6 +196,14 @@ namespace ThriftSharp
         internal static ThriftSerializationException MissingRequiredField( string structName, string fieldName )
         {
             return new ThriftSerializationException( "Field '{0}' of struct '{1}' is a required field, but was not present.", structName, fieldName );
+        }
+
+        /// <summary>
+        /// Creates a ThriftSerializationException indicating a read type ID did not match the expected type ID.
+        /// </summary>
+        internal static ThriftSerializationException TypeIdMismatch( ThriftTypeId expectedId, ThriftTypeId actualId )
+        {
+            return new ThriftSerializationException( "Deserialization error: Expected type {0}, but type {1} was read." );
         }
     }
 }

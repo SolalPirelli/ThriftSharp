@@ -33,6 +33,13 @@ namespace ThriftSharp.Internals
                 return null;
             }
 
+            var fieldTypeInfo = info.PropertyType.GetTypeInfo();
+
+            if ( fieldTypeInfo.IsValueType && !attr.IsRequired && Nullable.GetUnderlyingType( info.PropertyType ) == null )
+            {
+                throw ThriftParsingException.OptionalValueField( info );
+            }
+
             var defaultValueAttr = info.GetAttribute<ThriftDefaultValueAttribute>();
             var defaultValue = defaultValueAttr == null ? new Option() : new Option( defaultValueAttr.Value );
             var converterAttr = info.GetAttribute<ThriftConverterAttribute>();
@@ -40,7 +47,7 @@ namespace ThriftSharp.Internals
             if ( converterAttr == null )
             {
                 return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue,
-                                        info.PropertyType.GetTypeInfo(),
+                                        fieldTypeInfo,
                                         o => info.GetValue( o, null ),
                                         ( o, v ) => info.SetValue( o, v, null ) );
             }
@@ -59,9 +66,9 @@ namespace ThriftSharp.Internals
         {
             if ( !_knownStructs.ContainsKey( typeInfo ) )
             {
-                if ( !typeInfo.IsClass && !typeInfo.IsValueType )
+                if ( typeInfo.IsInterface || typeInfo.IsAbstract )
                 {
-                    throw ThriftParsingException.NotAStruct( typeInfo );
+                    throw ThriftParsingException.NotAConcreteType( typeInfo );
                 }
 
                 var attr = typeInfo.GetAttribute<ThriftStructAttribute>();
@@ -75,7 +82,11 @@ namespace ThriftSharp.Internals
                                      .Where( f => f != null )
                                      .ToArray();
 
-                _knownStructs.Add( typeInfo, new ThriftStruct( new ThriftStructHeader( attr.Name ), fields, typeInfo ) );
+                // The type may have been added during fields parsing
+                if ( !_knownStructs.ContainsKey( typeInfo ) )
+                {
+                    _knownStructs.Add( typeInfo, new ThriftStruct( new ThriftStructHeader( attr.Name ), fields, typeInfo ) );
+                }
             }
 
             return _knownStructs[typeInfo];

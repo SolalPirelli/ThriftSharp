@@ -22,7 +22,7 @@ namespace ThriftSharp
         /// Gets the exception's type.
         /// </summary>
         [ThriftField( 2, false, "type" )]
-        public ThriftProtocolExceptionType ExceptionType { get; private set; }
+        public ThriftProtocolExceptionType? ExceptionType { get; private set; }
 
 
         /// <summary>
