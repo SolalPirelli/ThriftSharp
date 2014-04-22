@@ -54,8 +54,8 @@ type Enum =
 type StructWithEnumFields() =
     [<ThriftField(1s, true, "Field1")>]
     member val Field1 = Enum.A with get, set
-    [<ThriftField(2s, true, "Field2")>]
-    member val Field2 = Enum.A with get, set
+    [<ThriftField(2s, false, "Field2")>]
+    member val Field2 = nullable Enum.A with get, set
 
 [<ThriftStruct("ArrayFields")>]
 type StructWithArrayFields() =
@@ -205,7 +205,7 @@ type __() =
 
     [<Test>]
     member __.``Enum fields``() =
-        StructWithEnumFields( Field1 = Enum.A, Field2 = Enum.B )
+        StructWithEnumFields( Field1 = Enum.A, Field2 = nullable Enum.B )
         ==>
         [StructHeader "EnumFields"
          FieldHeader (1s, "Field1", tid 8uy)

@@ -54,6 +54,7 @@ namespace ThriftSharp.Internals
                 if ( thriftType.NullableType != null )
                 {
                     value = Expression.Property( value, "Value" );
+                    thriftType = thriftType.NullableType;
                 }
                 if ( thriftType.IsEnum )
                 {
