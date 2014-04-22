@@ -7,9 +7,6 @@ module ThriftSharp.Tests.``Reading structs``
 open System.Collections.Generic
 open ThriftSharp
 
-[<ThriftStruct("NoFields")>]
-type StructWithoutFields() = class end
-
 [<ThriftStruct("OneField")>]
 type StructWithOneField() =
     [<ThriftField(1s, true, "Field")>]
@@ -101,14 +98,6 @@ let (==>) data (checker: 'a -> unit) = run <| async {
 
 [<TestContainer>]
 type __() =
-    [<Test>]
-    member __.``No fields``() =
-        [StructHeader "NoFields"
-         FieldStop
-         StructEnd]
-        ==>
-        fun (_: StructWithoutFields) -> ()
-
     [<Test>]
     member __.``One field``() =
         [StructHeader "OneField"

@@ -7,9 +7,6 @@ module ThriftSharp.Tests.``Writing structs``
 open System.Collections.Generic
 open ThriftSharp
 
-[<ThriftStruct("NoFields")>]
-type StructWithoutFields() = class end
-
 [<ThriftStruct("OneField"); AllowNullLiteral>]
 type StructWithOneField() =
     [<ThriftField(1s, true, "Field")>]
@@ -29,9 +26,9 @@ type StructWithManyPrimitiveFields() =
     member val Int32 = 1 with get, set
     [<ThriftField(6s, true, "Int64Field")>]
     member val Int64 = 1L with get, set
-    [<ThriftField(7s, true, "StringField")>]
+    [<ThriftField(7s, false, "StringField")>]
     member val String = "abc" with get, set
-    [<ThriftField(8s, true, "BinaryField")>]
+    [<ThriftField(8s, false, "BinaryField")>]
     member val Binary = [| 1y |] with get, set
 
 [<ThriftStruct("CollectionFields")>]
@@ -91,14 +88,6 @@ let throws<'E when 'E :> System.Exception> obj =
 [<TestContainer>]
 type __() =
     [<Test>]
-    member __.``No fields``() =
-        StructWithoutFields()
-        ==>
-        [StructHeader "NoFields"
-         FieldStop
-         StructEnd]
-        
-    [<Test>]
     member __.``One primitive field``() =
         StructWithOneField( Field = 42 )
         ==>
@@ -137,6 +126,32 @@ type __() =
          FieldEnd
          FieldHeader (8s, "BinaryField", tid 11uy)
          Binary [| 1y |]
+         FieldEnd
+         FieldStop
+         StructEnd]
+         
+    [<Test>]
+    member __.``Primitive fields default values``() =
+        StructWithManyPrimitiveFields( Bool = false, SByte = 0y, Double = 0.0, Int16 = 0s, Int32 = 0, Int64 = 0L, String = null, Binary = null )
+        ==>
+        [StructHeader "ManyPrimitiveFields"
+         FieldHeader (1s, "BoolField", tid 2uy)
+         Bool false
+         FieldEnd
+         FieldHeader (2s, "SByteField", tid 3uy)
+         SByte 0y
+         FieldEnd
+         FieldHeader (3s, "DoubleField", tid 4uy)
+         Double 0.0
+         FieldEnd
+         FieldHeader (4s, "Int16Field", tid 6uy)
+         Int16 0s
+         FieldEnd
+         FieldHeader (5s, "Int32Field", tid 8uy)
+         Int32 0
+         FieldEnd
+         FieldHeader (6s, "Int64Field", tid 10uy)
+         Int64 0L
          FieldEnd
          FieldStop
          StructEnd]

@@ -10,113 +10,16 @@ open System.Reflection
 open ThriftSharp
 open ThriftSharp.Internals
 
-[<ThriftStruct("Interface")>]
-type Interface =
-    interface end
 
-[<ThriftStruct("Abstract"); AbstractClass>]
-type Abstract() =
-    class end
+// Special types used as fields
 
-type UnmarkedStruct() =
-    [<ThriftField(1s, true, "Field")>]
-    member val Field = 0 with get, set
-
-[<ThriftStruct("NoFields")>]
-type StructWithoutFields() =
-    class end
-
-[<ThriftStruct("UnmarkedFields")>]
-type StructWithUnmarkedFields() =   
-    member val Property = 1 with get, set
-
-[<ThriftStruct("PrimitiveFields")>]
-type StructWithPrimitiveFields() =
-    [<ThriftField(1s, true, "Bool")>]
-    member val Bool = true with get, set
-    [<ThriftField(2s, true, "SByte")>]
-    member val SByte = 1y with get, set
-    [<ThriftField(3s, true, "Double")>]
-    member val Double = 1.0 with get, set
-    [<ThriftField(4s, true, "Int16")>]
-    member val Int16 = 1s with get, set
-    [<ThriftField(5s, true, "Int3")>]
-    member val Int32 = 1 with get, set
-    [<ThriftField(6s, true, "Int64")>]
-    member val Int64 = 1L with get, set
-    [<ThriftField(7s, true, "String")>]
-    member val String = "abc" with get, set
-    [<ThriftField(8s, true, "Binary")>]
-    member val Binary = [| 1y |] with get, set
-
-
-[<ThriftStruct("UnknownPrimitiveFields")>]
-type StructWithUnknownPrimitiveFields() =
-    [<ThriftField(1s, true, "UInt32")>]
-    member val UInt32 = 1u with get, set
-    [<ThriftField(1s, true, "UnsignedByte")>]
-    member val UnsignedByte = 1uy with get, set
-
-
-[<ThriftStruct("OptionalValueTypeFields")>]
-type StructWithOptionalValueTypeFields() =
-    [<ThriftField(1s, false, "Field")>]
-    member val Field = 0 with get, set 
-    
+type EnumWithoutAttribute = A = 1 | B = 2
 
 [<ThriftEnum>]
-type Enum =
-  | A = 1
-  | B = 2
-  
-[<ThriftStruct("Enum")>]
-type StructWithEnumField() =
-    [<ThriftField(1s, true, "Enum")>]
-    member val Field = Enum.A with get, set
-
-
-type EnumWithoutAttribute =
-  | A = 1
-  | B = 2
-
-[<ThriftStruct("EnumWithoutAttribute")>]
-type StructWithEnumWithoutAttribute() =
-    [<ThriftField(1s, true, "Enum")>]
-    member val Field = EnumWithoutAttribute.A with get, set
-
+type MyEnum = A = 1 | B = 2
 
 [<ThriftEnum>]
-type ByteEnum =
-  | A = 1uy
-  | B = 2uy
-
-[<ThriftStruct("ByteEnum")>]
-type StructWithByteEnum() =
-    [<ThriftField(1s, true, "Enum")>]
-    member val Field = ByteEnum.A with get, set
-
-
-[<ThriftStruct("Collections")>]
-type StructWithCollections() =
-    [<ThriftField(1s, true, "ICollection")>]
-    member val ICollection = null :> ICollection<int> with get, set
-    [<ThriftField(2s, true, "IList")>]
-    member val IList = null :> IList<int> with get, set
-    [<ThriftField(3s, true, "List")>]
-    member val List = null :> List<int> with get, set
-    [<ThriftField(4s, true, "Array")>]
-    member val Array = [| 0 |] with get, set
-    [<ThriftField(5s, true, "ISet")>]
-    member val ISet = null :> ISet<int> with get, set
-    [<ThriftField(6s, true, "HashSet")>]
-    member val HashSet = null :> HashSet<int> with get, set
-    [<ThriftField(7s, true, "IDictionary")>]
-    member val IDictionary = null :> IDictionary<int,int> with get, set
-    [<ThriftField(8s, true, "Dictionary")>]
-    member val Dictionary = null :> Dictionary<int,int> with get, set
-    [<ThriftField(9s, true, "ObservableCollection")>]
-    member val ObservableCollection = null :> ObservableCollection<int> with get, set
-
+type ByteEnum = A = 1uy | B = 2uy
 
 type CustomCollection<'T>( thisIsNotAParameterlessConstructor: obj ) =
     interface ICollection<'T> with
@@ -129,12 +32,6 @@ type CustomCollection<'T>( thisIsNotAParameterlessConstructor: obj ) =
         member x.CopyTo(_,_) = ()
         member x.GetEnumerator() = null :> IEnumerator<'T>
         member x.GetEnumerator() = null :> System.Collections.IEnumerator
-
-[<ThriftStruct("UnknownCollection")>]
-type StructWithUnknownCollection() =
-    [<ThriftField(1s, true, "CustomCollection")>]
-    member val CustomCollection = CustomCollection<int>( 0 ) with get, set
-
 
 type CustomSet<'T>( thisIsNotAParameterlessConstructor: obj ) =
     interface ISet<'T> with
@@ -159,12 +56,6 @@ type CustomSet<'T>( thisIsNotAParameterlessConstructor: obj ) =
         member x.GetEnumerator() = null :> IEnumerator<'T>
         member x.GetEnumerator() = null :> System.Collections.IEnumerator
 
-[<ThriftStruct("UnknownSet")>]
-type StructWithUnknownSet() =
-    [<ThriftField(1s, true, "CustomSet")>]
-    member val CustomSet = CustomSet<int>( 0 ) with get, set
-
-
 type CustomDictionary<'K,'V>( thisIsNotAParameterlessConstructor: obj ) =
     interface IDictionary<'K,'V> with
         member x.Count with get() = 0
@@ -184,10 +75,31 @@ type CustomDictionary<'K,'V>( thisIsNotAParameterlessConstructor: obj ) =
         member x.GetEnumerator() = null :> IEnumerator<KeyValuePair<'K,'V>>
         member x.GetEnumerator() = null :> System.Collections.IEnumerator
 
-[<ThriftStruct("UnknownDictionary")>]
-type StructWithUnknownDictionary() =
-    [<ThriftField(1s, true, "CustomDictionary")>]
-    member val CustomDictionary = CustomDictionary<int,int>( 0 ) with get, set
+// Special structs
+
+[<ThriftStruct("Interface")>]
+type Interface = interface end
+
+[<ThriftStruct("Abstract"); AbstractClass>]
+type Abstract() = class end
+
+type UnmarkedStruct() =
+    [<ThriftField(1s, true, "Field")>]
+    member val Field = 0 with get, set
+    
+[<ThriftStruct("NoFields")>]
+type StructWithoutFields() = class end
+
+[<ThriftStruct("OnlyUnmarkedFields")>]
+type StructWithOnlyUnmarkedFields() =   
+    member val Property = 1 with get, set
+
+[<ThriftStruct("UnmarkedFields")>]
+type StructWithUnmarkedFields() =   
+    member val Unmarked = 1 with get, set
+
+    [<ThriftField(1s, true, "Marked")>]
+    member val Marked = 1 with get, set
 
 [<ThriftStruct("SelfReferencing")>]
 type StructWithSelfReference() =
@@ -195,79 +107,129 @@ type StructWithSelfReference() =
     member val Field = Unchecked.defaultof<StructWithSelfReference> with get, set
 
     [<ThriftField(2s, true, "Array")>]
-    member val Array = Unchecked.defaultof<StructWithSelfReference[]> with get, set
+    member val List = null :> List<StructWithSelfReference> with get, set
+
+    [<ThriftField(3s, true, "Array")>]
+    member val Dictionary = null :> Dictionary<StructWithSelfReference,StructWithSelfReference> with get, set
 
 
-let parseOk<'T> () =
-    ThriftAttributesParser.ParseStruct(typeof<'T>.GetTypeInfo()) |> ignore
 
-let parseError<'T> () =
-    throwsAsync<ThriftParsingException> (fun () -> async { return box (ThriftAttributesParser.ParseStruct(typeof<'T>.GetTypeInfo())) })
- |> Async.RunSynchronously
- |> ignore
+let parse<'T> =
+    ThriftAttributesParser.ParseStruct(typeof<'T>.GetTypeInfo())
+
+let ok typ isReq =
+    let name = "Struct"
+    let fieldName = "Field"
+    let genType = makeClass [ <@ ThriftStructAttribute(name) @> ] [fieldName, typ, [ <@ ThriftFieldAttribute(0s, isReq, fieldName) @> ]]
+    let thriftStruct = ThriftAttributesParser.ParseStruct(genType.GetTypeInfo())
+
+    thriftStruct.TypeInfo <=> genType.GetTypeInfo()
+    thriftStruct.Header.Name <=> name
+
+    thriftStruct.Fields.Count <=> 1
+    thriftStruct.Fields.[0].Header.FieldType.TypeInfo.AsType() <=> typ
+    thriftStruct.Fields.[0].IsRequired <=> isReq 
+
+let fails typ isReq =
+    let typ = makeClass [ <@ ThriftStructAttribute("Struct") @> ] ["Field", typ, [ <@ ThriftFieldAttribute(0s, isReq, "Field") @> ]]
+    throws<ThriftParsingException>(fun () -> ThriftAttributesParser.ParseStruct(typ.GetTypeInfo()) |> box) |> ignore
+
+let failsOn<'T> =
+    throws<ThriftParsingException> (fun () -> ThriftAttributesParser.ParseStruct(typeof<'T>.GetTypeInfo()) |> box) |> ignore
+
 
 [<TestContainer>]
 type __() =
-    [<Test>]
-    member __.``Error on interface``() =
-        parseError<Interface>()
+    // Errors should be thrown when parsing structs without Thrift fields
+    [<Test>] member __.``No fields``() =        failsOn<StructWithoutFields>
+    [<Test>] member __.``No Thrift fields``() = failsOn<StructWithOnlyUnmarkedFields>
 
-    [<Test>]
-    member __.``Error on abstract class``() =
-        parseError<Abstract>()
+    // Required fields of primitive types should be parsed correctly
+    [<Test>] member __.``Boolean required field``() = ok typeof<bool> true
+    [<Test>] member __.``SByte required field``() =   ok typeof<sbyte> true
+    [<Test>] member __.``Int16 required field``() =   ok typeof<int16> true
+    [<Test>] member __.``Int32 required field``() =   ok typeof<int32> true
+    [<Test>] member __.``Int64 required field``() =   ok typeof<int64> true
+    [<Test>] member __.``Double required field``() =  ok typeof<double> true
+    [<Test>] member __.``String required field``() =  ok typeof<string> true
+    [<Test>] member __.``Binary required field``() =  ok typeof<sbyte[]> true
 
-    [<Test>]
-    member __.``Error when the struct isn't marked with an attribute``() =
-        parseError<UnmarkedStruct>()
+    // Optional fields of primitive reference types should be parsed correctly
+    [<Test>] member __.``String optional field``() = ok typeof<string> false
+    [<Test>] member __.``Binary optional field``() = ok typeof<sbyte[]> false
 
-    [<Test>]
-    member __.``No fields``() = 
-        parseOk<StructWithoutFields>()
+    // Errors should be thrown when parsing unsupported primitive types
+    [<Test>] member __.``Error on unsigned byte field``() =  fails typeof<byte> true
+    [<Test>] member __.``Error on unsigned int16 field``() = fails typeof<uint16> true
+    [<Test>] member __.``Error on unsigned int32 field``() = fails typeof<uint32> true
+    [<Test>] member __.``Error on unsigned int64 field``() = fails typeof<uint64> true
+    [<Test>] member __.``Error on float field``() =          fails typeof<float32> true
+    [<Test>] member __.``Error on decimal field``() =        fails typeof<decimal> true
 
-    [<Test>]
-    member __.``Fields without attributes``() =
-        parseOk<StructWithUnmarkedFields>()
+    // Errors should be thrown when parsing optional fields of primitive value types
+    [<Test>] member __.``Error on boolean optional field``() = fails typeof<bool> false
+    [<Test>] member __.``Error on sbyte optional field``() =   fails typeof<sbyte> false
+    [<Test>] member __.``Error on int16 optional field``() =   fails typeof<int16> false
+    [<Test>] member __.``Error on int32 optional field``() =   fails typeof<int32> false
+    [<Test>] member __.``Error on int64 optional field``() =   fails typeof<int64> false
+    [<Test>] member __.``Error on double optional field``() =  fails typeof<double> false
 
-    [<Test>]
-    member __.``Primitive fields``() =
-        parseOk<StructWithPrimitiveFields>()
+    // Required enum fields should be parsed correctly
+    [<Test>] member __.``Enum required field``() = ok typeof<MyEnum> true
 
-    [<Test>]
-    member __.``Error on unknown primitive fields``() =
-        parseError<StructWithUnknownPrimitiveFields>()
+    // Errors should be thrown when parsing optional enum fields
+    [<Test>] member __.``Error on enum optional field``() = fails typeof<MyEnum> false
 
-    [<Test>]
-    member __.``Error on optional value-type fields``() =
-        parseError<StructWithOptionalValueTypeFields>()
+    // Errors should be thrown when parsing non-int32-based enum fields
+    [<Test>] member __.``Error on non-int32-based enum field``() = fails typeof<ByteEnum> true
 
-    [<Test>]
-    member __.``Enum field``() =
-        parseOk<StructWithEnumField>()
+    // Errors should be thrown when parsing non-Thrift enum fields
+    [<Test>] member __.``Error on non-Thrift enum field``() = fails typeof<EnumWithoutAttribute> true
 
-    [<Test>]
-    member __.``Error on enum without attribute``() =
-        parseError<StructWithEnumWithoutAttribute>()
+    // Required fields of known interfaces or concrete collection types should be parsed correctly
+    [<Test>] member __.``Array required field``() =                ok typeof<int[]> true
+    [<Test>] member __.``ICollection required field``() =          ok typeof<ICollection<int>> true
+    [<Test>] member __.``ObservableCollection required field``() = ok typeof<ObservableCollection<int>> true
+    [<Test>] member __.``IList required field``() =                ok typeof<IList<int>> true
+    [<Test>] member __.``List required field``() =                 ok typeof<List<int>> true
+    [<Test>] member __.``ISet required field``() =                 ok typeof<ISet<int>> true
+    [<Test>] member __.``HashSet required field``() =              ok typeof<HashSet<int>> true
+    [<Test>] member __.``IDictionary required field``() =          ok typeof<IDictionary<int,int>> true
+    [<Test>] member __.``Dictionary required field``() =           ok typeof<Dictionary<int,int>> true
 
-    [<Test>]
-    member __.``Error on enum not int32-based``() =
-        parseError<StructWithByteEnum>()
+    // Optional fields of known interfaces or concrete collection types should be parsed correctly
+    [<Test>] member __.``Array optional field``() =                ok typeof<int[]> false
+    [<Test>] member __.``ICollection optional field``() =          ok typeof<ICollection<int>> false
+    [<Test>] member __.``ObservableCollection optional field``() = ok typeof<ObservableCollection<int>> false
+    [<Test>] member __.``IList optional field``() =                ok typeof<IList<int>> false
+    [<Test>] member __.``List optional field``() =                 ok typeof<List<int>> false
+    [<Test>] member __.``ISet optional field``() =                 ok typeof<ISet<int>> false
+    [<Test>] member __.``HashSet optional field``() =              ok typeof<HashSet<int>> false
+    [<Test>] member __.``IDictionary optional field``() =          ok typeof<IDictionary<int,int>> false
+    [<Test>] member __.``Dictionary optional field``() =           ok typeof<Dictionary<int,int>> false
 
-    [<Test>]
-    member __.``Collection fields``() =
-        parseOk<StructWithCollections>()
+    // Errors should be thrown when encountering unknown collections
+    [<Test>] member __.``Error on field with unknown ICollection implementation``() = fails typeof<CustomCollection<int>> true
+    [<Test>] member __.``Error on field with unknown ISet implementation``() =        fails typeof<CustomSet<int>> true
+    [<Test>] member __.``Error on field with unknown IDictionary implementation``() = fails typeof<CustomDictionary<int,int>> true
 
-    [<Test>]
-    member __.``Error on unknown collection field``() =
-        parseError<StructWithUnknownCollection>()
+    // Errors should be thrown when parsing interface and abstract classes
+    [<Test>] member __.``Error on interface``() = failsOn<Interface>
+    [<Test>] member __.``Error on abstract class``() = failsOn<Abstract>
 
-    [<Test>]
-    member __.``Error on unknown set field``() =
-        parseError<StructWithUnknownSet>()
+    // Errors should be thrown when parsing non-Thrift classes
+    [<Test>] member __.``Error on non-Thrift class``() = failsOn<UnmarkedStruct>
 
-    [<Test>]
-    member __.``Error on unknown dictionary field``() =
-        parseError<StructWithUnknownDictionary>()
+    // Struct which contain non-Thrift fields should be parsed correctly
+    [<Test>] member __.``Some non-Thrift fields``() = parse<StructWithUnmarkedFields>.Fields.Count <=> 1
 
-    [<Test>]
-    member __.``Self-referencing struct``() =
-        parseOk<StructWithSelfReference>()
+    // Structs with fields that reference the struct itself should be parsed correctly
+    [<Test>] 
+    member __.``Self-referencing struct``() = 
+        parse<StructWithSelfReference>.Fields |> Seq.sortBy (fun f -> f.Header.Id) 
+                                              |> Seq.map (fun f -> f.Header.FieldType.TypeInfo.AsType())
+                                              |> List.ofSeq
+        <===>
+        [ typeof<StructWithSelfReference>
+          typeof<List<StructWithSelfReference>>
+          typeof<Dictionary<StructWithSelfReference,StructWithSelfReference>> ]

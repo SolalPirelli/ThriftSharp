@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2014 Solal Pirelli
+// This code is licensed under the MIT License (see Licence.txt for details).
+// Redistributions of this source code must retain the above copyright notice.
+
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using ThriftSharp.Protocols;

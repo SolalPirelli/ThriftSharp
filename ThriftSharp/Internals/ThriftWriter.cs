@@ -229,7 +229,7 @@ namespace ThriftSharp.Internals
                 );
 
 
-                if ( field.IsRequired && ( fieldType.NullableType != null || !fieldType.IsPrimitive ) )
+                if ( field.IsRequired && ( fieldType.NullableType != null || fieldType.TypeInfo.IsClass ) )
                 {
                     var isDefaultExpr = Expression.Equal( Expression.Constant( null ), getFieldExpr );
 
@@ -245,7 +245,7 @@ namespace ThriftSharp.Internals
 
                     methodContents.Add( Expression.IfThenElse( isDefaultExpr, exceptionExpr, writingExpr ) );
                 }
-                else if ( field.DefaultValue.HasValue || fieldType.NullableType != null || !fieldType.IsPrimitive )
+                else if ( field.DefaultValue.HasValue || fieldType.NullableType != null || fieldType.TypeInfo.IsClass )
                 {
                     var defaultExpr = Expression.Constant( field.DefaultValue.HasValue ? field.DefaultValue.Value : null );
                     var isDefaultExpr = Expression.Equal( defaultExpr, getFieldExpr );

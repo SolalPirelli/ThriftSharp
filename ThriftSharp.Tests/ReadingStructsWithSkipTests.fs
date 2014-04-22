@@ -6,13 +6,10 @@ module ThriftSharp.Tests.``Reading structs skipping fields``
 
 open ThriftSharp
 
-[<ThriftStruct("NoFields")>]
-type StructWithoutFields() = class end
-
 [<ThriftStruct("OneField")>]
 type StructWithOneField() =
-    [<ThriftField(1s, true, "Field")>]
-    member val Field = 42 with get, set
+    [<ThriftField(1000s, false, "Field")>]
+    member val Field = nullable 42 with get, set
 
 
 let check<'T> data = run <| async {
@@ -25,23 +22,13 @@ let check<'T> data = run <| async {
 [<TestContainer>]
 type __() =
     [<Test>]
-    member __.``One field for a struct without fields``() =
-        check<StructWithoutFields>
-            [StructHeader "NoFields"
-             FieldHeader (1s, "Field", tid 8uy)
-             Int32 42
-             FieldEnd
-             FieldStop
-             StructEnd]
-
-    [<Test>]
     member __.``Many fields for a struct with one primitive fields``() =
         check<StructWithOneField>
             [StructHeader "OneField"
              FieldHeader (3s, "Field3", tid 2uy)
              Bool true
              FieldEnd
-             FieldHeader (1s, "Field", tid 8uy)
+             FieldHeader (1000s, "Field", tid 8uy)
              Int32 42
              FieldEnd
              FieldHeader(2s, "Field2", tid 8uy)
@@ -52,7 +39,7 @@ type __() =
 
     [<Test>]
     member __.``Skipping primitive fields``() =
-        check<StructWithoutFields>
+        check<StructWithOneField>
             [StructHeader "NoFields"
              FieldHeader (1s, "BoolField", tid 2uy)
              Bool false
@@ -80,7 +67,7 @@ type __() =
 
     [<Test>]
     member __.``Skipping collection fields``() =
-        check<StructWithoutFields>
+        check<StructWithOneField>
             [StructHeader "CollectionFields"
              FieldHeader (1s, "ListField", tid 15uy)
              ListHeader (1, tid 8uy)
@@ -107,7 +94,7 @@ type __() =
 
     [<Test>]
     member __.``Skipping struct field``() =
-        check<StructWithoutFields>
+        check<StructWithOneField>
             [StructHeader "StructField"
              FieldHeader (1s, "StructField", tid 12uy)
              StructHeader "OneField"

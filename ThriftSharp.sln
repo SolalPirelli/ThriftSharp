@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.30110.0
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThriftSharp.Benchmarking", "ThriftSharp.Benchmarking\ThriftSharp.Benchmarking.csproj", "{53C4AC53-E1F1-408C-9AAC-15084D74EE77}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThriftSharp", "ThriftSharp\ThriftSharp.csproj", "{D1275E05-4238-447E-B6AB-F7301AA6CD2E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThriftSharp.Extensions", "ThriftSharp.Extensions\ThriftSharp.Extensions.csproj", "{7B5349A9-5CE4-432D-A32B-F870867649A0}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ThriftSharp.Tests", "ThriftSharp.Tests\ThriftSharp.Tests.fsproj", "{1F3EDE6E-7D84-45BD-9B0C-00198760A714}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThriftSharp.Benchmarking", "ThriftSharp.Benchmarking\ThriftSharp.Benchmarking.csproj", "{53C4AC53-E1F1-408C-9AAC-15084D74EE77}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

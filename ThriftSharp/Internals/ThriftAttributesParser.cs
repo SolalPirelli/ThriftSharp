@@ -82,6 +82,11 @@ namespace ThriftSharp.Internals
                                      .Where( f => f != null )
                                      .ToArray();
 
+                if ( fields.Length == 0 )
+                {
+                    throw ThriftParsingException.NoFields( typeInfo );
+                }
+
                 // The type may have been added during fields parsing
                 if ( !_knownStructs.ContainsKey( typeInfo ) )
                 {
@@ -144,13 +149,19 @@ namespace ThriftSharp.Internals
             var attr = info.GetAttribute<ThriftMethodAttribute>();
             if ( attr == null )
             {
-                return null;
+                throw ThriftParsingException.MethodWithoutAttribute( info );
             }
 
             var converterAttr = info.ReturnParameter.GetAttribute<ThriftConverterAttribute>();
             var converter = converterAttr == null ? null : converterAttr.Converter;
 
             var throwsClauses = ParseThrowsClauses( info );
+
+            if ( attr.IsOneWay && throwsClauses.Length != 0 )
+            {
+                throw ThriftParsingException.OneWayMethodWithExceptions( info );
+            }
+
             var parameters = info.GetParameters()
                                  .Select( ParseMethodParameter )
                                  .Where( p => p != null )
@@ -159,7 +170,11 @@ namespace ThriftSharp.Internals
             var unwrapped = ReflectionEx.UnwrapTask( info.ReturnType );
             if ( unwrapped == null )
             {
-                throw ThriftParsingException.NotAsync( info );
+                throw ThriftParsingException.SynchronousMethod( info );
+            }
+            if ( attr.IsOneWay && unwrapped != typeof( void ) )
+            {
+                throw ThriftParsingException.OneWayMethodWithResult( info );
             }
 
             return new ThriftMethod( attr.Name, unwrapped, attr.IsOneWay,
@@ -185,6 +200,12 @@ namespace ThriftSharp.Internals
             var methods = typeInfo.DeclaredMethods
                                   .Select( ParseMethod )
                                   .ToArray();
+
+            if ( methods.Length == 0 )
+            {
+                throw ThriftParsingException.NoMethods( typeInfo );
+            }
+
             return new ThriftService( attr.Name, methods );
         }
     }
