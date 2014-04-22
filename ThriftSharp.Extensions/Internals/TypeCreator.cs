@@ -101,11 +101,6 @@ namespace ThriftSharp.Internals
                 gen.Emit( OpCodes.Ldloc, localBuilder );
                 // Call the delegate
                 gen.Emit( OpCodes.Call, typeof( Method ).GetMethod( "Invoke" ) );
-                // Remove the returned value if needed
-                if ( m.ReturnType == typeof( void ) )
-                {
-                    gen.Emit( OpCodes.Pop );
-                }
                 // Cast its wrapped return value
                 var unwrapped = ReflectionEx.UnwrapTask( m.ReturnType );
                 if ( unwrapped != typeof( void ) )
