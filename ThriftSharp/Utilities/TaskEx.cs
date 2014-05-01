@@ -51,7 +51,7 @@ namespace ThriftSharp.Utilities
                            switch ( t.Result.Status )
                            {
                                case TaskStatus.Faulted:
-                                   throw t.Result.Exception;
+                                   throw t.Result.Exception.Flatten().InnerException;
 
                                case TaskStatus.Canceled:
                                    throw new OperationCanceledException();

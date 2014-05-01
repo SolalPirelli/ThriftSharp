@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using ThriftSharp.Internals;
 using ThriftSharp.Protocols;
@@ -39,10 +40,11 @@ namespace ThriftSharp.Benchmarking
 
         public static void Main( string[] args )
         {
+            string format = string.Format( "{{0, -{0}}} {{1}}", Actions.Keys.Max( s => s.Length ) );
             foreach ( var pair in Actions )
             {
                 var time = MeasureExecutionTime( pair.Value );
-                Console.WriteLine( "{0} {1}", pair.Key, time.ToString() );
+                Console.WriteLine( format, pair.Key, time.ToString() );
             }
 
             Console.Read();

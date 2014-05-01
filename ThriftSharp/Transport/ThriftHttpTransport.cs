@@ -118,8 +118,8 @@ namespace ThriftSharp.Transport
                 requestStream.Flush();
             }
 
-            // This call MUST appear before the GetResponse call
-            // Silverlight (and WP8) throws a NotSupportedException otherwise.
+            // This call *must* appear before the GetResponse call
+            // Silverlight and WP8 throw NotSupportedException otherwise.
             _outputStream.Dispose();
 
             var response = await TaskEx.FromAsync( request.BeginGetResponse, request.EndGetResponse, _timeout, _token );
