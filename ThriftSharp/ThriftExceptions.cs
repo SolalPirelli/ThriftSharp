@@ -237,7 +237,11 @@ namespace ThriftSharp
     /// </summary>
     public sealed class ThriftSerializationException : Exception
     {
-        private ThriftSerializationException( string message, params string[] args ) : base( string.Format( message, args ) ) { }
+        /// <summary>
+        /// Prevents a default instance of the ThriftSerializationException class from being created.
+        /// This is meant to force customers to use one of the static factory methods.
+        /// </summary>
+        private ThriftSerializationException( string message, params object[] args ) : base( string.Format( message, args ) ) { }
 
         /// <summary>
         /// Creates a ThriftSerializationException indicating a required field was null during serialization.
@@ -260,7 +264,7 @@ namespace ThriftSharp
         /// </summary>
         internal static ThriftSerializationException TypeIdMismatch( ThriftTypeId expectedId, ThriftTypeId actualId )
         {
-            return new ThriftSerializationException( "Deserialization error: Expected type {0}, but type {1} was read." );
+            return new ThriftSerializationException( "Deserialization error: Expected type {0}, but type {1} was read.", expectedId, actualId );
         }
     }
 }
