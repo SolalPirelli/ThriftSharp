@@ -1,7 +1,0 @@
-syntax:glob
-*.suo
-*.csproj.user
-obj\*
-bin\*
-TestResults\*
-packages\*
