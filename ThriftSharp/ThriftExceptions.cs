@@ -203,9 +203,9 @@ namespace ThriftSharp
         /// </summary>
         internal static ThriftParsingException SynchronousMethod( MethodInfo methodInfo )
         {
-            return new ThriftParsingException( "The method '{0}' is two-way, but does not return a Task or Task<T>."
+            return new ThriftParsingException( "The method '{0}' but does not return a Task or Task<T>."
                                              + Environment.NewLine
-                                             + "Only asynchronous calls are supported for two-way methods. Please wrap the return type in a Task.",
+                                             + "Only asynchronous calls are supported. Please wrap the return type in a Task.",
                                                methodInfo.Name );
         }
 

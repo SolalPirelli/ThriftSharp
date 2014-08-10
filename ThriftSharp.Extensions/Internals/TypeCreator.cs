@@ -27,6 +27,9 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Creates an implementation of the specified interface, using the specified method implementor.
         /// </summary>
+        /// <remarks>
+        /// This makes quite a few assumptions specific to Thrift#, e.g. it only handles <see cref="Task" /> and <see cref="Task{T}" /> return types.
+        /// </remarks>
         public static T CreateImplementation<T>( MethodImplementor implementor )
         {
             // Create a dynamic assembly
@@ -55,12 +58,10 @@ namespace ThriftSharp.Internals
 
                 // Define the method attributes
                 var methodAttrs = MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig;
-                // Define the return type
-                var methodRetType = m.ReturnType == typeof( void ) ? null : m.ReturnType;
                 // Define the method parameter types
                 var methodParamTypes = m.GetParameters().Select( p => p.ParameterType ).ToArray();
                 // Create the method
-                var methodBuilder = typeBuilder.DefineMethod( m.Name, methodAttrs, methodRetType, methodParamTypes );
+                var methodBuilder = typeBuilder.DefineMethod( m.Name, methodAttrs, m.ReturnType, methodParamTypes );
 
                 // Generate the IL..
                 var gen = methodBuilder.GetILGenerator();

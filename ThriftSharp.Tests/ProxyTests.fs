@@ -20,6 +20,8 @@ type IService =
                     * [<ThriftParameter(2s, "arg2")>] arg2: double
                     * [<ThriftParameter(3s, "arg3")>] arg3: int[]
                     -> Task<List<string>>
+    [<ThriftMethod("OneWay", true)>]
+    abstract OneWay: unit -> Task
 
                     
 let (--) a b = a,b
@@ -121,6 +123,18 @@ type __() =
          Int32 2
          ListEnd
          FieldEnd
+         FieldStop
+         StructEnd
+         MessageEnd]
+
+    [<Test>]
+    member __.``One-way``() =
+        []
+        --
+        fun s -> s.OneWay()
+        -->
+        [MessageHeader(0, "OneWay", ThriftMessageType.OneWay)
+         StructHeader ""
          FieldStop
          StructEnd
          MessageEnd]
