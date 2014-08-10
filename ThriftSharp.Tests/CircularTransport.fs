@@ -20,20 +20,20 @@ type CircularTransport() =
             if hasRead then failwith "Cannot write after a read. Close the transport first."
             stream.Write(bs, 0, bs.Length)
 
-        member x.ReadByteAsync() =
-            Task.FromResult((x :> IThriftTransport).ReadBytesAsync(1).Result.[0])
+        member x.ReadByte() =
+            (x :> IThriftTransport).ReadBytes(1).[0]
             
-        member x.ReadBytesAsync(len) =
+        member x.ReadBytes(len) =
             if not hasRead then
                 hasRead <- true
                 stream.Position <- 0L
             let bs = Array.zeroCreate len
             if stream.Read(bs, 0, bs.Length) = len then
-                Task.FromResult(bs)
+                bs
             else
                 failwith "Not enough bytes were read."
 
-        member x.FlushAsync() =
+        member x.FlushAndReadAsync() =
             Task.FromResult(0) :> Task
 
         member x.Dispose() =

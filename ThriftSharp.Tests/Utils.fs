@@ -69,12 +69,9 @@ let throwsAsync<'T when 'T :> Exception> func = async {
 
 let run x = x |> Async.Ignore |> Async.RunSynchronously
 
-let readAsync<'T> prot = async {
+let read<'T> prot =
     let thriftStruct = ThriftAttributesParser.ParseStruct(typeof<'T>.GetTypeInfo())
-    let! retVal = ThriftReader.ReadAsync(thriftStruct, prot)
-               |> Async.AwaitTask
-    return retVal :?> 'T
-}
+    ThriftReader.Read(thriftStruct, prot) :?> 'T
 
 let write prot obj =
     let thriftStruct = ThriftAttributesParser.ParseStruct(obj.GetType().GetTypeInfo())

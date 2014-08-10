@@ -64,7 +64,7 @@ type ComplexStruct() =
 [<TestContainer>]
 type __() =
     [<Test>]
-    member __.``Complex struct``() = run <| async {
+    member __.``Complex struct``() =
         let o = ComplexStruct( Boolean = false, 
                                SByte = 1y,
                                Double = System.Double.PositiveInfinity,
@@ -83,7 +83,6 @@ type __() =
         let trans = CircularTransport()
         let prot = ThriftBinaryProtocol(trans)
         write prot o
-        let! o2 = readAsync<ComplexStruct> prot
+        let o2 = read<ComplexStruct> prot
 
         o2 <=> o
-    }

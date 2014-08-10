@@ -4,7 +4,6 @@
 
 using System;
 using System.Reflection;
-using System.Threading.Tasks;
 using ThriftSharp.Protocols;
 using ThriftSharp.Utilities;
 
@@ -53,7 +52,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Calls the specified ThriftMethod on the specified protocol with the specified arguments.
         /// </summary>
-        public static Task WriteAsync( IThriftProtocol protocol, ThriftMethod method, object[] args )
+        public static void Write( IThriftProtocol protocol, ThriftMethod method, object[] args )
         {
             var msg = new ThriftMessageHeader( 0, method.Name, method.IsOneWay ? ThriftMessageType.OneWay : ThriftMessageType.Call );
             var paramSt = MakeParametersStruct( method, args );
@@ -61,7 +60,6 @@ namespace ThriftSharp.Internals
             protocol.WriteMessageHeader( msg );
             ThriftWriter.Write( paramSt, null, protocol );
             protocol.WriteMessageEnd();
-            return protocol.FlushAsync();
         }
     }
 }

@@ -45,11 +45,11 @@ type __() =
         source.CancelAfter(50)
 
         let trans = { new IThriftTransport with
-                          member x.ReadByteAsync() = Task.FromResult(0uy)
-                          member x.ReadBytesAsync(_) = Task.FromResult(Array.empty)
+                          member x.ReadByte() = 0uy
+                          member x.ReadBytes(_) = Array.empty
                           member x.WriteByte(_) = ()
                           member x.WriteBytes(_) = ()
-                          member x.FlushAsync() = Task.Delay(10000, source.Token)
+                          member x.FlushAndReadAsync() = Task.Delay(10000, source.Token)
                           member x.Dispose() = () }
 
         let svc = ThriftAttributesParser.ParseService(typeof<IService>.GetTypeInfo())
@@ -65,11 +65,11 @@ type __() =
         source.Cancel()
 
         let trans = { new IThriftTransport with
-                          member x.ReadByteAsync() = Task.FromResult(0uy)
-                          member x.ReadBytesAsync(_) = Task.FromResult(Array.empty)
+                          member x.ReadByte() = 0uy
+                          member x.ReadBytes(_) = Array.empty
                           member x.WriteByte(_) = ()
                           member x.WriteBytes(_) = ()
-                          member x.FlushAsync() = Task.Delay(10000, source.Token)
+                          member x.FlushAndReadAsync() = Task.Delay(10000, source.Token)
                           member x.Dispose() = () }
 
         let svc = ThriftAttributesParser.ParseService(typeof<IService>.GetTypeInfo())

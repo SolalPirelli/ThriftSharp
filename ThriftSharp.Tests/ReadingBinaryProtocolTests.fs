@@ -10,29 +10,22 @@ open ThriftSharp.Protocols
 
 let (--) a b = a,b
 
-let (==>) (data, selector) check = run <| async {
+let (==>) (data, selector) check =
     let trans = MemoryTransport(data |> List.map byte)
-    let! obj = selector(new ThriftBinaryProtocol(trans)) |> Async.AwaitTask
+    let obj = new ThriftBinaryProtocol(trans) |> selector
     check(obj)
-}
 
 let (<==>) (data, selector) value =
     (data, selector) ==> (fun o -> o <=> value)
 
-let (=//=>) (data, selector) (check: 'a -> unit) = run <| async {
+let (=//=>) (data, selector) (check: 'a -> unit) =
     let trans = MemoryTransport(data |> List.map byte)
-    let! ex = throwsAsync<'a> (fun () -> 
-        async {
-            let! res = selector(new ThriftBinaryProtocol(trans)) |> Async.AwaitTask
-            return box res
-        })
+    let ex = throws<'a> (fun () -> new ThriftBinaryProtocol(trans) |> selector |> box)
     check(ex)
-}
 
-let needsNothing selector = run <| async {
+let needsNothing selector =
     let trans = MemoryTransport([])
-    do! selector(new ThriftBinaryProtocol(trans)) |> Async.AwaitIAsyncResult |> Async.Ignore
-}
+    selector(new ThriftBinaryProtocol(trans))
 
 [<TestContainer>]
 type __()  =
@@ -43,7 +36,7 @@ type __()  =
          0x4D; 0x65; 0x73; 0x73; 0x61; 0x67; 0x65 // "Message" in UTF-8 (string)
          0x00; 0x00; 0x00; 0x02] // ID (int32)
         --
-        fun p -> p.ReadMessageHeaderAsync()
+        fun p -> p.ReadMessageHeader()
         ==>
         fun header ->
             header.Id <=> 2
@@ -57,7 +50,7 @@ type __()  =
           0x4D; 0x65; // "Me" in UTF-8 (string)
           0x00; 0x00; 0x00; 0x00] // ID (int32)
         --
-        fun p -> p.ReadMessageHeaderAsync()
+        fun p -> p.ReadMessageHeader()
         ==>
         fun header ->
             header.Id <=> 0
@@ -71,7 +64,7 @@ type __()  =
          0x4D; 0x65; // "Me" in UTF-8 (string)
          0x00; 0x00; 0x00; 0x00] // ID (int32)
         --
-        fun p -> p.ReadMessageHeaderAsync()
+        fun p -> p.ReadMessageHeader()
         =//=>
         fun (ex: ThriftProtocolException) ->
             ex.ExceptionType <=> nullable ThriftProtocolExceptionType.InvalidProtocol
@@ -83,7 +76,7 @@ type __()  =
          0x03 // Message type (byte)
          0x00; 0x00; 0x00; 0x09] // ID (int32)
         --
-        fun p -> p.ReadMessageHeaderAsync()
+        fun p -> p.ReadMessageHeader()
         ==>
         fun header ->
             header.Name <=> "Message"
@@ -92,27 +85,27 @@ type __()  =
 
     [<Test>]
     member __.``MessageEnd``() =
-        needsNothing (fun p -> p.ReadMessageEndAsync())
+        needsNothing (fun p -> p.ReadMessageEnd())
 
     [<Test>]
     member __.``StructHeader``() =
         []
         --
-        fun p -> p.ReadStructHeaderAsync()
+        fun p -> p.ReadStructHeader()
         ==>
         fun header ->
             header.Name <=> ""
 
     [<Test>]
     member __.``StructEnd``() =
-        needsNothing (fun p -> p.ReadStructEndAsync())
+        needsNothing (fun p -> p.ReadStructEnd())
 
     [<Test>]
     member __.``FieldHeader``() =             
         [11 // type (byte)
          0; 10] // ID (int16)
         --
-        fun p -> p.ReadFieldHeaderAsync()
+        fun p -> p.ReadFieldHeader()
         ==>
         fun header ->
             header.Id <=> 10s
@@ -121,13 +114,13 @@ type __()  =
 
     [<Test>]
     member __.``FieldEnd``() =
-        needsNothing (fun p -> p.ReadFieldEndAsync())
+        needsNothing (fun p -> p.ReadFieldEnd())
 
     [<Test>]
     member __.``FieldStop``() =
         [0] // end of field
         --
-        fun p -> p.ReadFieldHeaderAsync()
+        fun p -> p.ReadFieldHeader()
         <==>
         null
 
@@ -136,7 +129,7 @@ type __()  =
         [8 // element type (byte)
          0; 0; 0; 20] // size (Int32)
         --
-        fun p -> p.ReadListHeaderAsync()
+        fun p -> p.ReadListHeader()
         ==>
         fun header ->
             header.Count <=> 20
@@ -144,14 +137,14 @@ type __()  =
 
     [<Test>]
     member __.``ListEnd``() =
-        needsNothing (fun p -> p.ReadListEndAsync())
+        needsNothing (fun p -> p.ReadListEnd())
 
     [<Test>]
     member __.``SetHeader``() =     
         [4 // element type (byte)
          0; 0; 0; 0] // size (int32)
         --
-        fun p -> p.ReadSetHeaderAsync()
+        fun p -> p.ReadSetHeader()
         ==>
         fun header ->
             header.Count <=> 0
@@ -159,7 +152,7 @@ type __()  =
 
     [<Test>]
     member __.``SetEnd``() =
-        needsNothing (fun p -> p.ReadSetEndAsync())
+        needsNothing (fun p -> p.ReadSetEnd())
 
     [<Test>]
     member __.``MapHeader``() =
@@ -167,7 +160,7 @@ type __()  =
          10 // value type (byte)
          0; 0; 1; 0 ] // size (int32)
         --
-        fun p -> p.ReadMapHeaderAsync()
+        fun p -> p.ReadMapHeader()
         ==>
         fun header ->
             header.Count <=> 256
@@ -176,13 +169,13 @@ type __()  =
 
     [<Test>]
     member __.``MapEnd``() =
-        needsNothing (fun p -> p.ReadMapEndAsync())
+        needsNothing (fun p -> p.ReadMapEnd())
 
     [<Test>]
     member __.``Boolean - true``() =
         [1] // not zero (byte)
         --
-        fun p -> p.ReadBooleanAsync()
+        fun p -> p.ReadBoolean()
         <==>
         true
 
@@ -190,7 +183,7 @@ type __()  =
     member __.``Boolean - false``() =
         [0] // zero (byte)
         --
-        fun p -> p.ReadBooleanAsync()
+        fun p -> p.ReadBoolean()
         <==>
         false
 
@@ -198,7 +191,7 @@ type __()  =
     member __.``SByte``() =
         [123]
         --
-        fun p -> p.ReadSByteAsync()
+        fun p -> p.ReadSByte()
         <==>
         123y
 
@@ -206,7 +199,7 @@ type __()  =
     member __.``Double - positive``() =
         [0x41; 0x32; 0xD6; 0x87; 0xE3; 0xD7; 0x0A; 0x3D] // 64 bit IEEE-754 floating-point number
         --
-        fun p -> p.ReadDoubleAsync()
+        fun p -> p.ReadDouble()
         <==>
         1234567.89
 
@@ -214,7 +207,7 @@ type __()  =
     member __.``Double - zero``() =
         [0; 0; 0; 0; 0; 0; 0; 0] // 64 bit IEEE-754 floating-point number
         --
-        fun p -> p.ReadDoubleAsync()
+        fun p -> p.ReadDouble()
         <==>
         0.0
 
@@ -222,7 +215,7 @@ type __()  =
     member __.``Double - negative``() =
         [0xC5; 0xF8; 0xEE; 0x90; 0xFF; 0x6C; 0x37; 0x3E] // 64-bit IEEE-754 floating-point number
         --
-        fun p -> p.ReadDoubleAsync()
+        fun p -> p.ReadDouble()
         <==>
         -123456789012345678901234567890.1234567890
 
@@ -230,7 +223,7 @@ type __()  =
     member __.``Double - PositiveInfinity``() =
         [0x7F; 0xF0; 0x00; 0x00; 0x00; 0x00; 0x00; 0x00] // 64-bit IEEE-754 floating-point number
         --
-        fun p -> p.ReadDoubleAsync()
+        fun p -> p.ReadDouble()
         ==>
         fun double ->
             System.Double.IsPositiveInfinity(double) <=> true
@@ -239,7 +232,7 @@ type __()  =
     member __.``Double - NegativeInfinity``() =
         [0xFF; 0xF0; 0x00; 0x00; 0x00; 0x00; 0x00; 0x00] // 64-bit IEEE-754 floating-point number
         --
-        fun p -> p.ReadDoubleAsync()
+        fun p -> p.ReadDouble()
         ==>
         fun double ->
             System.Double.IsNegativeInfinity(double) <=> true
@@ -248,7 +241,7 @@ type __()  =
     member __.``Double - Epsilon``() =
         [0x00; 0x00; 0x00; 0x00; 0x00; 0x00; 0x00; 0x01] // 64-bit IEEE-754 floating-point number
         --
-        fun p -> p.ReadDoubleAsync()
+        fun p -> p.ReadDouble()
         <==>
         System.Double.Epsilon
 
@@ -256,7 +249,7 @@ type __()  =
     member __.``Int16 - positive``() =
         [48; 57] // int16
         --
-        fun p -> p.ReadInt16Async()
+        fun p -> p.ReadInt16()
         <==>
         12345s
 
@@ -264,7 +257,7 @@ type __()  =
     member __.``Int16 - zero``() =
         [0; 0] // int16
         --
-        fun p -> p.ReadInt16Async()
+        fun p -> p.ReadInt16()
         <==>
         0s
 
@@ -272,7 +265,7 @@ type __()  =
     member __.``Int16 - negative``() =
         [251; 35] // int16
         --
-        fun p -> p.ReadInt16Async()
+        fun p -> p.ReadInt16()
         <==>
         -1245s
 
@@ -280,7 +273,7 @@ type __()  =
     member __.``Int32 - positive``() =
         [73; 150; 2; 210] // int32
         --
-        fun p -> p.ReadInt32Async()
+        fun p -> p.ReadInt32()
         <==>
         1234567890
 
@@ -288,7 +281,7 @@ type __()  =
     member __.``Int32 - zero``() =
         [0; 0; 0; 0] // int32
         --
-        fun p -> p.ReadInt32Async()
+        fun p -> p.ReadInt32()
         <==>
         0
 
@@ -296,7 +289,7 @@ type __()  =
     member __.``Int32 - negative``() =
         [197; 33; 151; 79] // int32
         --
-        fun p -> p.ReadInt32Async()
+        fun p -> p.ReadInt32()
         <==>
         -987654321
 
@@ -304,7 +297,7 @@ type __()  =
     member __.``Int64 - positive``() =
         [17; 34; 16; 244; 177; 108; 28; 177] // int64
         --
-        fun p -> p.ReadInt64Async()
+        fun p -> p.ReadInt64()
         <==>
         1234567890987654321L
 
@@ -312,7 +305,7 @@ type __()  =
     member __.``Int64 - zero``() =
         [0; 0; 0; 0; 0; 0; 0; 0] // int64
         --
-        fun p -> p.ReadInt64Async()
+        fun p -> p.ReadInt64()
         <==>
         0L
 
@@ -320,7 +313,7 @@ type __()  =
     member __.``Int64 - negative``() =
         [242; 75; 37; 160; 129; 11; 237; 79] // int64
         --
-        fun p -> p.ReadInt64Async()
+        fun p -> p.ReadInt64()
         <==>
         -987654321987654321L
 
@@ -330,7 +323,7 @@ type __()  =
          84; 104; 101; 32; 113; 117; 105; 99; 107; 32; 98   // data
          114; 111; 119; 110; 32; 102; 111; 120; 46; 46; 46] // data
         --
-        fun p -> p.ReadStringAsync()
+        fun p -> p.ReadString()
         <==>
         "The quick brown fox..."
 
@@ -338,7 +331,7 @@ type __()  =
     member __.``String - empty``() =
         [0; 0; 0; 0] // length (int32)
         --
-        fun p -> p.ReadStringAsync()
+        fun p -> p.ReadString()
         <==>
         ""
 
@@ -348,7 +341,7 @@ type __()  =
          239; 183; 178; 226; 150; 188; 225; 190; 162
          225; 185; 152; 195; 136; 224; 175; 171]
         --
-        fun p -> p.ReadStringAsync()
+        fun p -> p.ReadString()
         <==>
         "ﷲ▼ᾢṘÈ௫"
 
@@ -356,7 +349,7 @@ type __()  =
     member __.``Binary - empty``() =
         [0; 0; 0; 0] // length (int32)
         --
-        fun p -> p.ReadBinaryAsync()
+        fun p -> p.ReadBinary()
         <==>
         [| |]
         
@@ -365,6 +358,6 @@ type __()  =
         [0; 0; 0; 7 // length (int32)
          4; 8; 15; 16; 23; 42; 128] // data
         --
-        fun p -> p.ReadBinaryAsync()
+        fun p -> p.ReadBinary()
         <==>
         [|4y; 8y; 15y; 16y; 23y; 42y; -128y|]

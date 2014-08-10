@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading.Tasks;
 using ThriftSharp.Protocols;
 using ThriftSharp.Utilities;
 
@@ -56,21 +55,21 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Reads a protocol exception from the specified protocol.
         /// </summary>
-        private static async Task<ThriftProtocolException> ReadExceptionAsync( IThriftProtocol protocol )
+        private static ThriftProtocolException ReadException( IThriftProtocol protocol )
         {
             // Server exception (not a declared one)
             var exceptionStruct = ThriftAttributesParser.ParseStruct( typeof( ThriftProtocolException ).GetTypeInfo() );
-            var exception = await ThriftReader.ReadAsync( exceptionStruct, protocol );
-            await protocol.ReadMessageEndAsync();
+            var exception = ThriftReader.Read( exceptionStruct, protocol );
+            protocol.ReadMessageEnd();
             return (ThriftProtocolException) exception;
         }
 
         /// <summary>
         /// Reads a ThriftMessage returned by the specified ThriftMethod on the specified ThriftProtocol.
         /// </summary>
-        public static async Task<object> ReadAsync( IThriftProtocol protocol, ThriftMethod method )
+        public static object Read( IThriftProtocol protocol, ThriftMethod method )
         {
-            var header = await protocol.ReadMessageHeaderAsync();
+            var header = protocol.ReadMessageHeader();
 
             if ( !Enum.IsDefined( typeof( ThriftMessageType ), header.MessageType ) )
             {
@@ -78,12 +77,12 @@ namespace ThriftSharp.Internals
             }
             if ( header.MessageType == ThriftMessageType.Exception )
             {
-                throw await ReadExceptionAsync( protocol );
+                throw ReadException( protocol );
             }
 
             var retStAndVal = MakeReturnStruct( method );
-            await ThriftReader.ReadAsync( retStAndVal.Item1, protocol );
-            await protocol.ReadMessageEndAsync();
+            ThriftReader.Read( retStAndVal.Item1, protocol );
+            protocol.ReadMessageEnd();
             // Dispose of it now that we have finished reading and writing
             // using() is quite dangerous in this case because of async stuff happening
             protocol.Dispose();

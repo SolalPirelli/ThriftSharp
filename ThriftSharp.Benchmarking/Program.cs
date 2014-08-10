@@ -21,6 +21,11 @@ namespace ThriftSharp.Benchmarking
      * Simple person       00:00:00.0000050 | 83%
      * Complex person      00:00:00.0000123 | 12%
      * Very complex person 00:00:00.0000340 |  9%
+     * 
+     * v2.1 (i7-3612QM)
+     * Simple person       00:00:00.0000025 | 50%
+     * Complex person      00:00:00.0000058 | 47%
+     * Very complex person 00:00:00.0000156 | 46%
      */
 
     public sealed class Program
@@ -53,7 +58,7 @@ namespace ThriftSharp.Benchmarking
         private static void WriteAndRead( Person person )
         {
             ThriftWriter.Write( ThriftPerson, person, Protocol );
-            ThriftReader.ReadAsync( ThriftPerson, Protocol ).Wait();
+            ThriftReader.Read( ThriftPerson, Protocol );
         }
 
         private static TimeSpan MeasureExecutionTime( Action action )

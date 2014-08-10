@@ -12,11 +12,10 @@ type StructWithOneField() =
     member val Field = nullable 42 with get, set
 
 
-let check<'T> data = run <| async {
+let check<'T> data =
     let m = MemoryProtocol(data)
-    do! readAsync<'T> m |> Async.Ignore
+    read<'T> m |> ignore
     m.IsEmpty <=> true
-}
 
 
 [<TestContainer>]

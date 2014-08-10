@@ -40,8 +40,6 @@ type MemoryProtocol(toRead: ThriftProtocolValue list) =
 
     let write value = writtenVals <- value::writtenVals
     let read() = toRead.Dequeue()
-    let makeTask o = Task.FromResult(o)
-    let emptyTask = Task.FromResult(0) :> Task
 
     member x.WrittenValues with get() = List.rev writtenVals
     member x.IsEmpty with get() = toRead.Count = 0
@@ -112,109 +110,109 @@ type MemoryProtocol(toRead: ThriftProtocolValue list) =
         member x.WriteBinary(bs) =
             write (Binary bs)
 
-        member x.FlushAsync() =
-            emptyTask
+        member x.FlushAndReadAsync() =
+            Task.FromResult(0) :> Task
 
 
-        member x.ReadMessageHeaderAsync() =
+        member x.ReadMessageHeader() =
             match read() with
-            | MessageHeader (id, name, typ) -> makeTask (ThriftMessageHeader(id, name, typ))
+            | MessageHeader (id, name, typ) -> ThriftMessageHeader(id, name, typ)
             | x -> failwithf "Expected a message header, got %A" x
 
-        member x.ReadMessageEndAsync() =
+        member x.ReadMessageEnd() =
             match read() with
-            | MessageEnd -> emptyTask
+            | MessageEnd -> ()
             | x -> failwithf "Expected a message end, got %A" x
 
-        member x.ReadStructHeaderAsync() =
+        member x.ReadStructHeader() =
             match read() with
-            | StructHeader name -> makeTask (ThriftStructHeader(name))
+            | StructHeader name -> ThriftStructHeader(name)
             | x -> failwithf "Expected a struct header, got %A" x
 
-        member x.ReadStructEndAsync() =
+        member x.ReadStructEnd() =
             match read() with
-            | StructEnd -> emptyTask
+            | StructEnd -> ()
             | x -> failwithf "Expected a struct end, got %A" x
 
-        member x.ReadFieldHeaderAsync() =
+        member x.ReadFieldHeader() =
             match read() with
-            | FieldHeader (id, name, typ) -> makeTask (ThriftFieldHeader(id, name, typ))
-            | FieldStop -> makeTask null
+            | FieldHeader (id, name, typ) -> ThriftFieldHeader(id, name, typ)
+            | FieldStop -> null
             | x -> failwithf "Expected a field header or stop, got %A" x
 
-        member x.ReadFieldEndAsync() =
+        member x.ReadFieldEnd() =
             match read() with
-            | FieldEnd -> emptyTask
+            | FieldEnd -> ()
             | x -> failwithf "Expected a field end, got %A" x
 
-        member x.ReadMapHeaderAsync() =
+        member x.ReadMapHeader() =
             match read() with
-            | MapHeader (len, kt, valt) -> makeTask (ThriftMapHeader(len, kt, valt))
+            | MapHeader (len, kt, valt) -> ThriftMapHeader(len, kt, valt)
             | x -> failwithf "Expected a map header, got %A" x
 
-        member x.ReadMapEndAsync() =
+        member x.ReadMapEnd() =
             match read() with
-            | MapEnd -> emptyTask
+            | MapEnd -> ()
             | x -> failwithf "Expected a map end, got %A" x
 
-        member x.ReadListHeaderAsync() =
+        member x.ReadListHeader() =
             match read() with
-            | ListHeader (len, typ) -> makeTask (ThriftCollectionHeader(len, typ))
+            | ListHeader (len, typ) -> ThriftCollectionHeader(len, typ)
             | x -> failwithf "Expected a list header, got %A" x
 
-        member x.ReadListEndAsync() =
+        member x.ReadListEnd() =
             match read() with
-            | ListEnd -> emptyTask
+            | ListEnd -> ()
             | x -> failwithf "Expected a list end, got %A" x
 
-        member x.ReadSetHeaderAsync() =
+        member x.ReadSetHeader() =
             match read() with
-            | SetHeader (len, typ) -> makeTask (ThriftCollectionHeader(len, typ))
+            | SetHeader (len, typ) -> ThriftCollectionHeader(len, typ)
             | x -> failwithf "Expected a set header, got %A" x
 
-        member x.ReadSetEndAsync() =
+        member x.ReadSetEnd() =
             match read() with
-            | SetEnd -> emptyTask
+            | SetEnd -> ()
             | x -> failwithf "Expected a set end, got %A" x
 
-        member x.ReadBooleanAsync() =
+        member x.ReadBoolean() =
             match read() with
-            | Bool b -> makeTask b
+            | Bool b -> b
             | x -> failwithf "Expected a bool, got %A" x
 
-        member x.ReadSByteAsync() =
+        member x.ReadSByte() =
             match read() with
-            | SByte b -> makeTask b
+            | SByte b -> b
             | x -> failwithf "Expected a sbyte, got %A" x
 
-        member x.ReadDoubleAsync() =
+        member x.ReadDouble() =
             match read() with
-            | Double d -> makeTask d
+            | Double d -> d
             | x -> failwithf "Expected a double, got %A" x
 
-        member x.ReadInt16Async() =
+        member x.ReadInt16() =
             match read() with
-            | Int16 n -> makeTask n
+            | Int16 n -> n
             | x -> failwithf "Expected an int16, got %A" x
 
-        member x.ReadInt32Async() =
+        member x.ReadInt32() =
             match read() with
-            | Int32 n -> makeTask n
+            | Int32 n -> n
             | x -> failwithf "Expected an int32, got %A" x
 
-        member x.ReadInt64Async() =
+        member x.ReadInt64() =
             match read() with
-            | Int64 n -> makeTask n
+            | Int64 n -> n
             | x -> failwithf "Expected an int64, got %A" x
 
-        member x.ReadStringAsync() =
+        member x.ReadString() =
             match read() with
-            | String s -> makeTask s
+            | String s -> s
             | x -> failwithf "Expected a string, got %A" x
 
-        member x.ReadBinaryAsync() =
+        member x.ReadBinary() =
             match read() with
-            | Binary bs -> makeTask bs
+            | Binary bs -> bs
             | x -> failwithf "Expected binary, got %A" x
 
         member x.Dispose() = ()

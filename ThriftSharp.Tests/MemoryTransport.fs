@@ -31,15 +31,15 @@ type MemoryTransport(toRead: byte list) =
             if hasRead then failwith "Cannot write after a read. Close the transport first."
             write bs
 
-        member x.ReadByteAsync() =
-            Task.FromResult((x :> IThriftTransport).ReadBytesAsync(1).Result.[0])
+        member x.ReadByte() =
+            (x :> IThriftTransport).ReadBytes(1).[0]
             
-        member x.ReadBytesAsync(len) =
+        member x.ReadBytes(len) =
             if not hasRead then
                 hasRead <- true
-            Task.FromResult(read len)
+            read len
 
-        member x.FlushAsync() =
+        member x.FlushAndReadAsync() =
             hasRead <- true
             Task.FromResult(0) :> Task
 

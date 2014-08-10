@@ -20,21 +20,15 @@ type StructWithDefaultValue() =
     member val Field = nullable 123 with get, set
 
 
-let (==>) data (checker: 'a -> unit) = run <| async {
+let (==>) data (checker: 'a -> unit) =
     let m = MemoryProtocol(data)
-    let! inst = readAsync<'a> m
+    let inst = read<'a> m
     m.IsEmpty <=> true
-    do checker inst
-}
+    checker inst
 
-let throwsOnRead<'S, 'T when 'T :> exn> data = run <| async {
+let throwsOnRead<'S, 'T when 'T :> exn> data =
     let m = MemoryProtocol(data)
-    do! throwsAsync<'T> (fun () -> 
-        async { 
-            let! res = readAsync<'S> m
-            return box res 
-        }) |> Async.Ignore
-}
+    throws<'T> (fun () -> read<'S> m |> box) |> ignore
 
 
 [<TestContainer>]

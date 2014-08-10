@@ -25,21 +25,21 @@ namespace ThriftSharp.Transport
         void WriteBytes( byte[] bytes );
 
         /// <summary>
-        /// Asynchronously flushes the written bytes.
+        /// Asynchronously flushes the written bytes, and reads all input bytes in advance.
         /// </summary>
-        Task FlushAsync();
+        Task FlushAndReadAsync();
 
         /// <summary>
-        /// Asynchronously reads an unsigned byte.
+        /// Reads an unsigned byte.
         /// </summary>
         /// <returns>An unsigned byte.</returns>
-        Task<byte> ReadByteAsync();
+        byte ReadByte();
 
         /// <summary>
-        /// Asynchronously reads an array of unsigned bytes of the specified length.
+        /// Reads an array of unsigned bytes of the specified length.
         /// </summary>
         /// <param name="length">The length.</param>
         /// <returns>An array of unsigned bytes.</returns>
-        Task<byte[]> ReadBytesAsync( int length );
+        byte[] ReadBytes( int length );
     }
 }

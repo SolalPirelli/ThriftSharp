@@ -21,13 +21,15 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static async Task<object> SendMessageAsync( IThriftProtocol protocol, ThriftMethod method, params object[] args )
         {
-            await ThriftMessageWriter.WriteAsync( protocol, method, args );
+            ThriftMessageWriter.Write( protocol, method, args );
+            await protocol.FlushAndReadAsync();
 
             if ( method.IsOneWay )
             {
                 return null;
             }
-            return await ThriftMessageReader.ReadAsync( protocol, method );
+
+            return ThriftMessageReader.Read( protocol, method );
         }
 
 

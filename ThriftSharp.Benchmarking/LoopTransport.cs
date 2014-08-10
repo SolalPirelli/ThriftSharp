@@ -18,18 +18,18 @@ namespace ThriftSharp.Benchmarking
         private MemoryStream _memory;
         private bool _isReading = true;
 
-        public Task<byte> ReadByteAsync()
+        public byte ReadByte()
         {
             CheckRead();
-            return Task.FromResult( (byte) _memory.ReadByte() );
+            return (byte) _memory.ReadByte();
         }
 
-        public Task<byte[]> ReadBytesAsync( int length )
+        public byte[] ReadBytes( int length )
         {
             CheckRead();
             byte[] buffer = new byte[length];
             _memory.Read( buffer, 0, length );
-            return Task.FromResult( buffer );
+            return buffer;
         }
 
         public void WriteByte( byte b )
@@ -44,7 +44,7 @@ namespace ThriftSharp.Benchmarking
             _memory.Write( bytes, 0, bytes.Length );
         }
 
-        public Task FlushAsync()
+        public Task FlushAndReadAsync()
         {
             return CompletedTask;
         }

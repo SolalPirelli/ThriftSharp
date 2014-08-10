@@ -92,7 +92,7 @@ namespace ThriftSharp
         /// </summary>
         internal static ThriftParsingException UnknownValueType( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( "The type '{0}' is a value type, but it is not known by Thrift#."
+            return new ThriftParsingException( "The type '{0}' is an user-defined value type."
                                              + Environment.NewLine
                                              + "The only available value types are Thrift primitive types and nullable types."
                                              + Environment.NewLine
@@ -203,9 +203,9 @@ namespace ThriftSharp
         /// </summary>
         internal static ThriftParsingException SynchronousMethod( MethodInfo methodInfo )
         {
-            return new ThriftParsingException( "The method '{0}' does not return a Task or Task<T>."
+            return new ThriftParsingException( "The method '{0}' is two-way, but does not return a Task or Task<T>."
                                              + Environment.NewLine
-                                             + "Only asynchronous methods are supported. Please wrap the return type in a Task.",
+                                             + "Only asynchronous calls are supported for two-way methods. Please wrap the return type in a Task.",
                                                methodInfo.Name );
         }
 
@@ -252,7 +252,7 @@ namespace ThriftSharp
         }
 
         /// <summary>
-        /// Creates a ThriftSerializationException indicating a required field was null during deserialization.
+        /// Creates a ThriftSerializationException indicating a required field was not present during deserialization.
         /// </summary>
         internal static ThriftSerializationException MissingRequiredField( string structName, string fieldName )
         {

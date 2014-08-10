@@ -28,7 +28,8 @@ namespace ThriftSharp.Transport
         private readonly int _timeout;
 
         private readonly MemoryStream _outputStream;
-        private Stream _inputStream;
+        private byte[] _receivedBytes;
+        private int _receivedBytesIndex;
 
 
         /// <summary>
@@ -50,30 +51,33 @@ namespace ThriftSharp.Transport
 
 
         /// <summary>
-        /// Asynchronously eads an unsigned byte.
+        /// Reads an unsigned byte.
         /// </summary>
         /// <returns>An unsigned byte.</returns>
-        public async Task<byte> ReadByteAsync()
+        public byte ReadByte()
         {
-            if ( await _inputStream.ReadAsync( OneByteBuffer, 0, 1, _token ) != 1 )
+            if ( _receivedBytesIndex == _receivedBytes.Length )
             {
                 throw new InvalidOperationException( "There are no bytes left to be read." );
             }
-            return OneByteBuffer[0];
+            return _receivedBytes[_receivedBytesIndex++];
         }
 
         /// <summary>
-        /// Asynchronously reads an array of unsigned bytes of the specified length.
+        /// Reads an array of unsigned bytes of the specified length.
         /// </summary>
         /// <param name="length">The length.</param>
         /// <returns>An array of unsigned bytes.</returns>
-        public async Task<byte[]> ReadBytesAsync( int length )
+        public byte[] ReadBytes( int length )
         {
-            byte[] buffer = new byte[length];
-            if ( await _inputStream.ReadAsync( buffer, 0, length, _token ) != length )
+            if ( _receivedBytesIndex + length >= _receivedBytes.Length )
             {
-                throw new InvalidOperationException( "There are not enough bytes to be read." );
+                throw new InvalidOperationException( "There are not enough bytes left to be read." );
             }
+
+            byte[] buffer = new byte[length];
+            Array.Copy( _receivedBytes, _receivedBytesIndex, buffer, 0, length );
+            _receivedBytesIndex += length;
             return buffer;
         }
 
@@ -97,9 +101,9 @@ namespace ThriftSharp.Transport
 
 
         /// <summary>
-        /// Asynchronously flushes the written bytes.
+        /// Asynchronously flushes the written bytes, and reads all input bytes in advance.
         /// </summary>
-        public async Task FlushAsync()
+        public async Task FlushAndReadAsync()
         {
             _token.ThrowIfCancellationRequested();
 
@@ -123,7 +127,13 @@ namespace ThriftSharp.Transport
             _outputStream.Dispose();
 
             var response = await TaskEx.FromAsync( request.BeginGetResponse, request.EndGetResponse, _timeout, _token );
-            _inputStream = response.GetResponseStream();
+
+            using ( var responseStream = new MemoryStream() )
+            {
+                await response.GetResponseStream().CopyToAsync( responseStream );
+                _receivedBytes = responseStream.ToArray();
+                _receivedBytesIndex = 0;
+            }
         }
 
         #region IDisposable implementation
@@ -153,10 +163,6 @@ namespace ThriftSharp.Transport
             if ( _outputStream != null )
             {
                 _outputStream.Dispose();
-            }
-            if ( _inputStream != null )
-            {
-                _inputStream.Dispose();
             }
         }
         #endregion

@@ -14,104 +14,104 @@ namespace ThriftSharp.Protocols
     internal interface IThriftProtocol : IDisposable
     {
         /// <summary>
-        /// Asynchronously reads a message header.
+        /// Reads a message header.
         /// </summary>
-        Task<ThriftMessageHeader> ReadMessageHeaderAsync();
+        ThriftMessageHeader ReadMessageHeader();
 
         /// <summary>
-        /// Asynchronously reads an end-of-message token.
+        /// Reads an end-of-message token.
         /// </summary>
-        Task ReadMessageEndAsync();
+        void ReadMessageEnd();
 
         /// <summary>
-        /// Asynchronously reads a struct header.
+        /// Reads a struct header.
         /// </summary>
-        Task<ThriftStructHeader> ReadStructHeaderAsync();
+        ThriftStructHeader ReadStructHeader();
 
         /// <summary>
-        /// Asynchronously reads an end-of-struct token.
+        /// Reads an end-of-struct token.
         /// </summary>
-        Task ReadStructEndAsync();
+        void ReadStructEnd();
 
         /// <summary>
-        /// Asynchronously reads a field header, or returns null if an end-of-field token was encountered.
+        /// Reads a field header, or returns null if an end-of-field token was encountered.
         /// </summary>
-        Task<ThriftFieldHeader> ReadFieldHeaderAsync();
+        ThriftFieldHeader ReadFieldHeader();
 
         /// <summary>
-        /// Asynchronously reads an end-of-field token.
+        /// Reads an end-of-field token.
         /// </summary>
-        Task ReadFieldEndAsync();
+        void ReadFieldEnd();
 
         /// <summary>
-        /// Asynchronously reads a list header.
+        /// Reads a list header.
         /// </summary>
-        Task<ThriftCollectionHeader> ReadListHeaderAsync();
+        ThriftCollectionHeader ReadListHeader();
 
         /// <summary>
-        /// Asynchronously reads an end-of-list token.
+        /// Reads an end-of-list token.
         /// </summary>
-        Task ReadListEndAsync();
+        void ReadListEnd();
 
         /// <summary>
-        /// Asynchronously reads a set header.
+        /// Reads a set header.
         /// </summary>
-        Task<ThriftCollectionHeader> ReadSetHeaderAsync();
+        ThriftCollectionHeader ReadSetHeader();
 
         /// <summary>
-        /// Asynchronously reads an end-of-set token.
+        /// Reads an end-of-set token.
         /// </summary>
-        Task ReadSetEndAsync();
+        void ReadSetEnd();
 
         /// <summary>
-        /// Asynchronously reads a map header.
+        /// Reads a map header.
         /// </summary>
-        Task<ThriftMapHeader> ReadMapHeaderAsync();
+        ThriftMapHeader ReadMapHeader();
 
         /// <summary>
-        /// Asynchronously reads an end-of-map token.
+        /// Reads an end-of-map token.
         /// </summary>
-        Task ReadMapEndAsync();
+        void ReadMapEnd();
 
         /// <summary>
-        /// Asynchronously reads a boolean value.
+        /// Reads a boolean value.
         /// </summary>
-        Task<bool> ReadBooleanAsync();
+        bool ReadBoolean();
 
         /// <summary>
-        /// Asynchronously reads a signed byte.
+        /// Reads a signed byte.
         /// </summary>
-        Task<sbyte> ReadSByteAsync();
+        sbyte ReadSByte();
 
         /// <summary>
-        /// Asynchronously reads an IEEE 754 double-precision floating-point number.
+        /// Reads an IEEE 754 double-precision floating-point number.
         /// </summary>
-        Task<double> ReadDoubleAsync();
+        double ReadDouble();
 
         /// <summary>
-        /// Asynchronously reads a 16-bit integer.
+        /// Reads a 16-bit integer.
         /// </summary>
-        Task<short> ReadInt16Async();
+        short ReadInt16();
 
         /// <summary>
-        /// Asynchronously reads a 32-bit integer.
+        /// Reads a 32-bit integer.
         /// </summary>
-        Task<int> ReadInt32Async();
+        int ReadInt32();
 
         /// <summary>
-        /// Asynchronously reads a 64-bit integer.
+        /// Reads a 64-bit integer.
         /// </summary>
-        Task<long> ReadInt64Async();
+        long ReadInt64();
 
         /// <summary>
-        /// Asynchronously reads a string.
+        /// Reads a string.
         /// </summary>
-        Task<string> ReadStringAsync();
+        string ReadString();
 
         /// <summary>
-        /// Asynchronously reads an array of signed bytes.
+        /// Reads an array of signed bytes.
         /// </summary>
-        Task<sbyte[]> ReadBinaryAsync();
+        sbyte[] ReadBinary();
 
 
         /// <summary>
@@ -220,8 +220,8 @@ namespace ThriftSharp.Protocols
         void WriteBinary( sbyte[] value );
 
         /// <summary>
-        /// Asynchronously flushes the written data.
+        /// Asynchronously flushes the written data, and reads all input in advance.
         /// </summary>
-        Task FlushAsync();
+        Task FlushAndReadAsync();
     }
 }
