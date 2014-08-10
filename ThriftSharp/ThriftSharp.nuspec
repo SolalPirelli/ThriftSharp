@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<package>
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <projectUrl>https://github.com/SolalPirelli/ThriftSharp</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <copyright>Copyright $author$ 2014</copyright>
+    <tags>MVVM</tags>
+  </metadata>
+</package>

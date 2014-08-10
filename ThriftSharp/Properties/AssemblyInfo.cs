@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle( "Thrift#" )]
 [assembly: AssemblyDescription( "An attribute-based, IDL-less Thrift client for .NET" )]
+[assembly: AssemblyCompany( "Solal Pirelli" )]
 [assembly: AssemblyCopyright( "Copyright © Solal Pirelli 2014" )]
 [assembly: NeutralResourcesLanguage( "en" )]
 
