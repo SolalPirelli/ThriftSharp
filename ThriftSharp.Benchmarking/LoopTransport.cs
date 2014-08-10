@@ -49,6 +49,11 @@ namespace ThriftSharp.Benchmarking
             return CompletedTask;
         }
 
+        public void Reset()
+        {
+            _memory.Seek( 0, SeekOrigin.Begin );
+        }
+
         public void Dispose()
         {
             _memory.Dispose();
