@@ -4,6 +4,9 @@
 *.suo
 *.user
 
+# NuGet packages
+[Pp]ackages/
+
 # Build results
 [Dd]ebug/
 [Rr]elease/
