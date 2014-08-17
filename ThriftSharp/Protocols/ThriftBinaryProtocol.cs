@@ -400,10 +400,10 @@ namespace ThriftSharp.Protocols
         /// <summary>
         /// Writes the specified array of signed bytes, leading it with its length as a 32-bit integer.
         /// </summary>
-        public void WriteBinary( sbyte[] bytes )
+        public void WriteBinary( sbyte[] value )
         {
-            WriteInt32( bytes.Length );
-            _transport.WriteBytes( (byte[]) (Array) bytes );
+            WriteInt32( value.Length );
+            _transport.WriteBytes( (byte[]) (Array) value );
         }
 
         /// <summary>
