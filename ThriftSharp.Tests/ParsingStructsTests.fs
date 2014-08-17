@@ -141,8 +141,8 @@ let failsOn<'T> =
 [<TestContainer>]
 type __() =
     // Errors should be thrown when parsing structs without Thrift fields
-    [<Test>] member __.``No fields``() =        failsOn<StructWithoutFields>
-    [<Test>] member __.``No Thrift fields``() = failsOn<StructWithOnlyUnmarkedFields>
+    [<Test>] member __.``Error on no fields``() =        failsOn<StructWithoutFields>
+    [<Test>] member __.``Error on no Thrift fields``() = failsOn<StructWithOnlyUnmarkedFields>
 
     // Required fields of primitive types should be parsed correctly
     [<Test>] member __.``Boolean required field``() = ok typeof<bool> true
