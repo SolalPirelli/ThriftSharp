@@ -6,7 +6,6 @@ namespace ThriftSharp.Tests
 
 open System.Collections.Generic
 open System.Threading.Tasks
-open ThriftSharp
 open ThriftSharp.Protocols
 open ThriftSharp.Internals
 

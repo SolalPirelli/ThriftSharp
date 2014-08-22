@@ -6,9 +6,7 @@ module ThriftSharp.Tests.``Serialized and deserialized``
 
 open System.Collections.Generic
 open System.Linq
-open System.Reflection
 open ThriftSharp
-open ThriftSharp.Internals
 open ThriftSharp.Protocols
 
 [<ThriftEnum>]
