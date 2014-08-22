@@ -6,11 +6,11 @@
 module ThriftSharp.Tests.Utils
 
 open System
+open System.Collections
 open System.Collections.Generic
 open System.Reflection
 open System.Reflection.Emit
 open System.Threading
-open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.VisualStudio.TestTools.UnitTesting
 open Linq.QuotationEvaluation
@@ -33,11 +33,28 @@ let dict (vals: ('a * 'b) seq) =
         dic.Add(k, v)
     dic
 
-let (<=>) (act:'a) (exp:'a) =
-    if act <> exp then Assert.Fail(sprintf "Expected: %A%sActual: %A" exp Environment.NewLine act)
+let private seqEqualsMethod = typeof<System.Linq.Enumerable>.GetMethods(BindingFlags.Public ||| BindingFlags.Static)
+                           |> Seq.filter (fun m -> m.Name = "SequenceEqual")
+                           |> Seq.sortBy (fun m -> m.GetParameters().Length)
+                           |> Seq.head
 
-let (<===>) (act:'a seq) (exp:'a seq) =
-    CollectionAssert.AreEqual(List(act), List(exp))
+
+let rec private eq (act: obj) (exp: obj) =
+    if act :? IEnumerable then
+        let act = (act :?> IEnumerable).GetEnumerator()
+        let exp = (exp :?> IEnumerable).GetEnumerator()
+        
+        let rec eqEnum (act: IEnumerator) (exp: IEnumerator) =
+            if act.MoveNext() then exp.MoveNext() && eq act.Current exp.Current && eqEnum act exp
+            else not (exp.MoveNext())
+
+        eqEnum act exp
+               
+    else act = exp
+
+/// Ensures both objects are equal, comparing for collection or reference equality (not structural!)
+let (<=>) (act: 'a) (exp: 'a) =
+    if not (eq act exp) then Assert.Fail(sprintf "Expected: %A%sActual: %A" exp Environment.NewLine act)
 
 let throws<'T when 'T :> Exception> func =
     try
@@ -115,14 +132,14 @@ let makeClass structAttrs propsAndAttrs =
         let fieldBuilder = typeBuilder.DefineField("_" + name, typ, FieldAttributes.Private)
 
         // getter
-        let getterBuilder = typeBuilder.DefineMethod("get_" + name, MethodAttributes.Public ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig)
+        let getterBuilder = typeBuilder.DefineMethod("get_" + name, MethodAttributes.Public ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, typ, [| |])
         let getterIL = getterBuilder.GetILGenerator()
         getterIL.Emit(OpCodes.Ldarg_0)
         getterIL.Emit(OpCodes.Ldfld, fieldBuilder)
         getterIL.Emit(OpCodes.Ret)
         
         // setter
-        let setterBuilder = typeBuilder.DefineMethod("set_" + name, MethodAttributes.Public ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig)
+        let setterBuilder = typeBuilder.DefineMethod("set_" + name, MethodAttributes.Public ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, null, [| typ |])
         let setterIL = setterBuilder.GetILGenerator()
         setterIL.Emit(OpCodes.Ldarg_0)
         setterIL.Emit(OpCodes.Ldarg_1)

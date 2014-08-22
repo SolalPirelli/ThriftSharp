@@ -42,7 +42,7 @@ let (==>) ((readData, meth), resultCheck) writtenData = run <| async {
     let! result = meth(impl) |> Async.AwaitTask
     resultCheck result
 
-    m.WrittenValues <===> writtenData
+    m.WrittenValues <=> writtenData
 }
 
 let (-->) (readData, meth) writtenData = run <| async {
@@ -52,7 +52,7 @@ let (-->) (readData, meth) writtenData = run <| async {
 
     let! result = meth(impl) |> Async.AwaitIAsyncResult
 
-    m.WrittenValues <===> writtenData
+    m.WrittenValues <=> writtenData
 }
 
 
@@ -115,7 +115,7 @@ type __() =
         --
         fun s -> s.Complex("abc", 123.4, [|1; 2|])
         --
-        fun res -> res <===> ["the cake";"is";"a lie"]
+        fun res -> res <=> List(["the cake";"is";"a lie"])
         ==>
         [MessageHeader (0, "Complex", ThriftMessageType.Call)
          StructHeader ""

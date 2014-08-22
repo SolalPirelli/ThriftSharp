@@ -73,10 +73,10 @@ let ok argTypes retType isOneWay thrownExns =
     
     thriftService.Methods.Count <=> 1
     thriftService.Methods.[0].Name <=> methodName
-    thriftService.Methods.[0].Parameters |> List.ofSeq |> List.map (fun p -> p.TypeInfo.AsType()) <===> argTypes
+    thriftService.Methods.[0].Parameters |> List.ofSeq |> List.map (fun p -> p.TypeInfo.AsType()) <=> argTypes
     thriftService.Methods.[0].ReturnType <=> ReflectionEx.UnwrapTask( retType )
     thriftService.Methods.[0].IsOneWay <=> isOneWay
-    thriftService.Methods.[0].Exceptions |> List.ofSeq |> List.map (fun e -> e.ExceptionTypeInfo.AsType()) <===> thrownExns
+    thriftService.Methods.[0].Exceptions |> List.ofSeq |> List.map (fun e -> e.ExceptionTypeInfo.AsType()) <=> thrownExns
 
 let fails argTypes retType isOneWay thrownExns =
     let throwsClauses = thrownExns 
@@ -103,10 +103,10 @@ type __() =
     [<Test>] member __.``Error when interface isn't a service``() = failsOn<UnmarkedService>
 
     // Errors should be thrown when parsing services without methods
-    [<Test>] member __.``No methods``() = failsOn<EmptyService>
+    [<Test>] member __.``Error on no methods``() = failsOn<EmptyService>
 
     // Errors should be thrown when parsing services with non-Thrift methods
-    [<Test>] member __.``Non-Thrift methods``() = failsOn<ServiceWithUnmarkedMethod>
+    [<Test>] member __.``Error on non-Thrift methods``() = failsOn<ServiceWithUnmarkedMethod>
     
     // Errors should be thrown when parsing services with methods with unmarked parameters
     [<Test>] member __.``Error on unmarked method parameter``() = failsOn<ServiceWithUnmarkedMethodParameter>

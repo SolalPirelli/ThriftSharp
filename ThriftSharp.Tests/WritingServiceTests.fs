@@ -33,7 +33,7 @@ let (--) a b = a,b
 
 let (==>) (methodName, args) data = run <| async {
     let! m = writeMsgAsync<Service> methodName (Array.ofSeq args)
-    m.WrittenValues <===> data
+    m.WrittenValues <=> data
 }
 
 let throwsOnWrite<'T when 'T :> System.Exception> methodName args = run <| async {

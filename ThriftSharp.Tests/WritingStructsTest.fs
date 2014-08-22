@@ -79,7 +79,7 @@ type StructWithNullableField() =
 let (==>) obj data =
     let m = MemoryProtocol()
     write m obj
-    m.WrittenValues <===> data
+    m.WrittenValues <=> data
 
 let throws<'E when 'E :> System.Exception> obj =
     throwsAsync<'E>(fun () -> async { write (MemoryProtocol()) obj; return System.Object() }) |> run

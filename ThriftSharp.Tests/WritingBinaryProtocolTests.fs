@@ -11,7 +11,7 @@ open ThriftSharp.Protocols
 let (==>) write res =
     let trans = MemoryTransport()
     write(ThriftBinaryProtocol(trans))
-    trans.WrittenValues <===> (res |> List.map byte)
+    trans.WrittenValues <=> (res |> List.map byte)
 
 
 [<TestContainer>]

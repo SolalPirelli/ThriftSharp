@@ -229,7 +229,7 @@ type __() =
         parse<StructWithSelfReference>.Fields |> Seq.sortBy (fun f -> f.Header.Id) 
                                               |> Seq.map (fun f -> f.Header.FieldType.TypeInfo.AsType())
                                               |> List.ofSeq
-        <===>
+        <=>
         [ typeof<StructWithSelfReference>
           typeof<List<StructWithSelfReference>>
           typeof<Dictionary<StructWithSelfReference,StructWithSelfReference>> ]
