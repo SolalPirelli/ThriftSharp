@@ -25,19 +25,13 @@ let tid (n: int) = byte n |> LanguagePrimitives.EnumOfValue
 let utcDate(dd, mm, yyyy) = DateTime(yyyy, mm, dd, 00, 00, 00, DateTimeKind.Utc)
 
 // Use Nullable without having to open System (because of conflicts with e.g. Int32 in memory protocol) or use the long notation
-let nullable x = System.Nullable(x)
+let nullable x = Nullable(x)
 
 let dict (vals: ('a * 'b) seq) =
     let dic = Dictionary()
     for (k,v) in vals do
         dic.Add(k, v)
     dic
-
-let private seqEqualsMethod = typeof<System.Linq.Enumerable>.GetMethods(BindingFlags.Public ||| BindingFlags.Static)
-                           |> Seq.filter (fun m -> m.Name = "SequenceEqual")
-                           |> Seq.sortBy (fun m -> m.GetParameters().Length)
-                           |> Seq.head
-
 
 let rec private eq (act: obj) (exp: obj) =
     if act :? IEnumerable then
@@ -56,7 +50,7 @@ let rec private eq (act: obj) (exp: obj) =
 let (<=>) (act: 'a) (exp: 'a) =
     if not (eq act exp) then Assert.Fail(sprintf "Expected: %A%sActual: %A" exp Environment.NewLine act)
 
-let throws<'T when 'T :> Exception> func =
+let throws<'T when 'T :> exn> func =
     try
         func() |> ignore
         Assert.Fail("Expected an exception, but none was thrown.")
@@ -68,20 +62,20 @@ let throws<'T when 'T :> Exception> func =
         Assert.Fail(sprintf "Expected an exception of type %A, but got one of type %A (message: %s)" typeof<'T> (ex.GetType()) ex.Message)
         Unchecked.defaultof<'T>
 
-
-let throwsAsync<'T when 'T :> Exception> func = async {
-    try
-        // BUG: This should be asynchronous, but I can't find a way to catch all exceptions it throws...
-        func() |> Async.RunSynchronously |> ignore
-        Assert.Fail("Expected an exception, but none was thrown.")
-        return Unchecked.defaultof<'T>
-    with
-    | ex -> match (match ex with :? AggregateException -> ex.InnerException | _ -> ex) with
-            | ex when typeof<'T>.IsAssignableFrom(ex.GetType()) -> 
-                return ex :?> 'T
-            | ex -> 
-                Assert.Fail(sprintf "Expected an exception of type %A, but got one of type %A (message: %s)" typeof<'T> (ex.GetType()) ex.Message)
-                return Unchecked.defaultof<'T>
+let throwsAsync<'T when 'T :> exn> func = async {
+    let exn = ref (Unchecked.defaultof<'T>)
+    // can't use Async.Catch since it doesn't handle cancellation
+    Async.StartWithContinuations(
+        func(),
+        (fun _ -> Assert.Fail("Expected an exception, but none was thrown.")),
+        (function
+         | e when typeof<'T>.IsAssignableFrom(e.GetType()) -> 
+             exn := e :?> 'T
+         | e -> 
+             Assert.Fail(sprintf "Expected an %A, got an %A (message: %s)" typeof<'T> (e.GetType()) e.Message)),
+        (fun _ -> if typeof<'T> <> typeof<OperationCanceledException> then
+                     Assert.Fail(sprintf "Expected an %A, got an OperationCanceledException." typeof<'T>))
+    )
 }
 
 let run x = x |> Async.Ignore |> Async.RunSynchronously
@@ -106,7 +100,7 @@ let writeMsgAsync<'T> methodName args = async {
                             StructEnd
                             MessageEnd])
     let svc = ThriftAttributesParser.ParseService(typeof<'T>.GetTypeInfo())
-    let! res = Thrift.CallMethodAsync(ThriftCommunication(m), svc, methodName, args) |> Async.AwaitTask
+    do! Thrift.CallMethodAsync(ThriftCommunication(m), svc, methodName, args) |> Async.AwaitTask |> Async.Ignore
     return m
 }
 

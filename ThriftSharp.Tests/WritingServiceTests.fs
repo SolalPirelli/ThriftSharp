@@ -36,8 +36,8 @@ let (==>) (methodName, args) data = run <| async {
     m.WrittenValues <=> data
 }
 
-let throwsOnWrite<'T when 'T :> System.Exception> methodName args = run <| async {
-    do! throwsAsync<'T> (fun () -> 
+let fails<'E when 'E :> exn> methodName args = run <| async {
+    do! throwsAsync<'E> (fun () -> 
         async {
             let! res = writeMsgAsync<Service> methodName (Array.ofSeq args)
             return box res
@@ -124,8 +124,8 @@ type __() =
 
     [<Test>]
     member __.``ArgumentException is thrown when there are too few params``() =
-        throwsOnWrite<System.ArgumentException> "OneParameter" []
+        fails<System.ArgumentException> "OneParameter" []
         
     [<Test>]
     member __.``ArgumentException is thrown when there are too many params``() =
-        throwsOnWrite<System.ArgumentException> "OneParameter" [1; 2]
+        fails<System.ArgumentException> "OneParameter" [1; 2]

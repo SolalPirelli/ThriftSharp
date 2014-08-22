@@ -55,8 +55,8 @@ let (==>) obj data =
     write m obj
     m.WrittenValues <=> data
 
-let throws<'E when 'E :> System.Exception> obj =
-    throwsAsync<'E>(fun () -> async { write (MemoryProtocol()) obj; return System.Object() }) |> run
+let fails obj =
+    throwsAsync<ThriftSerializationException>(fun () -> async { write (MemoryProtocol()) obj; return System.Object() }) |> run
 
 
 [<TestContainer>]
@@ -85,7 +85,7 @@ type __() =
     // Other, more specialized, tests
     [<Test>]
     member __.``Error on required but unset struct field``() =
-        throws<ThriftSerializationException> (StructWithStructField())
+        fails (StructWithStructField())
 
     [<Test>]
     member __.``UnixDate converter``() =
