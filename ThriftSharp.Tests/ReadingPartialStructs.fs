@@ -26,9 +26,9 @@ let (==>) data (checker: 'a -> unit) =
     m.IsEmpty <=> true
     checker inst
 
-let throwsOnRead<'S, 'T when 'T :> exn> data =
+let fails<'S> data =
     let m = MemoryProtocol(data)
-    throws<'T> (fun () -> read<'S> m |> box) |> ignore
+    throws<ThriftSerializationException> (fun () -> read<'S> m |> box) |> ignore
 
 
 [<TestContainer>]
@@ -47,8 +47,8 @@ type __() =
             inst.Optional <=> nullable 2
 
     [<Test>]
-    member __.``Missing required field``() =
-        throwsOnRead<StructWithOptionalFields, ThriftSerializationException>
+    member __.``Error on missing required field``() =
+        fails<StructWithOptionalFields>
             [StructHeader "OptionalFields"
              FieldHeader (2s, "Optional", tid 8)
              Int32 10
