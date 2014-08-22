@@ -102,30 +102,27 @@ type __() =
     [<Test>] member __.``List, empty``() =  [ListHeader (0, tid 8); ListEnd]                              -- 15 --> List<int>()
     [<Test>] member __.``Set``() =          [SetHeader (1, tid 8); Int32 1; SetEnd]                       -- 14 --> HashSet([1])
     [<Test>] member __.``Set, empty``() =   [SetHeader (0, tid 8); SetEnd]                                -- 14 --> HashSet<int>()
-    [<Test>] member __.``Map``() =          [MapHeader (1, tid 8, tid 11); Int32 1; String "x"; MapEnd] -- 13 --> dict([1, "x"])
-    [<Test>] member __.``Map, empty``() =   [MapHeader (0, tid 8, tid 11); MapEnd]                      -- 13 --> Dictionary<int, string>()
+    [<Test>] member __.``Map``() =          [MapHeader (1, tid 8, tid 11); Int32 1; String "x"; MapEnd]   -- 13 --> dict([1, "x"])
+    [<Test>] member __.``Map, empty``() =   [MapHeader (0, tid 8, tid 11); MapEnd]                        -- 13 --> Dictionary<int, string>()
     [<Test>] member __.``Array``() =        [ListHeader (1, tid 8); Int32 1; ListEnd]                     -- 15 --> [| 1 |]
     [<Test>] member __.``Array, empty``() = [ListHeader (0, tid 8); ListEnd]                              -- 15 --> Array.empty<int>
 
-
-    // Other special cases
-
+    // Struct field
     [<Test>]
     member __.``Struct``() =
-        [StructHeader "StructField"
-         FieldHeader (1s, "Field", tid 12)
-         StructHeader "SimpleStruct"
+        [StructHeader "SimpleStruct"
          FieldHeader (1s, "Field", tid 8)
          Int32 1
          FieldEnd
          FieldStop
-         StructEnd
-         FieldEnd
-         FieldStop
          StructEnd]
-        ==>
-        fun (inst: StructWithStructField) ->
-            inst.Field.Field = 1
+        --
+        12
+        -->
+        SimpleStruct(Field = 1)
+
+
+    // Other special cases
 
     [<Test>]
     member __.``Converted``() =
@@ -172,6 +169,8 @@ type __() =
         ==>
         fun (inst: StructWithNullableFieldWithDefault) ->
             inst.Field <=> nullable 42
+
+    // Type mismatch errors
 
     [<Test>]
     member __.``ThriftSerializationException is thrown when the field type doesn't match its declaration``() =

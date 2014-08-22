@@ -11,6 +11,7 @@ open System.Collections.Generic
 open System.Reflection
 open System.Reflection.Emit
 open System.Threading
+open Microsoft.FSharp.Reflection
 open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.VisualStudio.TestTools.UnitTesting
 open Linq.QuotationEvaluation
@@ -33,8 +34,12 @@ let dict (vals: ('a * 'b) seq) =
         dic.Add(k, v)
     dic
 
-let rec private eq (act: obj) (exp: obj) =
-    if act :? IEnumerable then
+
+let rec private eq (act: obj) (exp: obj) = // can safely assume act and exp are of the same type
+    System.Diagnostics.Debug.WriteLine(sprintf "%A ||| %A" act exp)
+    if act = null then
+        exp = null
+    elif not (act :? string) && act :? IEnumerable then
         let act = (act :?> IEnumerable).GetEnumerator()
         let exp = (exp :?> IEnumerable).GetEnumerator()
         
@@ -43,10 +48,15 @@ let rec private eq (act: obj) (exp: obj) =
             else not (exp.MoveNext())
 
         eqEnum act exp
-               
-    else act = exp
+    elif FSharpType.IsUnion(act.GetType()) then
+        act = exp
+    elif act.GetType().Assembly = Assembly.GetExecutingAssembly() then
+        act.GetType().GetProperties()
+     |> Seq.forall (fun p -> eq (p.GetValue(act)) (p.GetValue(exp)))
+    else
+        Object.Equals(exp, act)
 
-/// Ensures both objects are equal, comparing for collection or reference equality (not structural!)
+/// Ensures both objects are equal, comparing for collection, reference or structural equality
 let (<=>) (act: 'a) (exp: 'a) =
     if not (eq act exp) then Assert.Fail(sprintf "Expected: %A%sActual: %A" exp Environment.NewLine act)
 
