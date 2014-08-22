@@ -92,7 +92,7 @@ type __() =
         StructWithOneField( Field = 42 )
         ==>
         [StructHeader "OneField"
-         FieldHeader (1s, "Field", tid 8uy)
+         FieldHeader (1s, "Field", tid 8)
          Int32 42
          FieldEnd
          FieldStop
@@ -103,28 +103,28 @@ type __() =
         StructWithManyPrimitiveFields()
         ==>
         [StructHeader "ManyPrimitiveFields"
-         FieldHeader (1s, "BoolField", tid 2uy)
+         FieldHeader (1s, "BoolField", tid 2)
          Bool true
          FieldEnd
-         FieldHeader (2s, "SByteField", tid 3uy)
+         FieldHeader (2s, "SByteField", tid 3)
          SByte 1y
          FieldEnd
-         FieldHeader (3s, "DoubleField", tid 4uy)
+         FieldHeader (3s, "DoubleField", tid 4)
          Double 1.0
          FieldEnd
-         FieldHeader (4s, "Int16Field", tid 6uy)
+         FieldHeader (4s, "Int16Field", tid 6)
          Int16 1s
          FieldEnd
-         FieldHeader (5s, "Int32Field", tid 8uy)
+         FieldHeader (5s, "Int32Field", tid 8)
          Int32 1
          FieldEnd
-         FieldHeader (6s, "Int64Field", tid 10uy)
+         FieldHeader (6s, "Int64Field", tid 10)
          Int64 1L
          FieldEnd
-         FieldHeader (7s, "StringField", tid 11uy)
+         FieldHeader (7s, "StringField", tid 11)
          String "abc"
          FieldEnd
-         FieldHeader (8s, "BinaryField", tid 11uy)
+         FieldHeader (8s, "BinaryField", tid 11)
          Binary [| 1y |]
          FieldEnd
          FieldStop
@@ -135,22 +135,22 @@ type __() =
         StructWithManyPrimitiveFields( Bool = false, SByte = 0y, Double = 0.0, Int16 = 0s, Int32 = 0, Int64 = 0L, String = null, Binary = null )
         ==>
         [StructHeader "ManyPrimitiveFields"
-         FieldHeader (1s, "BoolField", tid 2uy)
+         FieldHeader (1s, "BoolField", tid 2)
          Bool false
          FieldEnd
-         FieldHeader (2s, "SByteField", tid 3uy)
+         FieldHeader (2s, "SByteField", tid 3)
          SByte 0y
          FieldEnd
-         FieldHeader (3s, "DoubleField", tid 4uy)
+         FieldHeader (3s, "DoubleField", tid 4)
          Double 0.0
          FieldEnd
-         FieldHeader (4s, "Int16Field", tid 6uy)
+         FieldHeader (4s, "Int16Field", tid 6)
          Int16 0s
          FieldEnd
-         FieldHeader (5s, "Int32Field", tid 8uy)
+         FieldHeader (5s, "Int32Field", tid 8)
          Int32 0
          FieldEnd
-         FieldHeader (6s, "Int64Field", tid 10uy)
+         FieldHeader (6s, "Int64Field", tid 10)
          Int64 0L
          FieldEnd
          FieldStop
@@ -161,21 +161,21 @@ type __() =
         StructWithCollectionFields( List = List([4; 8; 15]), Set = HashSet([16; 23]), Map = dict([42, "Lost"]) )
         ==>
         [StructHeader "CollectionFields"
-         FieldHeader (1s, "ListField", tid 15uy)
-         ListHeader (3, tid 8uy)
+         FieldHeader (1s, "ListField", tid 15)
+         ListHeader (3, tid 8)
          Int32 4
          Int32 8
          Int32 15
          ListEnd
          FieldEnd
-         FieldHeader (2s, "SetField", tid 14uy)
-         SetHeader (2, tid 8uy)
+         FieldHeader (2s, "SetField", tid 14)
+         SetHeader (2, tid 8)
          Int32 16
          Int32 23
          SetEnd
          FieldEnd
-         FieldHeader (3s, "MapField", tid 13uy)
-         MapHeader (1, tid 8uy, tid 11uy)
+         FieldHeader (3s, "MapField", tid 13)
+         MapHeader (1, tid 8, tid 11)
          Int32 42
          String "Lost"
          MapEnd
@@ -188,9 +188,9 @@ type __() =
         StructWithStructField( Struct = StructWithOneField( Field = 777 ) )
         ==>
         [StructHeader "StructField"
-         FieldHeader (1s, "StructField", tid 12uy)
+         FieldHeader (1s, "StructField", tid 12)
          StructHeader "OneField"
-         FieldHeader (1s, "Field", tid 8uy)
+         FieldHeader (1s, "Field", tid 8)
          Int32 777
          FieldEnd
          FieldStop
@@ -208,10 +208,10 @@ type __() =
         StructWithEnumFields( Field1 = Enum.A, Field2 = nullable Enum.B )
         ==>
         [StructHeader "EnumFields"
-         FieldHeader (1s, "Field1", tid 8uy)
+         FieldHeader (1s, "Field1", tid 8)
          Int32 1
          FieldEnd
-         FieldHeader (2s, "Field2", tid 8uy)
+         FieldHeader (2s, "Field2", tid 8)
          Int32 3
          FieldEnd
          FieldStop
@@ -222,14 +222,14 @@ type __() =
         StructWithArrayFields( Field1 = [| 12345; 67890 |], Field2 = [| |] )
         ==>
         [StructHeader "ArrayFields"
-         FieldHeader (1s, "Field1", tid 15uy)
-         ListHeader (2, tid 8uy)
+         FieldHeader (1s, "Field1", tid 15)
+         ListHeader (2, tid 8)
          Int32 12345
          Int32 67890
          ListEnd
          FieldEnd
-         FieldHeader (2s, "Field2", tid 15uy)
-         ListHeader (0, tid 8uy)
+         FieldHeader (2s, "Field2", tid 15)
+         ListHeader (0, tid 8)
          ListEnd
          FieldEnd
          FieldStop
@@ -240,7 +240,7 @@ type __() =
         StructWithConvertingField( UnixDate = utcDate(18, 12, 1994) )
         ==>
         [StructHeader "ConvertingField"
-         FieldHeader (1s, "UnixDate", tid 8uy)
+         FieldHeader (1s, "UnixDate", tid 8)
          Int32 787708800
          FieldEnd
          FieldStop
@@ -259,7 +259,7 @@ type __() =
         StructWithNullableField( Field = nullable 112233 )
         ==>
         [StructHeader "NullableField"
-         FieldHeader (1s, "Field", tid 8uy)
+         FieldHeader (1s, "Field", tid 8)
          Int32 112233
          FieldEnd
          FieldStop

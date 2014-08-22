@@ -20,7 +20,7 @@ open ThriftSharp.Internals
 type TestAttribute = TestMethodAttribute
 type TestContainerAttribute = TestClassAttribute
 
-let tid = LanguagePrimitives.EnumOfValue
+let tid (n: int) = byte n |> LanguagePrimitives.EnumOfValue
 
 let utcDate(dd, mm, yyyy) = DateTime(yyyy, mm, dd, 00, 00, 00, DateTimeKind.Utc)
 

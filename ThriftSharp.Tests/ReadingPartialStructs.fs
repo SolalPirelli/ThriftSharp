@@ -36,7 +36,7 @@ type __() =
     [<Test>]
     member __.``Missing optional field``() = 
         [StructHeader "OptionalFields"
-         FieldHeader (1s, "Required", tid 8uy)
+         FieldHeader (1s, "Required", tid 8)
          Int32 10
          FieldEnd
          FieldStop
@@ -50,7 +50,7 @@ type __() =
     member __.``Missing required field``() =
         throwsOnRead<StructWithOptionalFields, ThriftSerializationException>
             [StructHeader "OptionalFields"
-             FieldHeader (2s, "Optional", tid 8uy)
+             FieldHeader (2s, "Optional", tid 8)
              Int32 10
              FieldEnd
              FieldStop
@@ -59,7 +59,7 @@ type __() =
     [<Test>]
     member __.``Present optional w/ default value field``() =
         [StructHeader "WithDefaultValue"
-         FieldHeader (1s, "Field", tid 8uy)
+         FieldHeader (1s, "Field", tid 8)
          Int32 789
          FieldEnd
          FieldStop

@@ -26,7 +26,7 @@ type __() =
     member __.``Asynchronous call``() = run <| async {
         let m = MemoryProtocol([MessageHeader (0, "", ThriftMessageType.Reply)
                                 StructHeader ""
-                                FieldHeader (0s, "", tid 11uy)
+                                FieldHeader (0s, "", tid 11)
                                 String "the result"
                                 FieldEnd
                                 FieldStop
