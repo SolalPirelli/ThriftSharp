@@ -43,9 +43,10 @@ let (==>) (data, methodName) expected = run <| async {
     (reply :?> 'a) <=> expected
 }
 
-let (=//=>) (data, methodName) (checker: 'a -> unit) = run <| async {
+let (=//=>) (data, methodName) expected = run <| async {
     let m = MemoryProtocol(data)
-    return! throwsAsync<'a> (fun () -> readMsgAsync<Service> m methodName)
+    let! actual = throwsAsync<'a> (readMsgAsync<Service> m methodName)
+    actual <=> expected
 }
 
 
@@ -94,9 +95,7 @@ type __() =
         --
         "NoReply"
         =//=>
-        fun (ex: ThriftProtocolException) ->
-            ex.Message <=> "An error occured."
-            ex.ExceptionType <=> nullable ThriftProtocolExceptionType.InternalError
+        ThriftProtocolException(ThriftProtocolExceptionType.InternalError, Message = "An error occured.")
 
     [<Test>]
     member __.``No reply with exception declared, nothing received``() =
@@ -148,8 +147,7 @@ type __() =
         --
         "NoReplyWithException"
         =//=>
-        fun (ex: MyException) ->
-            ex.Code <=> 456
+        MyException(Code = 456)
 
     [<Test>]
     member __.``Reply expected, but none was received``() =
@@ -161,8 +159,7 @@ type __() =
         --
         "NoException"
         =//=>
-        fun (ex: ThriftProtocolException) ->
-            ex.ExceptionType <=> nullable ThriftProtocolExceptionType.MissingResult
+        ThriftProtocolException(ThriftProtocolExceptionType.MissingResult)
 
     [<Test>]
     member __.``Reply expected and received``() =
@@ -197,8 +194,7 @@ type __() =
         --
         "NoException"
         =//=>
-        fun (ex: ThriftProtocolException) ->
-            ex.ExceptionType <=> nullable ThriftProtocolExceptionType.MissingResult
+        ThriftProtocolException(ThriftProtocolExceptionType.MissingResult)
 
     [<Test>]
     member __.``Reply or exception expected, reply received``() =
@@ -233,8 +229,7 @@ type __() =
         --
         "WithException" 
         =//=>
-        fun (ex: MyException) ->
-            ex.Code <=> 4224
+        MyException(Code = 4224)
 
     [<Test>]
     member __.``UnixDate return type``() =

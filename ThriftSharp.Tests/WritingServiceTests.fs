@@ -36,13 +36,11 @@ let (==>) (methodName, args) data = run <| async {
     m.WrittenValues <=> data
 }
 
-let fails<'E when 'E :> exn> methodName args = run <| async {
-    do! throwsAsync<'E> (fun () -> 
-        async {
-            let! res = writeMsgAsync<Service> methodName (Array.ofSeq args)
-            return box res
-        }) |> Async.Ignore
-}
+let fails<'E when 'E :> exn> methodName args =
+    throwsAsync<'E> (async { 
+        let! res = writeMsgAsync<Service> methodName (Array.ofSeq args)
+        return box res
+    }) |> run
 
 
 [<TestContainer>]

@@ -54,7 +54,7 @@ namespace ThriftSharp.Internals
 
             var methodArgs = args.Where( a => !( a is CancellationToken ) ).ToArray();
 
-            return (T) await SendMessageAsync( protocol, method, methodArgs );
+            return (T) await SendMessageAsync( protocol, method, methodArgs ).ConfigureAwait( false );
         }
     }
 }

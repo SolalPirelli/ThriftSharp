@@ -73,7 +73,7 @@ namespace ThriftSharp.Internals
 
             if ( !Enum.IsDefined( typeof( ThriftMessageType ), header.MessageType ) )
             {
-                throw new ThriftProtocolException( ThriftProtocolExceptionType.InvalidMessageType, "The returned Thrift message type is invalid." );
+                throw new ThriftProtocolException( ThriftProtocolExceptionType.InvalidMessageType );
             }
             if ( header.MessageType == ThriftMessageType.Exception )
             {
@@ -95,7 +95,7 @@ namespace ThriftSharp.Internals
             {
                 return null;
             }
-            throw new ThriftProtocolException( ThriftProtocolExceptionType.MissingResult, "The result is missing." );
+            throw new ThriftProtocolException( ThriftProtocolExceptionType.MissingResult );
         }
     }
 }

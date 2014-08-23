@@ -44,7 +44,7 @@ namespace ThriftSharp.Protocols
                 uint version = (uint) size & VersionMask;
                 if ( version != Version1 )
                 {
-                    throw new ThriftProtocolException( ThriftProtocolExceptionType.InvalidProtocol, "Invalid protocol version: " + version );
+                    throw new ThriftProtocolException( ThriftProtocolExceptionType.InvalidProtocol );
                 }
 
                 var type = (ThriftMessageType) ( size & 0xFF );

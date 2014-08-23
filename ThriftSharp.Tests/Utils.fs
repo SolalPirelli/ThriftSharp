@@ -11,6 +11,7 @@ open System.Collections.Generic
 open System.Reflection
 open System.Reflection.Emit
 open System.Threading
+open System.Threading.Tasks
 open Microsoft.FSharp.Reflection
 open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.VisualStudio.TestTools.UnitTesting
@@ -36,7 +37,6 @@ let dict (vals: ('a * 'b) seq) =
         dic.Add(k, v)
     dic
 
-
 let rec private eq (act: obj) (exp: obj) = // can safely assume act and exp are of the same type
     if act = null then
         exp = null
@@ -49,10 +49,12 @@ let rec private eq (act: obj) (exp: obj) = // can safely assume act and exp are 
             else not (exp.MoveNext())
 
         eqEnum act exp
-    elif FSharpType.IsUnion(act.GetType()) then
+    elif FSharpType.IsUnion(act.GetType()) || act.GetType().IsEnum then
         act = exp
-    elif act.GetType().Assembly = Assembly.GetExecutingAssembly() then
+    // HACK
+    elif act.GetType().Assembly.FullName.Contains("ThriftSharp") then
         act.GetType().GetProperties()
+     |> Seq.filter (fun p -> p.DeclaringType = act.GetType())
      |> Seq.forall (fun p -> eq (p.GetValue(act)) (p.GetValue(exp)))
     else
         Object.Equals(exp, act)
@@ -73,21 +75,25 @@ let throws<'T when 'T :> exn> func =
         Assert.Fail(sprintf "Expected an exception of type %A, but got one of type %A (message: %s)" typeof<'T> (ex.GetType()) ex.Message)
         Unchecked.defaultof<'T>
 
-let throwsAsync<'T when 'T :> exn> func = async {
-    let exn = ref (Unchecked.defaultof<'T>)
-    // can't use Async.Catch since it doesn't handle cancellation
-    Async.StartWithContinuations(
-        func(),
-        (fun _ -> Assert.Fail("Expected an exception, but none was thrown.")),
-        (function
-         | e when typeof<'T>.IsAssignableFrom(e.GetType()) -> 
-             exn := e :?> 'T
-         | e -> 
-             Assert.Fail(sprintf "Expected an %A, got an %A (message: %s)" typeof<'T> (e.GetType()) e.Message)),
-        (fun _ -> if typeof<'T> <> typeof<OperationCanceledException> then
-                     Assert.Fail(sprintf "Expected an %A, got an OperationCanceledException." typeof<'T>))
+let throwsAsync<'T when 'T :> exn> func = 
+    Async.FromContinuations(fun (cont, _, _) ->
+        Async.StartWithContinuations(
+            func,
+            (fun _ -> Assert.Fail("Expected an exception, but none was thrown.")
+                      exit 0),
+            (fun e -> match (match e with :? AggregateException as e -> e.InnerException | _ -> e) with
+                      | e when typeof<'T>.IsAssignableFrom(e.GetType()) -> 
+                          cont (e :?> 'T)
+                      | e -> 
+                          Assert.Fail(sprintf "Expected an %A, got an %A (message: %s)" typeof<'T> (e.GetType()) e.Message)
+                          exit 0),
+            (fun e -> if typeof<'T> <> typeof<OperationCanceledException> then
+                          Assert.Fail(sprintf "Expected an %A, got an OperationCanceledException." typeof<'T>)
+                          exit 0
+                      else
+                          cont (box e :?> 'T))
+        )
     )
-}
 
 let run x = x |> Async.Ignore |> Async.RunSynchronously
 
@@ -99,10 +105,10 @@ let write prot obj =
     let thriftStruct = ThriftAttributesParser.ParseStruct(obj.GetType().GetTypeInfo())
     ThriftWriter.Write(thriftStruct, obj, prot)
 
-let readMsgAsync<'T> prot name = async {
+let readMsgAsync<'T> prot name =
     let svc = ThriftAttributesParser.ParseService(typeof<'T>.GetTypeInfo())
-    return! Thrift.CallMethodAsync(ThriftCommunication(prot), svc, name, [| |]) |> Async.AwaitTask
-}
+    Thrift.CallMethodAsync<obj>(ThriftCommunication(prot), svc, name, [| |]) |> Async.AwaitTask
+
 
 let writeMsgAsync<'T> methodName args = async {
     let m = MemoryProtocol([MessageHeader (0, "", ThriftMessageType.Reply)
@@ -111,7 +117,7 @@ let writeMsgAsync<'T> methodName args = async {
                             StructEnd
                             MessageEnd])
     let svc = ThriftAttributesParser.ParseService(typeof<'T>.GetTypeInfo())
-    do! Thrift.CallMethodAsync(ThriftCommunication(m), svc, methodName, args) |> Async.AwaitTask |> Async.Ignore
+    do! Thrift.CallMethodAsync<obj>(ThriftCommunication(m), svc, methodName, args) |> Async.AwaitTask |> Async.Ignore
     return m
 }
 
@@ -137,7 +143,7 @@ let makeClass structAttrs propsAndAttrs =
         let fieldBuilder = typeBuilder.DefineField("_" + name, typ, FieldAttributes.Private)
 
         // getter
-        let getterBuilder = typeBuilder.DefineMethod("get_" + name, MethodAttributes.Public ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, typ, [| |])
+        let getterBuilder = typeBuilder.DefineMethod("get_" + name, MethodAttributes.Public ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, typ, Type.EmptyTypes)
         let getterIL = getterBuilder.GetILGenerator()
         getterIL.Emit(OpCodes.Ldarg_0)
         getterIL.Emit(OpCodes.Ldfld, fieldBuilder)

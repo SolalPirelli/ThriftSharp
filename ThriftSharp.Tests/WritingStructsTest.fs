@@ -56,7 +56,7 @@ let (==>) obj data =
     m.WrittenValues <=> data
 
 let fails obj =
-    throwsAsync<ThriftSerializationException>(fun () -> async { write (MemoryProtocol()) obj; return System.Object() }) |> run
+    throwsAsync<ThriftSerializationException>(async { write (MemoryProtocol()) obj; return System.Object() }) |> run
 
 
 [<TestContainer>]

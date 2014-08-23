@@ -55,8 +55,7 @@ type __() =
         let svc = ThriftAttributesParser.ParseService(typeof<IService>.GetTypeInfo())
         let comm = ThriftCommunication(ThriftBinaryProtocol(trans))
 
-        do! throwsAsync<System.OperationCanceledException> (fun () -> 
-            Thrift.CallMethodAsync(comm, svc, "Cancellable", 1, source.Token) |> Async.AwaitTask) |> Async.Ignore
+        do! throwsAsync<System.OperationCanceledException> (Thrift.CallMethodAsync(comm, svc, "Cancellable", 1, source.Token) |> Async.AwaitTask) |> Async.Ignore
     }
 
     [<Test>]
@@ -75,7 +74,5 @@ type __() =
         let svc = ThriftAttributesParser.ParseService(typeof<IService>.GetTypeInfo())
         let comm = ThriftCommunication(ThriftBinaryProtocol(trans))
 
-        do! throwsAsync<System.OperationCanceledException> (fun () -> 
-            Thrift.CallMethodAsync(comm, svc, "Cancellable", 1, source.Token) |> Async.AwaitTask) 
-         |> Async.Ignore
+        do! throwsAsync<System.OperationCanceledException> (Thrift.CallMethodAsync(comm, svc, "Cancellable", 1, source.Token) |> Async.AwaitTask) |> Async.Ignore
     }
