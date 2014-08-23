@@ -23,7 +23,9 @@ type TestContainerAttribute = TestClassAttribute
 
 let tid (n: int) = byte n |> LanguagePrimitives.EnumOfValue
 
-let utcDate(dd, mm, yyyy) = DateTime(yyyy, mm, dd, 00, 00, 00, DateTimeKind.Utc)
+let date(dd, mm, yyyy) = 
+    let d = DateTime(yyyy, mm, dd, 00, 00, 00, DateTimeKind.Utc)
+    d.ToLocalTime()
 
 // Use Nullable without having to open System (because of conflicts with e.g. Int32 in memory protocol) or use the long notation
 let nullable x = Nullable(x)
@@ -36,7 +38,6 @@ let dict (vals: ('a * 'b) seq) =
 
 
 let rec private eq (act: obj) (exp: obj) = // can safely assume act and exp are of the same type
-    System.Diagnostics.Debug.WriteLine(sprintf "%A ||| %A" act exp)
     if act = null then
         exp = null
     elif not (act :? string) && act :? IEnumerable then

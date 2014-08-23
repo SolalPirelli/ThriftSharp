@@ -89,7 +89,7 @@ type __() =
 
     [<Test>]
     member __.``UnixDate converter``() =
-        StructWithConvertingField( UnixDate = utcDate(18, 12, 1994) )
+        StructWithConvertingField( UnixDate = date(18, 12, 1994) )
         ==>
         [StructHeader "ConvertingField"
          FieldHeader (1s, "UnixDate", tid 8)

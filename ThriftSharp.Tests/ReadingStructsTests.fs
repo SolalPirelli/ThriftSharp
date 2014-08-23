@@ -51,7 +51,7 @@ type StructWithNullableFieldWithDefault() =
 let (--) a b = (a, b)
 
 let (-->) (fieldData, typeId) (expected: 'a) =
-    let isReq = typeof<'a>.IsValueType && not typeof<'a>.IsGenericType // enough to detect nullables
+    let isReq = typeof<'a>.IsValueType && System.Nullable.GetUnderlyingType(typeof<'a>) = null
 
     let typ = 
         makeClass 
@@ -69,11 +69,11 @@ let (-->) (fieldData, typeId) (expected: 'a) =
     m.IsEmpty <=> true
     expected <=> (typ.GetProperty("Field").GetValue(inst) :?> 'a)
 
-let (==>) data expected (checker: 'a -> unit) =
+let (==>) data (expected: 'a) =
     let m = MemoryProtocol(data)
     let inst = read<'a> m
     m.IsEmpty <=> true
-    checker expected
+    inst <=> expected
 
 let fails<'field> typeId fieldData =
     let typ = makeClass [ <@ ThriftStructAttribute("Struct") @> ] [ "Field", typeof<'field>, [ <@ ThriftFieldAttribute(1s, true, "Field") @> ] ]
@@ -133,9 +133,7 @@ type __() =
          FieldStop
          StructEnd]
         ==>
-        fun (inst: StructWithConvertedField) ->
-            let date = inst.Field
-            date.ToUniversalTime() <=> utcDate(18, 12, 1994)
+        StructWithConvertedField(Field = date(18, 12, 1994))
 
     [<Test>]
     member __.``Converted nullable``() =
@@ -146,11 +144,7 @@ type __() =
          FieldStop
          StructEnd]
         ==>
-        fun (inst: StructWithNullableConvertedField) ->
-            let nullableDate = inst.Field
-            nullableDate.HasValue <=> true
-            let date2 = nullableDate.Value
-            date2.ToUniversalTime() <=> utcDate(18, 12, 1994)
+        StructWithNullableConvertedField(Field = nullable (date(18, 12, 1994)))
 
     [<Test>]
     member __.``Nullable, not set``() =
@@ -158,8 +152,7 @@ type __() =
          FieldStop
          StructEnd]
         ==>
-        fun (inst: StructWithNullableField) ->
-            inst.Field <=> System.Nullable()
+        StructWithNullableField(Field = System.Nullable())
 
     [<Test>]
     member __.``Nullable, not set, with default value``() =
@@ -167,8 +160,7 @@ type __() =
          FieldStop
          StructEnd]
         ==>
-        fun (inst: StructWithNullableFieldWithDefault) ->
-            inst.Field <=> nullable 42
+        StructWithNullableFieldWithDefault(Field = nullable 42)
 
     // Type mismatch errors
 

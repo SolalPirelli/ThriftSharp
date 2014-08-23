@@ -36,11 +36,11 @@ type Service =
 
 let (--) a b = a,b
 
-let (==>) (data, methodName) (checker: 'a -> unit) = run <| async {
+let (==>) (data, methodName) expected = run <| async {
     let m = MemoryProtocol(data)
     let! reply = readMsgAsync<Service> m methodName
     m.IsEmpty <=> true
-    do checker (reply :?> 'a)
+    (reply :?> 'a) <=> expected
 }
 
 let (=//=>) (data, methodName) (checker: 'a -> unit) = run <| async {
@@ -61,8 +61,7 @@ type __() =
         --
         "NoReply"
         ==>
-        fun (o: obj) ->
-            o <=> null
+        null
 
     [<Test>]
     member __.``No reply expected, but one was received``() =
@@ -77,8 +76,7 @@ type __() =
         --
         "NoReply"
         ==>
-        fun (o: obj) ->
-            o <=> null
+        null
 
     [<Test>]
     member __.``No reply expected, but a server error was received``() =
@@ -110,8 +108,7 @@ type __() =
         --
         "NoReplyWithException"
         ==>
-        fun (o: obj) ->
-            o <=> null
+        null
 
     [<Test>]
     member __.``No reply with exception declared, but another one was received``() = 
@@ -131,8 +128,7 @@ type __() =
         --
         "NoReplyWithException"
         ==>
-        fun (o: obj) ->
-            o <=> null
+        null
 
     [<Test>]
     member __.``No reply with exception declared and received``() =
@@ -181,8 +177,7 @@ type __() =
         --
         "NoException"
         ==>
-        fun (n: int) ->
-            n <=> 101
+        101
 
     [<Test>]
     member __.``Reply expected, but an undeclared exception was received``() =
@@ -218,8 +213,7 @@ type __() =
         --
         "WithException"
         ==>
-        fun (n: int) ->
-            n <=> 7
+        7
 
     [<Test>]
     member __.``Reply or exception expected, exception received``() =
@@ -255,5 +249,4 @@ type __() =
         --
         "WithUnixDateReturnValue"
         ==>
-        fun (date: System.DateTime) ->
-            date.ToUniversalTime() <=> utcDate(18, 12, 1994)
+        date(18, 12, 1994)

@@ -111,7 +111,7 @@ type __() =
     member __.``UnixDate parameter``() =
         "WithUnixDateParam" 
         --
-        [utcDate(18, 12, 1994)]
+        [date(18, 12, 1994)]
         ==>
         [MessageHeader (0, "withUnixDateParam", ThriftMessageType.Call)
          StructHeader ""
