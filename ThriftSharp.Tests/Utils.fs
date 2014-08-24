@@ -77,20 +77,17 @@ let throws<'T when 'T :> exn> func =
         Unchecked.defaultof<'T>
 
 let throwsAsync<'T when 'T :> exn> func = 
-    Async.FromContinuations(fun (cont, _, _) ->
+    Async.FromContinuations(fun (cont, econt, _) ->
         Async.StartWithContinuations(
             func,
-            (fun _ -> Assert.Fail("Expected an exception, but none was thrown.")
-                      exit 0),
+            (fun _ -> econt(AssertFailedException("Expected an exception, but none was thrown."))),
             (fun e -> match (match e with :? AggregateException as e -> e.InnerException | _ -> e) with
                       | e when typeof<'T>.IsAssignableFrom(e.GetType()) -> 
                           cont (e :?> 'T)
-                      | e -> 
-                          Assert.Fail(sprintf "Expected an %A, got an %A (message: %s)" typeof<'T> (e.GetType()) e.Message)
-                          exit 0),
+                      | e ->
+                          econt(AssertFailedException(sprintf "Expected an %A, got an %A (message: %s)" typeof<'T> (e.GetType()) e.Message))),
             (fun e -> if typeof<'T> <> typeof<OperationCanceledException> then
-                          Assert.Fail(sprintf "Expected an %A, got an OperationCanceledException." typeof<'T>)
-                          exit 0
+                          econt(AssertFailedException(sprintf "Expected an %A, got an OperationCanceledException." typeof<'T>))
                       else
                           cont (box e :?> 'T))
         )

@@ -154,6 +154,9 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the message's ID.
         /// </summary>
+        /// <remarks>
+        /// Apparently unused.
+        /// </remarks>
         public readonly int Id;
 
         /// <summary>
