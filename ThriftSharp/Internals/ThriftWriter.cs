@@ -248,10 +248,42 @@ namespace ThriftSharp.Internals
                 }
                 else if ( field.DefaultValue.HasValue || fieldType.NullableType != null || fieldType.TypeInfo.IsClass )
                 {
-                    var defaultExpr = Expression.Constant( field.DefaultValue.HasValue ? field.DefaultValue.Value : null );
-                    var isDefaultExpr = Expression.Equal( defaultExpr, getFieldExpr );
+                    Expression defaultValueExpr;
+                    // if it has a default value, use it
+                    if ( field.DefaultValue.HasValue )
+                    {
+                        if ( fieldType.TypeInfo.IsClass )
+                        {
+                            // if it's a class, it's OK
+                            defaultValueExpr = Expression.Constant( field.DefaultValue.Value );
+                        }
+                        else
+                        {
+                            // otherwise we need to make the default value a Nullable.
+                            defaultValueExpr =
+                                Expression.New(
+                                   fieldType.TypeInfo // is a nullable of the right type
+                                            .DeclaredConstructors
+                                            .First(), // Nullable<T> only has one ctor,
+                                   Expression.Constant( field.DefaultValue.Value )
+                           );
+                        }
+                    }
+                    else
+                    {
+                        // otherwise it's always a reference type
+                        defaultValueExpr = Expression.Constant( null );
+                    }
 
-                    methodContents.Add( Expression.IfThenElse( isDefaultExpr, Expression.Empty(), writingExpr ) );
+                    methodContents.Add(
+                        Expression.IfThen(
+                            Expression.NotEqual(
+                                getFieldExpr,
+                                defaultValueExpr
+                            ),
+                            writingExpr
+                        )
+                    );
                 }
                 else
                 {
@@ -260,12 +292,14 @@ namespace ThriftSharp.Internals
             }
 
             methodContents.Add( Expression.Call( protocolParam, "WriteFieldStop", EmptyTypes ) );
-
             methodContents.Add( Expression.Call( protocolParam, "WriteStructEnd", EmptyTypes ) );
 
-            var methodBlock = Expression.Block( methodContents );
-
-            return Expression.Lambda<Action<ThriftStruct, object, IThriftProtocol>>( methodBlock, structParam, valueParam, protocolParam ).Compile();
+            return Expression.Lambda<Action<ThriftStruct, object, IThriftProtocol>>(
+                Expression.Block( methodContents ),
+                structParam,
+                valueParam,
+                protocolParam
+            ).Compile();
         }
 
 

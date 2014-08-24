@@ -63,10 +63,9 @@
     <Compile Include="Utils.fs" />
     <Compile Include="ParsingStructsTests.fs" />
     <Compile Include="ParsingServicesTests.fs" />
-    <Compile Include="ReadingStructsTests.fs" />
+    <Compile Include="StructsTests.fs" />
     <Compile Include="ReadingStructsWithSkipTests.fs" />
     <Compile Include="ReadingPartialStructs.fs" />
-    <Compile Include="WritingStructsTest.fs" />
     <Compile Include="ReadingServiceTests.fs" />
     <Compile Include="WritingServiceTests.fs" />
     <Compile Include="BinaryProtocolTests.fs" />
