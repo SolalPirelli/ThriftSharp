@@ -22,6 +22,7 @@ type MemoryTransport(toRead: byte list) =
     member x.WrittenValues with get() = List.rev writtenVals
     member x.IsEmpty with get() = toRead.Count = 0
     member x.IsDisposed with get() = isDisposed
+    member x.HasRead with get() = hasRead
 
     new() = MemoryTransport([])
 

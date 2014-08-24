@@ -127,12 +127,23 @@ type Tests() =
             (StructWithNullableField(Field = System.Nullable()))
 
     [<Test>]
-    member x.``Nullable, not set, with default value``() =
+    member x.``Nullable with default value, not set``() =
         x.TestStruct
             [StructHeader "NullableFieldWithDefault"
              FieldStop
              StructEnd]
             (StructWithNullableFieldWithDefault(Field = nullable 42))
+
+    [<Test>]
+    member x.``Nullable with default value, set``() =
+        x.TestStruct
+            [StructHeader "NullableFieldWithDefault"
+             FieldHeader (1s, "Field", tid 8)
+             Int32 1
+             FieldEnd
+             FieldStop
+             StructEnd]
+            (StructWithNullableFieldWithDefault(Field = nullable 1))
 
 
 [<TestContainer>]
@@ -173,7 +184,15 @@ type Reading() =
         inst <=> value
 
 
-    // Read-only tests
+    // Read-only tests    
+    [<Test>]
+    member __.``Error on missing required field``() =
+        let data = 
+            [StructHeader "StructField"
+             FieldStop
+             StructEnd]
+        let m = MemoryProtocol(data)
+        throws<ThriftSerializationException> (fun () -> read<StructWithStructField> m |> box) |> ignore
 
     [<Test>]
     member __.``ThriftSerializationException is thrown when the field type doesn't match its declaration``() =
@@ -204,9 +223,6 @@ type Reading() =
 type Writing() =
     inherit Tests()
 
-    let fails obj =
-        throwsAsync<ThriftSerializationException>(async { write (MemoryProtocol()) obj; return System.Object() }) |> run
-
     override x.Test fieldData typeId (value: 'a) =
         let isReq = typeof<'a>.IsValueType && System.Nullable.GetUnderlyingType(typeof<'a>) = null
         
@@ -235,9 +251,9 @@ type Writing() =
     // Write-only tests
 
     [<Test>]
-    member __.``Error on required but unset struct field``() =
-        fails (StructWithStructField())
-
+    member __.``Error on required but unset field``() = run <| async {
+        do! throwsAsync<ThriftSerializationException>(async {write (MemoryProtocol()) (StructWithStructField()); return obj()}) |> Async.Ignore
+    }
 
 [<TestContainer>]
 type Skipping() =

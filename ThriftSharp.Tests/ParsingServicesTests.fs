@@ -121,7 +121,7 @@ type __() =
     [<Test>] member __.``Method with no return value and 1 struct parameter``() = ok [typeof<CustomException>] typeof<Task> false []
     [<Test>] member __.``Method with no return value and 3 parameters``() = ok [typeof<bool>; typeof<CustomException>; typeof<int[]>] typeof<Task> false []
 
-    // Errors should be thrown when parsing services with non-Task-returning, two-way methods
+    // Errors should be thrown when parsing services with non-Task-returning methods
     [<Test>] member __.``Error on method with no return type``() =     fails [] typeof<System.Void> false []
     [<Test>] member __.``Error on method with int return type``() =    fails [] typeof<int> false []
     [<Test>] member __.``Error on method with string return type``() = fails [] typeof<string> false []

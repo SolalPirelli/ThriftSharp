@@ -65,16 +65,19 @@ let (<=>) (act: 'a) (exp: 'a) =
     if not (eq act exp) then Assert.Fail(sprintf "Expected: %A%sActual: %A" exp Environment.NewLine act)
 
 let throws<'T when 'T :> exn> func =
+    let exn = ref Unchecked.defaultof<'T>
+
     try
         func() |> ignore
-        Assert.Fail("Expected an exception, but none was thrown.")
-        Unchecked.defaultof<'T>
     with
     | ex when typeof<'T>.IsAssignableFrom(ex.GetType()) -> 
-        ex :?> 'T
+        exn := ex :?> 'T
     | ex -> 
         Assert.Fail(sprintf "Expected an exception of type %A, but got one of type %A (message: %s)" typeof<'T> (ex.GetType()) ex.Message)
-        Unchecked.defaultof<'T>
+    
+    if Object.Equals(!exn, null) then
+        Assert.Fail("Expected an exception, but none was thrown.")
+    !exn
 
 let throwsAsync<'T when 'T :> exn> func = 
     Async.FromContinuations(fun (cont, econt, _) ->

@@ -463,3 +463,11 @@ type Other() =
         let prot = ThriftBinaryProtocol(trans)
         prot.Dispose()
         trans.IsDisposed <=> true
+
+    [<Test>]
+    member x.``FlushAndReadAsync() works``() = run <| async {
+        let trans = MemoryTransport()
+        let prot = ThriftBinaryProtocol(trans)
+        do! prot.FlushAndReadAsync() |> Async.AwaitIAsyncResult |> Async.Ignore
+        trans.HasRead <=> true
+    }

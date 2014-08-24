@@ -64,7 +64,6 @@
     <Compile Include="ParsingStructsTests.fs" />
     <Compile Include="ParsingServicesTests.fs" />
     <Compile Include="StructsTests.fs" />
-    <Compile Include="ReadingPartialStructs.fs" />
     <Compile Include="BinaryProtocolTests.fs" />
     <Compile Include="ServiceCallTests.fs" />
     <None Include="packages.config" />
