@@ -26,7 +26,7 @@ namespace ThriftSharp
 
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ThriftTransportException" /> class.
+        /// Initializes a new instance of the <see cref="ThriftProtocolException" /> class.
         /// </summary>
         /// <remarks>
         /// For serialization purposes only.
@@ -34,7 +34,7 @@ namespace ThriftSharp
         private ThriftProtocolException() { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ThriftTransportException" /> class with the specified values.
+        /// Initializes a new instance of the <see cref="ThriftProtocolException" /> class with the specified values.
         /// </summary>
         /// <param name="exceptionType">The exception type.</param>
         internal ThriftProtocolException( ThriftProtocolExceptionType exceptionType )
