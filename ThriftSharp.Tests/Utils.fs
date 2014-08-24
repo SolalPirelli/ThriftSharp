@@ -11,7 +11,6 @@ open System.Collections.Generic
 open System.Reflection
 open System.Reflection.Emit
 open System.Threading
-open System.Threading.Tasks
 open Microsoft.FSharp.Reflection
 open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.VisualStudio.TestTools.UnitTesting
@@ -190,7 +189,7 @@ let makeInterface interfaceAttrs methodsAndAttrs =
     methodsAndAttrs |> Seq.iteri (fun n (args, retType, attrExprs) ->
         let methodBuilder = interfaceBuilder.DefineMethod(string n, MethodAttributes.Public ||| MethodAttributes.Abstract ||| MethodAttributes.Virtual, retType, args |> Array.map fst)
 
-        args |> Seq.iteri (fun i (argType, argAttrExprs) ->
+        args |> Seq.iteri (fun i (_, argAttrExprs) ->
             let paramBuilder = methodBuilder.DefineParameter(i + 1, ParameterAttributes.None, string i) // +1 because 0 is the return value
             
             for expr in argAttrExprs do

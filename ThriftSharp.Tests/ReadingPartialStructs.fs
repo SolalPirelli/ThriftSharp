@@ -20,11 +20,11 @@ type StructWithDefaultValue() =
     member val Field = nullable 123 with get, set
 
 
-let (==>) data (checker: 'a -> unit) =
+let (==>) data (expected: 'a) =
     let m = MemoryProtocol(data)
     let inst = read<'a> m
     m.IsEmpty <=> true
-    checker inst
+    inst <=> expected
 
 let fails<'S> data =
     let m = MemoryProtocol(data)
@@ -42,9 +42,7 @@ type __() =
          FieldStop
          StructEnd]
         ==>
-        fun (inst: StructWithOptionalFields) ->
-            inst.Required <=> 10
-            inst.Optional <=> nullable 2
+        StructWithOptionalFields(Required = 10, Optional = nullable 2)
 
     [<Test>]
     member __.``Error on missing required field``() =
@@ -65,8 +63,7 @@ type __() =
          FieldStop
          StructEnd]
         ==>
-        fun (inst: StructWithDefaultValue) ->
-            inst.Field <=> nullable 789
+        StructWithDefaultValue(Field = nullable 789)
 
     [<Test>]
     member __.``Missing optional w/ default value field``() =
@@ -74,5 +71,4 @@ type __() =
          FieldStop
          StructEnd]
         ==>
-        fun (inst: StructWithDefaultValue) ->
-            inst.Field <=> nullable 456
+        StructWithDefaultValue(Field = nullable 456)

@@ -10,18 +10,15 @@ open ThriftSharp.Protocols
 
 let (--) a b = a,b
 
-let (==>) (data, selector) check =
+let (==>) (data, selector) expected =
     let trans = MemoryTransport(data |> List.map byte)
     let obj = new ThriftBinaryProtocol(trans) |> selector
-    check(obj)
+    obj <=> expected
 
-let (<==>) (data, selector) value =
-    (data, selector) ==> (fun o -> o <=> value)
-
-let (=//=>) (data, selector) (check: 'a -> unit) =
+let (=//=>) (data, selector) (expected: 'a) =
     let trans = MemoryTransport(data |> List.map byte)
     let ex = throws<'a> (fun () -> new ThriftBinaryProtocol(trans) |> selector |> box)
-    check(ex)
+    ex <=> expected
 
 let needsNothing selector =
     let trans = MemoryTransport([])
@@ -38,10 +35,7 @@ type __()  =
         --
         fun p -> p.ReadMessageHeader()
         ==>
-        fun header ->
-            header.Id <=> 2
-            header.MessageType <=> ThriftMessageType.Reply
-            header.Name <=> "Message"
+        ThriftMessageHeader(2, "Message", ThriftMessageType.Reply)
 
     [<Test>]
     member __.``MessageHeader - exception``() =   
@@ -52,10 +46,7 @@ type __()  =
         --
         fun p -> p.ReadMessageHeader()
         ==>
-        fun header ->
-            header.Id <=> 0
-            header.MessageType <=> ThriftMessageType.Exception
-            header.Name <=> "Me"
+        ThriftMessageHeader(0, "Me", ThriftMessageType.Exception)
 
     [<Test>]
     member __.``Message header - wrong version``() =
@@ -66,8 +57,7 @@ type __()  =
         --
         fun p -> p.ReadMessageHeader()
         =//=>
-        fun (ex: ThriftProtocolException) ->
-            ex.ExceptionType <=> nullable ThriftProtocolExceptionType.InvalidProtocol
+        ThriftProtocolException(ThriftProtocolExceptionType.InvalidProtocol)
 
     [<Test>]
     member __.``Message header - old version``() =
@@ -78,10 +68,7 @@ type __()  =
         --
         fun p -> p.ReadMessageHeader()
         ==>
-        fun header ->
-            header.Name <=> "Message"
-            header.MessageType <=> ThriftMessageType.Exception
-            header.Id <=> 9
+        ThriftMessageHeader(9, "Message", ThriftMessageType.Exception)
 
     [<Test>]
     member __.``MessageEnd``() =
@@ -93,8 +80,7 @@ type __()  =
         --
         fun p -> p.ReadStructHeader()
         ==>
-        fun header ->
-            header.Name <=> ""
+        ThriftStructHeader("")
 
     [<Test>]
     member __.``StructEnd``() =
@@ -107,10 +93,7 @@ type __()  =
         --
         fun p -> p.ReadFieldHeader()
         ==>
-        fun header ->
-            header.Id <=> 10s
-            header.Name <=> ""
-            header.FieldTypeId <=> ThriftTypeId.Binary
+        ThriftFieldHeader(10s, "", ThriftTypeId.Binary)
 
     [<Test>]
     member __.``FieldEnd``() =
@@ -121,7 +104,7 @@ type __()  =
         [0] // end of field
         --
         fun p -> p.ReadFieldHeader()
-        <==>
+        ==>
         null
 
     [<Test>]
@@ -131,9 +114,7 @@ type __()  =
         --
         fun p -> p.ReadListHeader()
         ==>
-        fun header ->
-            header.Count <=> 20
-            header.ElementTypeId <=> ThriftTypeId.Int32
+        ThriftCollectionHeader(20, ThriftTypeId.Int32)
 
     [<Test>]
     member __.``ListEnd``() =
@@ -146,9 +127,7 @@ type __()  =
         --
         fun p -> p.ReadSetHeader()
         ==>
-        fun header ->
-            header.Count <=> 0
-            header.ElementTypeId <=> ThriftTypeId.Double
+        ThriftCollectionHeader(0, ThriftTypeId.Double)
 
     [<Test>]
     member __.``SetEnd``() =
@@ -162,10 +141,7 @@ type __()  =
         --
         fun p -> p.ReadMapHeader()
         ==>
-        fun header ->
-            header.Count <=> 256
-            header.KeyTypeId <=> ThriftTypeId.Int16
-            header.ValueTypeId <=> ThriftTypeId.Int64
+        ThriftMapHeader(256, ThriftTypeId.Int16, ThriftTypeId.Int64)
 
     [<Test>]
     member __.``MapEnd``() =
@@ -176,7 +152,7 @@ type __()  =
         [1] // not zero (byte)
         --
         fun p -> p.ReadBoolean()
-        <==>
+        ==>
         true
 
     [<Test>]
@@ -184,7 +160,7 @@ type __()  =
         [0] // zero (byte)
         --
         fun p -> p.ReadBoolean()
-        <==>
+        ==>
         false
 
     [<Test>]
@@ -192,7 +168,7 @@ type __()  =
         [123]
         --
         fun p -> p.ReadSByte()
-        <==>
+        ==>
         123y
 
     [<Test>]
@@ -200,7 +176,7 @@ type __()  =
         [0x41; 0x32; 0xD6; 0x87; 0xE3; 0xD7; 0x0A; 0x3D] // 64 bit IEEE-754 floating-point number
         --
         fun p -> p.ReadDouble()
-        <==>
+        ==>
         1234567.89
 
     [<Test>]
@@ -208,7 +184,7 @@ type __()  =
         [0; 0; 0; 0; 0; 0; 0; 0] // 64 bit IEEE-754 floating-point number
         --
         fun p -> p.ReadDouble()
-        <==>
+        ==>
         0.0
 
     [<Test>]
@@ -216,7 +192,7 @@ type __()  =
         [0xC5; 0xF8; 0xEE; 0x90; 0xFF; 0x6C; 0x37; 0x3E] // 64-bit IEEE-754 floating-point number
         --
         fun p -> p.ReadDouble()
-        <==>
+        ==>
         -123456789012345678901234567890.1234567890
 
     [<Test>]
@@ -225,8 +201,7 @@ type __()  =
         --
         fun p -> p.ReadDouble()
         ==>
-        fun double ->
-            System.Double.IsPositiveInfinity(double) <=> true
+        System.Double.PositiveInfinity
 
     [<Test>]
     member __.``Double - NegativeInfinity``() =
@@ -234,15 +209,14 @@ type __()  =
         --
         fun p -> p.ReadDouble()
         ==>
-        fun double ->
-            System.Double.IsNegativeInfinity(double) <=> true
+        System.Double.NegativeInfinity
 
     [<Test>]
     member __.``Double - Epsilon``() =
         [0x00; 0x00; 0x00; 0x00; 0x00; 0x00; 0x00; 0x01] // 64-bit IEEE-754 floating-point number
         --
         fun p -> p.ReadDouble()
-        <==>
+        ==>
         System.Double.Epsilon
 
     [<Test>]
@@ -250,7 +224,7 @@ type __()  =
         [48; 57] // int16
         --
         fun p -> p.ReadInt16()
-        <==>
+        ==>
         12345s
 
     [<Test>]
@@ -258,7 +232,7 @@ type __()  =
         [0; 0] // int16
         --
         fun p -> p.ReadInt16()
-        <==>
+        ==>
         0s
 
     [<Test>]
@@ -266,7 +240,7 @@ type __()  =
         [251; 35] // int16
         --
         fun p -> p.ReadInt16()
-        <==>
+        ==>
         -1245s
 
     [<Test>]
@@ -274,7 +248,7 @@ type __()  =
         [73; 150; 2; 210] // int32
         --
         fun p -> p.ReadInt32()
-        <==>
+        ==>
         1234567890
 
     [<Test>]
@@ -282,7 +256,7 @@ type __()  =
         [0; 0; 0; 0] // int32
         --
         fun p -> p.ReadInt32()
-        <==>
+        ==>
         0
 
     [<Test>]
@@ -290,7 +264,7 @@ type __()  =
         [197; 33; 151; 79] // int32
         --
         fun p -> p.ReadInt32()
-        <==>
+        ==>
         -987654321
 
     [<Test>]
@@ -298,7 +272,7 @@ type __()  =
         [17; 34; 16; 244; 177; 108; 28; 177] // int64
         --
         fun p -> p.ReadInt64()
-        <==>
+        ==>
         1234567890987654321L
 
     [<Test>]
@@ -306,7 +280,7 @@ type __()  =
         [0; 0; 0; 0; 0; 0; 0; 0] // int64
         --
         fun p -> p.ReadInt64()
-        <==>
+        ==>
         0L
 
     [<Test>]
@@ -314,7 +288,7 @@ type __()  =
         [242; 75; 37; 160; 129; 11; 237; 79] // int64
         --
         fun p -> p.ReadInt64()
-        <==>
+        ==>
         -987654321987654321L
 
     [<Test>]
@@ -324,7 +298,7 @@ type __()  =
          114; 111; 119; 110; 32; 102; 111; 120; 46; 46; 46] // data
         --
         fun p -> p.ReadString()
-        <==>
+        ==>
         "The quick brown fox..."
 
     [<Test>]
@@ -332,7 +306,7 @@ type __()  =
         [0; 0; 0; 0] // length (int32)
         --
         fun p -> p.ReadString()
-        <==>
+        ==>
         ""
 
     [<Test>]
@@ -342,7 +316,7 @@ type __()  =
          225; 185; 152; 195; 136; 224; 175; 171]
         --
         fun p -> p.ReadString()
-        <==>
+        ==>
         "ﷲ▼ᾢṘÈ௫"
 
     [<Test>]
@@ -350,7 +324,7 @@ type __()  =
         [0; 0; 0; 0] // length (int32)
         --
         fun p -> p.ReadBinary()
-        <==>
+        ==>
         [| |]
         
     [<Test>]
@@ -359,5 +333,5 @@ type __()  =
          4; 8; 15; 16; 23; 42; 128] // data
         --
         fun p -> p.ReadBinary()
-        <==>
+        ==>
         [|4y; 8y; 15y; 16y; 23y; 42y; -128y|]

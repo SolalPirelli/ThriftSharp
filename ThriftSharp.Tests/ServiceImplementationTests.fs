@@ -34,14 +34,14 @@ type Service(comm) =
 
 let (--) a b = a,b
 
-let (==>) ((readData, meth), resultCheck) writtenData = run <| async {
+let (==>) ((readData, meth), expected) writtenData = run <| async {
     let m = MemoryProtocol(readData)
     let comm = ThriftCommunication(m)
     let impl = Service(comm) :> IService
 
     let! result = meth(impl) |> Async.AwaitTask
-    resultCheck result
-
+    
+    result <=> expected
     m.WrittenValues <=> writtenData
 }
 
@@ -71,7 +71,7 @@ type __() =
         --
         fun s -> s.Async(2)
         -- 
-        fun res -> res <=> 123
+        123
         ==>
         [MessageHeader (0, "Async", ThriftMessageType.Call)
          StructHeader ""
@@ -115,7 +115,7 @@ type __() =
         --
         fun s -> s.Complex("abc", 123.4, [|1; 2|])
         --
-        fun res -> res <=> List(["the cake";"is";"a lie"])
+        List(["the cake";"is";"a lie"])
         ==>
         [MessageHeader (0, "Complex", ThriftMessageType.Call)
          StructHeader ""

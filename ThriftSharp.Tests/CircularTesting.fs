@@ -5,7 +5,6 @@
 module ThriftSharp.Tests.``Serialized and deserialized``
 
 open System.Collections.Generic
-open System.Linq
 open ThriftSharp
 open ThriftSharp.Protocols
 
@@ -40,24 +39,6 @@ type ComplexStruct() =
     member val BoolSet = HashSet([ false ]) with get, set
     [<ThriftField(2222s, true, "DoubleSByteMapWhichIsVeryCoolAndSuperAwesomeSoYouShouldTotallyUseItBecauseOfHowCoolAndAwesomeItIsDontForgetAboutIt")>]
     member val DoubleSByteMap = Dictionary() with get, set
-
-    override x.Equals(other) =
-        let o = box other :?> ComplexStruct
-        let eq x y = Enumerable.SequenceEqual(x,y)
-        x.Boolean = o.Boolean
-     && x.SByte = o.SByte
-     && x.Double = o.Double
-     && x.Int16 = o.Int16
-     && x.Int32 = o.Int32
-     && x.Int64 = o.Int64
-     && x.String = o.String
-     && eq x.Binary o.Binary
-     && eq x.Int32Array o.Int32Array
-     && eq x.EnumList o.EnumList
-     && eq x.BoolSet o.BoolSet
-     && eq x.DoubleSByteMap o.DoubleSByteMap
-
-    override x.GetHashCode() = 0 // not used
 
 [<TestContainer>]
 type __() =
