@@ -395,7 +395,7 @@ type Tests()  =
             [| 4y; 8y; 15y; 16y; 23y; 42y; -128y |]
         )
 
-[<TestContainer>]
+[<TestClass>]
 type Reading() =
     inherit Tests() 
 
@@ -437,7 +437,7 @@ type Reading() =
         ThriftBinaryProtocol(trans).ReadFieldHeader() <=> null
         trans.IsEmpty <=> true
 
-[<TestContainer>]
+[<TestClass>]
 type Writing() =
     inherit Tests()
 
@@ -455,7 +455,7 @@ type Writing() =
         ThriftBinaryProtocol(trans).WriteFieldStop()
         trans.WrittenValues <=> [0uy]
 
-[<TestContainer>]
+[<TestClass>]
 type Other() =
     [<Test>]
     member x.``Dispose() works``() =

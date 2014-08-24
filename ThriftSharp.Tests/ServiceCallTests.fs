@@ -373,7 +373,7 @@ type ServiceImpl(prot) =
         member x.WithException() = base.CallAsync<int>("WithException")
         member x.OneWay() =  base.CallAsync("OneWay")
 
-[<TestContainer>]
+[<TestClass>]
 type ServiceImplementation() =
     inherit Tests()
 
@@ -381,7 +381,7 @@ type ServiceImplementation() =
         ServiceImpl(prot) :> IService
 
 
-[<TestContainer>]
+[<TestClass>]
 type Proxy() =
     inherit Tests()
 

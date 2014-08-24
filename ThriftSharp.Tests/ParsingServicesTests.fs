@@ -94,7 +94,7 @@ let failsOn<'T> =
 
 
 
-[<TestContainer>]
+[<TestClass>]
 type __() =
     // Errors should be thrown when parsing services that are not interfaces
     [<Test>] member __.``Error when service isn't an interface``() = failsOn<NotAnInterface>

@@ -146,7 +146,7 @@ type Tests() =
             (StructWithNullableFieldWithDefault(Field = nullable 1))
 
 
-[<TestContainer>]
+[<TestClass>]
 type Reading() =
     inherit Tests()
 
@@ -219,7 +219,7 @@ type Reading() =
         fails typeof<int[]> 15 [ListHeader (1, tid 9); Int64 1L; ListEnd]
 
 
-[<TestContainer>]
+[<TestClass>]
 type Writing() =
     inherit Tests()
 
@@ -255,7 +255,7 @@ type Writing() =
         do! throwsAsync<ThriftSerializationException>(async {write (MemoryProtocol()) (StructWithStructField()); return obj()}) |> Async.Ignore
     }
 
-[<TestContainer>]
+[<TestClass>]
 type Skipping() =
     inherit Tests()
     

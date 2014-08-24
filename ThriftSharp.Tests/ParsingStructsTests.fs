@@ -138,7 +138,7 @@ let failsOn<'T> =
     throws<ThriftParsingException> (fun () -> ThriftAttributesParser.ParseStruct(typeof<'T>.GetTypeInfo()) |> box) |> ignore
 
 
-[<TestContainer>]
+[<TestClass>]
 type __() =
     // Errors should be thrown when parsing structs without Thrift fields
     [<Test>] member __.``Error on no fields``() =        failsOn<StructWithoutFields>

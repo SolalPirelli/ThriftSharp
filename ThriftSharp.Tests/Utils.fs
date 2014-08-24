@@ -10,7 +10,6 @@ open System.Collections
 open System.Collections.Generic
 open System.Reflection
 open System.Reflection.Emit
-open System.Text
 open System.Threading
 open Microsoft.FSharp.Reflection
 open Microsoft.FSharp.Quotations.Patterns
@@ -19,9 +18,10 @@ open Linq.QuotationEvaluation
 open ThriftSharp
 open ThriftSharp.Internals
 
-// Shorter names
-type TestAttribute = TestMethodAttribute
-type TestContainerAttribute = TestClassAttribute
+// Shorter name
+type Test = TestMethodAttribute
+// So other files don't have to reference the VS testing namespace
+type TestClass = TestClassAttribute
 
 let tid (n: int) = byte n |> LanguagePrimitives.EnumOfValue
 
