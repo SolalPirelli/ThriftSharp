@@ -18,6 +18,12 @@ type SimpleStruct() =
     [<ThriftField(1s, true, "Field")>]
     member val Field = 0 with get, set
 
+// used for the skipping tests
+[<ThriftStruct("Struct")>]
+type StructWithOneField() =
+    [<ThriftField(0s, false, "Field")>]
+    member val Field = nullable 42 with get, set
+
 [<ThriftStruct("StructField")>]
 type StructWithStructField() =
     [<ThriftField(1s, true, "Field")>]
@@ -231,3 +237,22 @@ type Writing() =
     [<Test>]
     member __.``Error on required but unset struct field``() =
         fails (StructWithStructField())
+
+
+[<TestContainer>]
+type Skipping() =
+    inherit Tests()
+    
+    override x.Test fieldData typeId (value: 'a) =
+        let data = 
+            [StructHeader "Struct"; 
+             FieldHeader (1s, "Field", tid typeId)] 
+          @ fieldData 
+          @ [FieldEnd; FieldStop; StructEnd]
+
+        let m = MemoryProtocol(data)
+        read<StructWithOneField> m |> ignore
+        m.IsEmpty <=> true
+
+    override x.TestStruct data (value: 'a) =
+        () // not applicable

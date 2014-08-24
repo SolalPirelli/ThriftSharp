@@ -5,6 +5,7 @@
 namespace ThriftSharp.Tests
 
 open System.Collections.Generic
+open System.Text
 open System.Threading.Tasks
 open ThriftSharp.Protocols
 open ThriftSharp.Internals
@@ -30,8 +31,11 @@ type ThriftProtocolValue =
     | Int16 of int16
     | Int32 of int
     | Int64 of int64
-    | String of string
     | Binary of sbyte[]
+
+[<AutoOpen>]
+module ThriftProtocolValueExtensions =   
+    let String (str: string) = Binary(Encoding.UTF8.GetBytes(str) |> Array.map sbyte)
 
 type MemoryProtocol(toRead: ThriftProtocolValue list) =
     let mutable writtenVals = []
@@ -206,7 +210,7 @@ type MemoryProtocol(toRead: ThriftProtocolValue list) =
 
         member x.ReadString() =
             match read() with
-            | String s -> s
+            | Binary bytes -> Encoding.UTF8.GetString(bytes |> Array.map byte)
             | x -> failwithf "Expected a string, got %A" x
 
         member x.ReadBinary() =
