@@ -69,8 +69,7 @@
     <Compile Include="WritingStructsTest.fs" />
     <Compile Include="ReadingServiceTests.fs" />
     <Compile Include="WritingServiceTests.fs" />
-    <Compile Include="ReadingBinaryProtocolTests.fs" />
-    <Compile Include="WritingBinaryProtocolTests.fs" />
+    <Compile Include="BinaryProtocolTests.fs" />
     <Compile Include="CircularTesting.fs" />
     <Compile Include="ServiceCallTests.fs" />
     <Compile Include="ServiceImplementationTests.fs" />
