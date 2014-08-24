@@ -70,8 +70,6 @@
     <Compile Include="BinaryProtocolTests.fs" />
     <Compile Include="CircularTesting.fs" />
     <Compile Include="ServiceCallTests.fs" />
-    <Compile Include="ServiceImplementationTests.fs" />
-    <Compile Include="ProxyTests.fs" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

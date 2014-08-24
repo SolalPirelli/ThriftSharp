@@ -3,22 +3,14 @@
 // Redistributions of this source code must retain the above copyright notice.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
 using ThriftSharp.Utilities;
-// A big ugly, but declaring a delegate means declaring a public one (for the invoke to work) in an internals namespace, which is worse.
-using Method = System.Func<object[], object>;
 
 namespace ThriftSharp.Internals
 {
-    /// <summary>
-    /// Receives a MethodInfo and returns an implementation of that method.
-    /// </summary>
-    internal delegate Func<object[], object> MethodImplementor( MethodInfo mi );
-
     /// <summary>
     /// A dynamic type creator that uses Reflection.Emit to build interface implementations at runtime.
     /// </summary>
@@ -30,118 +22,94 @@ namespace ThriftSharp.Internals
         /// <remarks>
         /// This makes quite a few assumptions specific to Thrift#, e.g. it only handles <see cref="Task" /> and <see cref="Task{T}" /> return types.
         /// </remarks>
-        public static T CreateImplementation<T>( MethodImplementor implementor )
+        public static T CreateImplementation<T>( ThriftCommunication communication, ThriftService service )
         {
             // Create a dynamic assembly
             var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly( new AssemblyName( "GeneratedCode" ), AssemblyBuilderAccess.Run );
             // Add a module
-            var moduleBuilder = assemblyBuilder.DefineDynamicModule( "MainModule" );
+            var moduleBuilder = assemblyBuilder.DefineDynamicModule( "Module" );
             // Add a type inside that module
             var typeBuilder = moduleBuilder.DefineType( typeof( T ).Name, TypeAttributes.Public );
             // Make the type inherit from the interface
             typeBuilder.AddInterfaceImplementation( typeof( T ) );
-
-            // Store the field names and their values to set them later, once we've created the type.
-            var fields = new List<Tuple<string, object>>();
+            // Add a field for the "communication" parameter of this method
+            var commField = typeBuilder.DefineField( "communication", typeof( ThriftCommunication ), FieldAttributes.Public );
+            // Add a field for the "service" parameter of this method
+            // whose type is object for reasons detailed below
+            var serviceField = typeBuilder.DefineField( "service", typeof( object ), FieldAttributes.Public );
 
             // Generate the methods
             foreach ( var m in typeof( T ).GetMethods( BindingFlags.Public | BindingFlags.Instance ) )
             {
-                // Create the implementation
-                var method = implementor.Invoke( m );
-                // Store it in a field
-                var fieldBuilder = typeBuilder.DefineField( "_Implementation_" + m.Name, typeof( Method ), FieldAttributes.Public );
-                // Add the field and its future value to the list of fields
-                fields.Add( Tuple.Create( fieldBuilder.Name, (object) method ) );
-                // The above steps are needed to invoke a delegate from IL; 
-                // otherwise it's in the generating assembly and the generated assembly can't access it.
-
                 // Define the method attributes
                 var methodAttrs = MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig;
                 // Define the method parameter types
                 var methodParamTypes = m.GetParameters().Select( p => p.ParameterType ).ToArray();
                 // Create the method
                 var methodBuilder = typeBuilder.DefineMethod( m.Name, methodAttrs, m.ReturnType, methodParamTypes );
+                // Get the method's parameters
+                var parameters = m.GetParameters();
 
                 // Generate the IL..
                 var gen = methodBuilder.GetILGenerator();
+
                 // Create a new local variable, which will be an array
-                var localBuilder = gen.DeclareLocal( typeof( object[] ) );
+                var paramsLocal = gen.DeclareLocal( typeof( object[] ) );
                 // Load the array length
                 gen.Emit( OpCodes.Ldc_I4, m.GetParameters().Length );
                 // Create the array (using the length above)
                 gen.Emit( OpCodes.Newarr, typeof( object ) );
-                // Put it in the local variables list
-                gen.Emit( OpCodes.Stloc, localBuilder );
+                // Store the created array in the local
+                gen.Emit( OpCodes.Stloc, paramsLocal );
 
-                var parameters = m.GetParameters();
+                // For each parameter:
                 for ( int n = 0; n < parameters.Length; n++ )
                 {
-                    // For each parameter:
-                    var p = parameters[n];
                     // Load the array
-                    gen.Emit( OpCodes.Ldloc, localBuilder );
+                    gen.Emit( OpCodes.Ldloc, paramsLocal );
                     // Load the index of the parameter in the array
                     gen.Emit( OpCodes.Ldc_I4, n );
                     // Load the parameter, +1 because it's an instance method thus arg 0 is the instance
                     gen.Emit( OpCodes.Ldarg, n + 1 );
                     // Box it if needed
-                    if ( p.ParameterType.IsValueType )
+                    if ( parameters[n].ParameterType.IsValueType )
                     {
-                        gen.Emit( OpCodes.Box, p.ParameterType );
+                        gen.Emit( OpCodes.Box, parameters[n].ParameterType );
                     }
                     // Set the parameter at the index in the array
                     gen.Emit( OpCodes.Stelem_Ref );
                 }
 
-                // Load the instance
-                gen.Emit( OpCodes.Ldarg_0 );
-                // Load the delegate field
-                gen.Emit( OpCodes.Ldfld, fieldBuilder );
-                // Load the delegate argument
-                gen.Emit( OpCodes.Ldloc, localBuilder );
-                // Call the delegate
-                gen.Emit( OpCodes.Call, typeof( Method ).GetMethod( "Invoke" ) );
-                // Cast its wrapped return value
-                var unwrapped = ReflectionEx.UnwrapTask( m.ReturnType );
-                if ( unwrapped != typeof( void ) )
+                // Get the return type for the CallMethodAsync method, i.e. the unwrapped return type...
+                var unwrappedReturnType = ReflectionEx.UnwrapTask( m.ReturnType );
+                if ( unwrappedReturnType == typeof( void ) )
                 {
-                    // Create a method that converts a Task<object> into its Result type casted correctly
-                    var dynMeth = new DynamicMethod( "_TaskCast_" + m.Name, unwrapped, new[] { typeof( Task<object> ) } );
-                    // Generate another set of IL instructions. Yay!
-                    var mGen = dynMeth.GetILGenerator();
-                    // Load the first argument
-                    mGen.Emit( OpCodes.Ldarg_0 );
-                    // Get the "Result" property
-                    mGen.Emit( OpCodes.Callvirt, typeof( Task<object> ).GetProperty( "Result" ).GetGetMethod() );
-                    // If it's a value type, unbox it; otherwise cast it (same opcode)
-                    mGen.Emit( OpCodes.Unbox_Any, unwrapped );
-                    // Return the casted value
-                    mGen.Emit( OpCodes.Ret );
-                    // Build the method delegate type
-                    var dynDelType = typeof( Func<,> ).MakeGenericType( typeof( Task<object> ), unwrapped );
-                    // Finish creating the method
-                    var dynDel = dynMeth.CreateDelegate( dynDelType );
-                    // Create a field with the dynamic method
-                    var fieldCastBuilder = typeBuilder.DefineField( "_TaskCast" + m.Name, dynDelType, FieldAttributes.Public );
-                    // Add the field to the list of fields to be set on the instance
-                    fields.Add( Tuple.Create( fieldCastBuilder.Name, (object) dynDel ) );
-
-                    // Load the instance
-                    gen.Emit( OpCodes.Ldarg_0 );
-                    // Load the field that contains the delegate
-                    gen.Emit( OpCodes.Ldfld, fieldCastBuilder );
-                    // Get the "ContinueWith" method (this seems to be the only way; GetMethod fails to find a proper overload for generic methods)
-                    var continueWithMethod = typeof( Task<object> ).GetMethods()
-                                                                   .First( mi => mi.Name == "ContinueWith"
-                                                                        && mi.IsGenericMethod
-                                                                       // first param's first generic param is generic
-                                                                       // i.e. it's the overload taking a Func<Task<...>,...>
-                                                                        && mi.GetParameters()[0].ParameterType.GetGenericArguments()[0].IsGenericType )
-                                                                   .MakeGenericMethod( unwrapped );
-                    // Call the "ContinueWith" method with the delegate
-                    gen.Emit( OpCodes.Callvirt, continueWithMethod );
+                    // ... or object if there is none
+                    unwrappedReturnType = typeof( object );
                 }
+
+                // Now we have a problem: We need to call Thrift.CallMethodAsync<T>, which is internal...
+                // so we have to use a public proxy method, which takes an 'object' instead of a 'ThriftService'
+                // since the latter is also internal.
+
+                // Get the CallMethodAsync method
+                var proxiedMethod = typeof( SpecialProxy ).GetMethods()
+                                                          .First( tm => tm.Name == "CallMethodAsync" )
+                                                          .MakeGenericMethod( unwrappedReturnType );
+                // Load the instance to load a field
+                gen.Emit( OpCodes.Ldarg_0 );
+                // Load the first argument of CallMethodAsync (the communication)
+                gen.Emit( OpCodes.Ldfld, commField );
+                // Load the instance to load a field
+                gen.Emit( OpCodes.Ldarg_0 );
+                // Load the second argument of CallMethodAsync (the service, whose type is object as mentioned above)
+                gen.Emit( OpCodes.Ldfld, serviceField );
+                // Load the third argument of CallMethodAsync (the method name)
+                gen.Emit( OpCodes.Ldstr, m.Name );
+                // Load the fourth and final argument of CallMethodAsync (the arguments)
+                gen.Emit( OpCodes.Ldloc, paramsLocal );
+                // Call the method
+                gen.Emit( OpCodes.Call, proxiedMethod );
                 // Return its return value
                 gen.Emit( OpCodes.Ret );
 
@@ -149,18 +117,18 @@ namespace ThriftSharp.Internals
                 typeBuilder.DefineMethodOverride( methodBuilder, m );
             }
 
+            // Get the instance type
+            var instanceType = typeBuilder.CreateType();
             // Create the instance
-            var inst = (T) ReflectionEx.Create( typeBuilder.CreateType().GetTypeInfo() );
+            var instance = (T) ReflectionEx.Create( instanceType.GetTypeInfo() );
 
-            // Set the fields (delegates) values
-            foreach ( var tup in fields )
-            {
-                // For some reason we can't just keep the FieldBuilder from before; its SetValue method doesn't work.
-                inst.GetType().GetField( tup.Item1 ).SetValue( inst, tup.Item2 );
-            }
+            // Set the "service" field
+            instanceType.GetField( serviceField.Name ).SetValue( instance, service );
+            // Set the "communication" field
+            instanceType.GetField( commField.Name ).SetValue( instance, communication );
 
-            // Return the instance
-            return inst;
+            // Return the instance.
+            return instance;
         }
     }
 }

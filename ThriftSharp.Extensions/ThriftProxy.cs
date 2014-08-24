@@ -21,7 +21,7 @@ namespace ThriftSharp
         public static T Create<T>( ThriftCommunication communication )
         {
             var service = ThriftAttributesParser.ParseService( typeof( T ).GetTypeInfo() );
-            return TypeCreator.CreateImplementation<T>( m => args => Thrift.CallMethodAsync<object>( communication, service, m.Name, args ) );
+            return TypeCreator.CreateImplementation<T>( communication, service );
         }
     }
 }

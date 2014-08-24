@@ -7,11 +7,9 @@ module ThriftSharp.Tests.``Service calls``
 open System.Collections.Generic
 open System.Threading
 open System.Threading.Tasks
-open System.Reflection
 open ThriftSharp
 open ThriftSharp.Internals
 open ThriftSharp.Protocols
-open ThriftSharp.Transport
 
 [<ThriftStruct("MyException")>]
 type MyException() =
@@ -389,60 +387,3 @@ type Proxy() =
 
     override x.GetService prot =
         ThriftProxy.Create<IService>(ThriftCommunication(prot))
-
-//[<TestContainer>]
-//type __() =
-//    [<Test>]
-//    member __.``Asynchronous call``() = run <| async {
-//        let m = MemoryProtocol([MessageHeader (0, "", ThriftMessageType.Reply)
-//                                StructHeader ""
-//                                FieldHeader (0s, "", tid 11)
-//                                String "the result"
-//                                FieldEnd
-//                                FieldStop
-//                                StructEnd
-//                                MessageEnd])
-//        let svc = ThriftAttributesParser.ParseService(typeof<IService>.GetTypeInfo())
-//        let! res = Thrift.CallMethodAsync(ThriftCommunication(m), svc, "Async", 1)
-//                         .ContinueWith(fun (x: Task<obj>) -> x.Result :?> string)
-//                |> Async.AwaitTask
-//        res <=> "the result"
-//    }
-//
-//    [<Test>]
-//    member __.``Async call with CancellationToken``() = run <| async {
-//        let source = CancellationTokenSource()
-//        source.CancelAfter(50)
-//
-//        let trans = { new IThriftTransport with
-//                          member x.ReadByte() = 0uy
-//                          member x.ReadBytes(_) = Array.empty
-//                          member x.WriteByte(_) = ()
-//                          member x.WriteBytes(_) = ()
-//                          member x.FlushAndReadAsync() = Task.Delay(10000, source.Token)
-//                          member x.Dispose() = () }
-//
-//        let svc = ThriftAttributesParser.ParseService(typeof<IService>.GetTypeInfo())
-//        let comm = ThriftCommunication(ThriftBinaryProtocol(trans))
-//
-//        do! throwsAsync<System.OperationCanceledException> (Thrift.CallMethodAsync(comm, svc, "Cancellable", 1, source.Token) |> Async.AwaitTask) |> Async.Ignore
-//    }
-//
-//    [<Test>]
-//    member __.``Async call with CancellationToken, already canceled``() = run <| async {  
-//        let source = CancellationTokenSource()
-//        source.Cancel()
-//
-//        let trans = { new IThriftTransport with
-//                          member x.ReadByte() = 0uy
-//                          member x.ReadBytes(_) = Array.empty
-//                          member x.WriteByte(_) = ()
-//                          member x.WriteBytes(_) = ()
-//                          member x.FlushAndReadAsync() = Task.Delay(10000, source.Token)
-//                          member x.Dispose() = () }
-//
-//        let svc = ThriftAttributesParser.ParseService(typeof<IService>.GetTypeInfo())
-//        let comm = ThriftCommunication(ThriftBinaryProtocol(trans))
-//
-//        do! throwsAsync<System.OperationCanceledException> (Thrift.CallMethodAsync(comm, svc, "Cancellable", 1, source.Token) |> Async.AwaitTask) |> Async.Ignore
-//    }
