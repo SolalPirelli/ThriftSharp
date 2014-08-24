@@ -11,6 +11,7 @@ open ThriftSharp.Transport
 type MemoryTransport(toRead: byte list) =
     let mutable writtenVals = []
     let mutable hasRead = false
+    let mutable isDisposed = false
     let toRead = Queue(toRead)
 
     let write values = for value in values do writtenVals <- value::writtenVals
@@ -20,6 +21,7 @@ type MemoryTransport(toRead: byte list) =
 
     member x.WrittenValues with get() = List.rev writtenVals
     member x.IsEmpty with get() = toRead.Count = 0
+    member x.IsDisposed with get() = isDisposed
 
     new() = MemoryTransport([])
 
@@ -28,6 +30,8 @@ type MemoryTransport(toRead: byte list) =
             (x :> IThriftTransport).WriteBytes([| b |])
 
         member x.WriteBytes(bs) =
+            if isDisposed then
+                failwith "Already disposed."
             if hasRead then failwith "Cannot write after a read. Close the transport first."
             write bs
 
@@ -35,13 +39,19 @@ type MemoryTransport(toRead: byte list) =
             (x :> IThriftTransport).ReadBytes(1).[0]
             
         member x.ReadBytes(len) =
+            if isDisposed then
+                failwith "Already disposed."
             if not hasRead then
                 hasRead <- true
             read len
 
         member x.FlushAndReadAsync() =
+            if isDisposed then
+                failwith "Already disposed."
             hasRead <- true
             Task.FromResult(0) :> Task
 
         member x.Dispose() =
-            hasRead <- false
+            if isDisposed then
+                failwith "Cannot dispose twice."
+            isDisposed <- true
