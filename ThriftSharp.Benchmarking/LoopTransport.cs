@@ -9,7 +9,7 @@ using ThriftSharp.Transport;
 namespace ThriftSharp.Benchmarking
 {
     /// <summary>
-    /// Simple looping transport that will read back from what was written.
+    /// Simple looping transport for Thrift# that will read back from what was written.
     /// </summary>
     public sealed class LoopTransport : IThriftTransport
     {

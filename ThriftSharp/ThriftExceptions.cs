@@ -248,7 +248,7 @@ namespace ThriftSharp
         /// </summary>
         internal static ThriftSerializationException RequiredFieldIsNull( string structName, string fieldName )
         {
-            return new ThriftSerializationException( "Field '{0}' of struct '{1}' is a required field and cannot be null when writing it.", structName, fieldName );
+            return new ThriftSerializationException( "Field '{1}' of struct '{0}' is a required field and cannot be null when writing it.", structName, fieldName );
         }
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace ThriftSharp
         /// </summary>
         internal static ThriftSerializationException MissingRequiredField( string structName, string fieldName )
         {
-            return new ThriftSerializationException( "Field '{0}' of struct '{1}' is a required field, but was not present.", structName, fieldName );
+            return new ThriftSerializationException( "Field '{1}' of struct '{0}' is a required field, but was not present.", structName, fieldName );
         }
 
         /// <summary>

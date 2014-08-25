@@ -2,16 +2,19 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 // Redistributions of this source code must retain the above copyright notice.
 
+using System.Collections.Generic;
+using System.Linq;
+
 namespace ThriftSharp.Benchmarking
 {
-    [ThriftStruct( "Person" )]
+    [ThriftStruct( "GeneratedPerson" )] // all names are exactly the same as the Thrift generated ones
     public sealed class Person
     {
         [ThriftField( 1, true, "FirstName" )]
-        public string Name { get; set; }
+        public string FirstName { get; set; }
 
         [ThriftField( 2, false, "MiddleNames" )]
-        public string[] MiddleNames { get; set; }
+        public List<string> MiddleNames { get; set; }
 
         [ThriftField( 3, true, "LastName" )]
         public string LastName { get; set; }
@@ -23,132 +26,32 @@ namespace ThriftSharp.Benchmarking
         public bool IsAlive { get; set; }
 
         [ThriftField( 6, true, "Hobbies" )]
-        public Hobby[] Hobbies { get; set; }
+        public List<Hobby> Hobbies { get; set; }
 
-        [ThriftField( 7, true, "Relatives" )]
-        public Person[] Relatives { get; set; }
+        [ThriftField( 7, false, "Description" )]
+        public string Description { get; set; }
 
 
-        public static Person GetSimplePerson()
+        // to re-use the test data
+        public static explicit operator GeneratedPerson( Person person )
         {
-            return new Person
+            var hobbies = person.Hobbies.Select( h => (GeneratedHobby) h ).ToList();
+            var genPerson = new GeneratedPerson( person.FirstName, person.LastName, person.IsAlive, hobbies );
+
+            if ( person.MiddleNames != null )
             {
-                Name = "John",
-                LastName = "Doe",
-                Age = 42,
-                IsAlive = true,
-                Hobbies = new Hobby[0],
-                Relatives = new Person[0]
-            };
-        }
-
-        public static Person GetComplexPerson()
-        {
-            return new Person
+                genPerson.MiddleNames = person.MiddleNames;
+            }
+            if ( person.Age.HasValue )
             {
-                Name = "Pablo",
-                MiddleNames = new[]
-                {
-                    "Diego", "José", "Francisco de Paula", "Juan", "Nepomuceno", "María de los Remedios", "Cipriano de la Santísima Trinidad"
-                },
-                LastName = "Ruiz y Picasso",
-                IsAlive = false,
-                Hobbies = new[] { Hobby.Painting },
-                Relatives = new[] 
-                { 
-                    new Person
-                    {
-                        Name = "Olga", 
-                        MiddleNames = new[] { "Stepanovna" }, 
-                        LastName = "Khokhlova",
-                        IsAlive = false,
-                        Hobbies = new[] { Hobby.Dancing },
-                        Relatives = new Person[0]
-                    }
-                }
-            };
-        }
-
-        public static Person GetVeryComplexPerson()
-        {
-            return new Person
+                genPerson.Age = person.Age.Value;
+            }
+            if ( person.Description != null )
             {
-                Name = "John",
-                MiddleNames = new[]
-                {
-                    "Q", "W", "E", "R", "T", "Z", "UIOP", "ASDF", "GHJ", "KL", "YX", "CVB", "NM"
-                },
-                LastName = "Public",
-                Age = 34,
-                IsAlive = true,
-                Hobbies = new[] { Hobby.Programming, Hobby.Sleeping, Hobby.Sports },
-                Relatives = new[] 
-                { 
-                    new Person
-                    {
-                        Name = "Jane",
-                        MiddleNames = new[]
-                        {
-                            "1", "2", "345", "67890"
-                        },
-                        LastName = "Public",
-                        Age = 35,
-                        IsAlive = true,
-                        Hobbies = new[] { Hobby.Programming, Hobby.Sleeping },
-                        Relatives = new[]
-                        {
-                            new Person
-                            {
-                                Name = "Alice",
-                                MiddleNames = new[]
-                                {
-                                    "Carol", "Eve"
-                                },
-                                LastName = "Doe",
-                                Age = 69,
-                                IsAlive = true,
-                                Hobbies = new Hobby[0],
-                                Relatives = new[]
-                                {
-                                    new Person
-                                    {
-                                        Name = "Bob",
-                                        MiddleNames = new string[0],
-                                        LastName = "Doe",
-                                        IsAlive = false,
-                                        Hobbies = new[] { Hobby.Sleeping },
-                                        Relatives = new Person[0]
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    new Person
-                    {
-                        Name = "John Jr",
-                        MiddleNames = new[]
-                        {
-                            "Q", "1", "E", "2"
-                        },
-                        LastName = "Public",
-                        Age = 3,
-                        IsAlive = true,
-                        Hobbies = new[] { Hobby.Sleeping },
-                        Relatives = new Person[0]
-                    }
-                }
-            };
-        }
+                genPerson.Description = person.Description;
+            }
 
-
-        [ThriftEnum]
-        public enum Hobby
-        {
-            Painting,
-            Programming,
-            Sports,
-            Sleeping,
-            Dancing
+            return genPerson;
         }
     }
 }

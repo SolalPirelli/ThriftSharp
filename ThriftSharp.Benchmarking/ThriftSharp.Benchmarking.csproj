@@ -40,8 +40,14 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="Thrift">
+      <HintPath>..\packages\Thrift.0.9.1.3\lib\net35\Thrift.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GeneratedHobby.cs" />
+    <Compile Include="GeneratedPerson.cs" />
+    <Compile Include="Hobby.cs" />
     <Compile Include="Person.cs" />
     <Compile Include="LoopTransport.cs" />
     <Compile Include="Program.cs" />
@@ -52,6 +58,9 @@
       <Project>{d1275e05-4238-447e-b6ab-f7301aa6cd2e}</Project>
       <Name>ThriftSharp</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
