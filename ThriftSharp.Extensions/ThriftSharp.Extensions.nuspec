@@ -9,6 +9,9 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <copyright>Copyright $author$ 2014</copyright>
-    <tags>MVVM</tags>
+    <tags>thrift</tags>
+    <dependencies>
+      <dependency id="ThriftSharp" version="$version$" />
+    </dependencies>
   </metadata>
 </package>

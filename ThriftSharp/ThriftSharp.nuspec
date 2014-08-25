@@ -9,6 +9,6 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <copyright>Copyright $author$ 2014</copyright>
-    <tags>MVVM</tags>
+    <tags>thrift</tags>
   </metadata>
 </package>
