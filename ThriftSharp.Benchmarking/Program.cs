@@ -14,24 +14,24 @@ using ThriftSharp.Protocols;
 namespace ThriftSharp.Benchmarking
 {
     /* Benchmarks results on an i7-3612QM in Release mode without debugging:
-     * (100 warmup iterations, 1,000,000 iterations)
+     * (100 warmup iterations, 100,000 iterations)
      * 
      * ThriftSharp v2.1.0.29585
-     * Read, simple   00:00:00.0000006
-     * Read, complex  00:00:00.0000019
-     * Write, simple  00:00:00.0000009
-     * Write, complex 00:00:00.0000021
+     * Read, simple   00:00:00.0000015
+     * Read, complex  00:00:00.0000031
+     * Write, simple  00:00:00.0000019
+     * Write, complex 00:00:00.0000033
      * 
      * Thrift v0.9.1.3
-     * Read, simple   00:00:00.0000003
-     * Read, complex  00:00:00.0000008
-     * Write, simple  00:00:00.0000001
-     * Write, complex 00:00:00.0000008
+     * Read, simple   00:00:00.0000028
+     * Read, complex  00:00:00.0000036
+     * Write, simple  00:00:00.0000005
+     * Write, complex 00:00:00.0000012
      */
     public sealed class Program
     {
         private const int WarmupIterations = 100;
-        private const int Iterations = 1000000;
+        private const int Iterations = 100000;
 
         public static void Main( string[] args )
         {
@@ -86,6 +86,13 @@ namespace ThriftSharp.Benchmarking
             var watch = new Stopwatch();
             for ( int n = 0; n < Iterations + WarmupIterations; n++ )
             {
+                transport.PrepareRead();
+
+                // clean up
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+
                 if ( n >= WarmupIterations )
                 {
                     watch.Start();
@@ -94,8 +101,6 @@ namespace ThriftSharp.Benchmarking
                 ThriftReader.Read( personStruct, protocol );
 
                 watch.Stop();
-
-                transport.Reset();
             }
 
             return TimeSpan.FromTicks( watch.ElapsedTicks / Iterations );
@@ -111,6 +116,11 @@ namespace ThriftSharp.Benchmarking
             var watch = new Stopwatch();
             for ( int n = 0; n < Iterations + WarmupIterations; n++ )
             {
+                // clean up
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+
                 if ( n >= WarmupIterations )
                 {
                     watch.Start();
@@ -134,6 +144,11 @@ namespace ThriftSharp.Benchmarking
             var watch = new Stopwatch();
             for ( int n = 0; n < Iterations + WarmupIterations; n++ )
             {
+                // clean up
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+
                 if ( n >= WarmupIterations )
                 {
                     watch.Start();
@@ -152,6 +167,11 @@ namespace ThriftSharp.Benchmarking
             var watch = new Stopwatch();
             for ( int n = 0; n < Iterations + WarmupIterations; n++ )
             {
+                // clean up
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+
                 if ( n >= WarmupIterations )
                 {
                     watch.Start();
