@@ -80,7 +80,108 @@ type Tests() =
     [<Test>] member x.``Map, empty``() = x.Test   [MapHeader (0, tid 8, tid 10); MapEnd]                     13  (Dictionary<int, int64>())
     [<Test>] member x.Array() = x.Test            [ListHeader (1, tid 8); Int32 1; ListEnd]                  15  [| 1 |]
     [<Test>] member x.``Array, empty``() = x.Test [ListHeader (0, tid 8); ListEnd]                           15  Array.empty<int>
+
+    // Collections of structs
+    [<Test>]
+    member x.``List of struct``() =
+        x.Test
+            [ListHeader (1, tid 12)
+             StructHeader "SimpleStruct"
+             FieldHeader (1s, "Field", tid 8)
+             Int32 1
+             FieldEnd
+             FieldStop
+             StructEnd
+             ListEnd]
+            15
+            (List [SimpleStruct(Field = 1)])
+
+    [<Test>]
+    member x.``Set of struct``() =
+        x.Test
+            [SetHeader (1, tid 12)
+             StructHeader "SimpleStruct"
+             FieldHeader (1s, "Field", tid 8)
+             Int32 1
+             FieldEnd
+             FieldStop
+             StructEnd
+             SetEnd]
+            14
+            (HashSet [SimpleStruct(Field = 1)])
+
+    [<Test>]
+    member x.``Map of struct``() =
+        x.Test
+            [MapHeader (1, tid 12, tid 12)
+             StructHeader "SimpleStruct"
+             FieldHeader (1s, "Field", tid 8)
+             Int32 1
+             FieldEnd
+             FieldStop
+             StructEnd
+             StructHeader "SimpleStruct"
+             FieldHeader (1s, "Field", tid 8)
+             Int32 2
+             FieldEnd
+             FieldStop
+             StructEnd
+             MapEnd]
+            13
+            (dict [SimpleStruct(Field = 1), SimpleStruct(Field = 2)])
+
+    [<Test>]
+    member x.``Array of struct``() =
+        x.Test
+            [ListHeader (1, tid 12)
+             StructHeader "SimpleStruct"
+             FieldHeader (1s, "Field", tid 8)
+             Int32 1
+             FieldEnd
+             FieldStop
+             StructEnd
+             ListEnd]
+            15
+            [| SimpleStruct(Field = 1) |]
          
+    // Collections of enums
+    [<Test>]
+    member x.``List of enum``() =
+        x.Test
+            [ListHeader (1, tid 8)
+             Int32 1
+             ListEnd]
+            15
+            (List [SimpleEnum.A])
+
+    [<Test>]
+    member x.``Set of enum``() =
+        x.Test
+            [SetHeader (1, tid 8)
+             Int32 1
+             SetEnd]
+            14
+            (HashSet [SimpleEnum.A])
+            
+    [<Test>]
+    member x.``Map of enum``() =
+        x.Test
+            [MapHeader (1, tid 8, tid 8)
+             Int32 1
+             Int32 2
+             MapEnd]
+            13
+            (dict [SimpleEnum.A, SimpleEnum.B])
+            
+    [<Test>]
+    member x.``Array of enum``() =
+        x.Test
+            [ListHeader (1, tid 8)
+             Int32 1
+             ListEnd]
+            15
+            [| SimpleEnum.A |]
+
     // Struct fields
     [<Test>]
     member x.``Struct``() =

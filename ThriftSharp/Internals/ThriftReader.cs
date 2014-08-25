@@ -334,11 +334,14 @@ namespace ThriftSharp.Internals
                 );
             }
 
-            return Expression.Call(
-                typeof( ThriftReader ),
-                "Read",
-                EmptyTypes,
-                Expression.Constant( thriftType.Struct ), protocolParam
+            return Expression.Convert(
+                Expression.Call(
+                    typeof( ThriftReader ),
+                    "Read",
+                    EmptyTypes,
+                    Expression.Constant( thriftType.Struct ), protocolParam
+                ),
+                thriftType.TypeInfo.AsType()
             );
         }
 

@@ -41,6 +41,10 @@ let dict (vals: ('a * 'b) seq) =
 let rec private eq (act: obj) (exp: obj) = // can safely assume act and exp are of the same type
     if act = null then
         exp = null
+    elif act :? IDictionary then
+        let act = act :?> IDictionary
+        let exp = exp :?> IDictionary
+        eq act.Keys exp.Keys && eq act.Values exp.Values
     elif not (act :? string) && act :? IEnumerable then
         let act = (act :?> IEnumerable).GetEnumerator()
         let exp = (exp :?> IEnumerable).GetEnumerator()
