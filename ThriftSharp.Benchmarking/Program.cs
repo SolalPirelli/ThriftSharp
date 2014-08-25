@@ -13,87 +13,64 @@ using ThriftSharp.Protocols;
 
 namespace ThriftSharp.Benchmarking
 {
-    /* Benchmarks executed on an i7-3612QM in Release mode without debugging.
+    /* Benchmarks results on an i7-3612QM in Release mode without debugging:
+     * (100 warmup iterations, 1,000,000 iterations)
      * 
-     * ThriftSharp v2.1.0
-     * Read, simple   00:00:00.0000007
-     * Read, complex  00:00:00.0000020
-     * Write, simple  00:00:00.0000008
-     * Write, complex 00:00:00.0000024
+     * ThriftSharp v2.1.0.29585
+     * Read, simple   00:00:00.0000006
+     * Read, complex  00:00:00.0000019
+     * Write, simple  00:00:00.0000009
+     * Write, complex 00:00:00.0000021
      * 
-     * Thrift v0.9.1
+     * Thrift v0.9.1.3
      * Read, simple   00:00:00.0000003
      * Read, complex  00:00:00.0000008
      * Write, simple  00:00:00.0000001
      * Write, complex 00:00:00.0000008
      */
-
     public sealed class Program
     {
         private const int WarmupIterations = 100;
-        private const int Iterations = 100000;
+        private const int Iterations = 1000000;
 
         public static void Main( string[] args )
         {
-            var actions = new Dictionary<string, Func<TimeSpan>>
+            var thriftSharpActions = new Dictionary<string, Func<TimeSpan>>
             {
-                { "ThriftSharp: read, simple", () => MeasureThriftSharpReadTime( SimplePerson ) },
-                { "ThriftSharp: read, complex", () => MeasureThriftSharpReadTime( ComplexPerson ) },
-                { "ThriftSharp: write, simple", () => MeasureThriftSharpWriteTime( SimplePerson ) },
-                { "ThriftSharp: write, complex", () => MeasureThriftSharpWriteTime( ComplexPerson ) },
-                { "Thrift: read, simple", () => MeasureThriftReadTime( (GeneratedPerson) SimplePerson ) },
-                { "Thrift: read, complex", () => MeasureThriftReadTime( (GeneratedPerson) ComplexPerson ) },
-                { "Thrift: write, simple", () => MeasureThriftWriteTime( (GeneratedPerson) SimplePerson ) },
-                { "Thrift: write, complex", () => MeasureThriftWriteTime( (GeneratedPerson) ComplexPerson ) }
+                { "Read, simple", () => MeasureThriftSharpReadTime( SimplePerson ) },
+                { "Read, complex", () => MeasureThriftSharpReadTime( ComplexPerson ) },
+                { "Write, simple", () => MeasureThriftSharpWriteTime( SimplePerson ) },
+                { "Write, complex", () => MeasureThriftSharpWriteTime( ComplexPerson ) }
             };
 
+            var thriftActions = new Dictionary<string, Func<TimeSpan>>
+            {
+                { "Read, simple", () => MeasureThriftReadTime( (GeneratedPerson) SimplePerson ) },
+                { "Read, complex", () => MeasureThriftReadTime( (GeneratedPerson) ComplexPerson ) },
+                { "Write, simple", () => MeasureThriftWriteTime( (GeneratedPerson) SimplePerson ) },
+                { "Write, complex", () => MeasureThriftWriteTime( (GeneratedPerson) ComplexPerson ) }
+            };
+
+            Console.WriteLine( "ThriftSharp v{0}", typeof( ThriftCommunication ).Assembly.GetName().Version );
+            Measure( thriftSharpActions );
+
+            Console.WriteLine();
+
+            Console.WriteLine( "Thrift v{0}", typeof( TTransport ).Assembly.GetName().Version );
+            Measure( thriftActions );
+
+            Console.Read();
+        }
+
+        #region Benchmarking
+        private static void Measure( Dictionary<string, Func<TimeSpan>> actions )
+        {
             string format = string.Format( "{{0, -{0}}} {{1}}", actions.Keys.Max( s => s.Length ) );
             foreach ( var pair in actions )
             {
                 var time = pair.Value();
                 Console.WriteLine( format, pair.Key, time.ToString() );
             }
-
-            Console.Read();
-        }
-
-        private static TimeSpan MeasureThriftReadTime( GeneratedPerson person )
-        {
-            // write something to be read
-            byte[] bytes = TMemoryBuffer.Serialize( person );
-
-            var watch = new Stopwatch();
-            for ( int n = 0; n < Iterations + WarmupIterations; n++ )
-            {
-                if ( n >= WarmupIterations )
-                {
-                    watch.Start();
-                }
-
-                TMemoryBuffer.DeSerialize<GeneratedPerson>( bytes );
-
-                watch.Stop();
-            }
-
-            return TimeSpan.FromTicks( watch.ElapsedTicks / Iterations );
-        }
-
-        private static TimeSpan MeasureThriftWriteTime( GeneratedPerson person )
-        {
-            var watch = new Stopwatch();
-            for ( int n = 0; n < Iterations + WarmupIterations; n++ )
-            {
-                if ( n >= WarmupIterations )
-                {
-                    watch.Start();
-                }
-
-                TMemoryBuffer.Serialize( person );
-
-                watch.Stop();
-            }
-
-            return TimeSpan.FromTicks( watch.ElapsedTicks / Iterations );
         }
 
         private static TimeSpan MeasureThriftSharpReadTime( Person person )
@@ -138,14 +115,58 @@ namespace ThriftSharp.Benchmarking
                 {
                     watch.Start();
                 }
+
                 ThriftWriter.Write( personStruct, person, protocol );
+
+                watch.Stop();
+
+                transport.Reset();
+            }
+
+            return TimeSpan.FromTicks( watch.ElapsedTicks / Iterations );
+        }
+
+        private static TimeSpan MeasureThriftReadTime( GeneratedPerson person )
+        {
+            // write something to be read
+            byte[] bytes = TMemoryBuffer.Serialize( person );
+
+            var watch = new Stopwatch();
+            for ( int n = 0; n < Iterations + WarmupIterations; n++ )
+            {
+                if ( n >= WarmupIterations )
+                {
+                    watch.Start();
+                }
+
+                TMemoryBuffer.DeSerialize<GeneratedPerson>( bytes );
+
                 watch.Stop();
             }
 
             return TimeSpan.FromTicks( watch.ElapsedTicks / Iterations );
         }
 
+        private static TimeSpan MeasureThriftWriteTime( GeneratedPerson person )
+        {
+            var watch = new Stopwatch();
+            for ( int n = 0; n < Iterations + WarmupIterations; n++ )
+            {
+                if ( n >= WarmupIterations )
+                {
+                    watch.Start();
+                }
 
+                TMemoryBuffer.Serialize( person );
+
+                watch.Stop();
+            }
+
+            return TimeSpan.FromTicks( watch.ElapsedTicks / Iterations );
+        }
+        #endregion
+
+        #region Data
         private static Person SimplePerson
         {
             get
@@ -194,5 +215,6 @@ namespace ThriftSharp.Benchmarking
                 };
             }
         }
+        #endregion
     }
 }
