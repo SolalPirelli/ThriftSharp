@@ -16,7 +16,7 @@ namespace ThriftSharp.Benchmarking
     /* Benchmarks results on an i7-3612QM in Release mode without debugging:
      * (100 warmup iterations, 100,000 iterations)
      * 
-     * ThriftSharp v2.1.0.29585
+     * ThriftSharp v2.1.0
      * Read, simple   00:00:00.0000015
      * Read, complex  00:00:00.0000031
      * Write, simple  00:00:00.0000019

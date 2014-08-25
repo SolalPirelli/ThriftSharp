@@ -6,10 +6,11 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle( "ThriftSharp.Benchmarking" )]
-[assembly: AssemblyDescription( "Benchmarks for Thrift#, comparing it to the official Thrift implementation." )]
+[assembly: AssemblyDescription( "Benchmarks for ThriftSharp, comparing it to the official Thrift implementation." )]
+[assembly: AssemblyCompany( "Solal Pirelli" )]
 [assembly: AssemblyCopyright( "Copyright © Solal Pirelli 2014" )]
 [assembly: AssemblyCulture( "" )]
 
 [assembly: ComVisible( false )]
 
-[assembly: AssemblyVersion( "2.1.0.*" )]
+[assembly: AssemblyVersion( "2.1.0" )]
