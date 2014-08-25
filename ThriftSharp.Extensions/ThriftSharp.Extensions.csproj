@@ -43,7 +43,6 @@
   <ItemGroup>
     <Compile Include="Internals\SpecialProxy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Internals\TypeCreator.cs" />
     <Compile Include="ThriftProxy.cs" />
   </ItemGroup>
   <ItemGroup>
