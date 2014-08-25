@@ -67,12 +67,12 @@ namespace ThriftSharp
 
     /// <summary>
     /// Converts 64-bit integer timestamps to DateTime using the Java format, 
-    /// i.e. the number of milliseconds since Jan. 1, 1970 00:00:00 UTC.
+    /// i.e. the number of milliseconds since Jan. 1, 1970 00:00:00.000 UTC.
     /// </summary>
     public sealed class ThriftJavaDateConverter : ThriftValueConverter<long, DateTime>
     {
         // The Java time start: Jan. 1, 1970 00:00:00 UTC.
-        private static readonly DateTime JavaTimeStart = new DateTime( 1970, 1, 1, 0, 0, 0, DateTimeKind.Utc );
+        private static readonly DateTime JavaTimeStart = new DateTime( 1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc );
 
         /// <summary>
         /// Converts the specified 64-bit Java timestamp to a DateTime.
