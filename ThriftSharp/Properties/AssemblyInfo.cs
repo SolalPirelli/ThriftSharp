@@ -7,7 +7,7 @@ using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle( "Thrift#" )]
+[assembly: AssemblyTitle( "ThriftSharp" )]
 [assembly: AssemblyDescription( "Attribute-based, IDL-less Thrift client for .NET." )]
 [assembly: AssemblyCompany( "Solal Pirelli" )]
 [assembly: AssemblyCopyright( "Copyright © Solal Pirelli 2014" )]
