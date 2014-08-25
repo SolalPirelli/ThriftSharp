@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle( "Thrift#.Benchmarking" )]
-[assembly: AssemblyDescription( "Benchmarks for Thrift#" )]
+[assembly: AssemblyDescription( "Benchmarks for Thrift#, comparing it to the official Thrift implementation." )]
 [assembly: AssemblyCopyright( "Copyright © Solal Pirelli 2014" )]
 [assembly: AssemblyCulture( "" )]
 

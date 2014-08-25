@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle( "Thrift#.Extensions" )]
-[assembly: AssemblyDescription( "Extensions for Thrift# using the full .NET framework." )]
+[assembly: AssemblyDescription( "Extensions for Thrift# on the full .NET framework." )]
 [assembly: AssemblyCopyright( "Copyright © Solal Pirelli 2014" )]
 [assembly: AssemblyCulture( "" )]
 
