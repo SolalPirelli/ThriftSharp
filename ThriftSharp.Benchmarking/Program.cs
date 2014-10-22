@@ -16,17 +16,17 @@ namespace ThriftSharp.Benchmarking
     /* Benchmarks results on an i7-3612QM in Release mode without debugging:
      * (100 warmup iterations, 100,000 iterations)
      * 
-     * ThriftSharp v2.1.0
-     * Read, simple   00:00:00.0000015
-     * Read, complex  00:00:00.0000031
-     * Write, simple  00:00:00.0000019
-     * Write, complex 00:00:00.0000033
+     * ThriftSharp v2.2.0.0
+     * Read, simple   00:00:00.0000016
+     * Read, complex  00:00:00.0000032
+     * Write, simple  00:00:00.0000020
+     * Write, complex 00:00:00.0000035
      * 
      * Thrift v0.9.1.3
-     * Read, simple   00:00:00.0000028
-     * Read, complex  00:00:00.0000036
-     * Write, simple  00:00:00.0000005
-     * Write, complex 00:00:00.0000012
+     * Read, simple   00:00:00.0000030
+     * Read, complex  00:00:00.0000039
+     * Write, simple  00:00:00.0000006
+     * Write, complex 00:00:00.0000013
      */
     public sealed class Program
     {
