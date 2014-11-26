@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Reflection;
 using ThriftSharp.Utilities;
 
@@ -83,7 +82,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the struct's fields.
         /// </summary>
-        public readonly ReadOnlyCollection<ThriftField> Fields;
+        public readonly IReadOnlyList<ThriftField> Fields;
 
         /// <summary>
         /// Gets the struct's underlying TypeInfo.
@@ -94,10 +93,10 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Initializes a new instance of the ThriftStructHeader class with the specified values.
         /// </summary>
-        public ThriftStruct( ThriftStructHeader header, IList<ThriftField> fields, TypeInfo typeInfo )
+        public ThriftStruct( ThriftStructHeader header, IReadOnlyList<ThriftField> fields, TypeInfo typeInfo )
         {
             Header = header;
-            Fields = fields.CopyAsReadOnly();
+            Fields = fields;
             TypeInfo = typeInfo;
         }
     }
@@ -203,12 +202,12 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the method's parameters.
         /// </summary>
-        public readonly ReadOnlyCollection<ThriftMethodParameter> Parameters;
+        public readonly IReadOnlyList<ThriftMethodParameter> Parameters;
 
         /// <summary>
         /// Gets the method's "throws" clauses.
         /// </summary>
-        public readonly ReadOnlyCollection<ThriftThrowsClause> Exceptions;
+        public readonly IReadOnlyList<ThriftThrowsClause> Exceptions;
 
         /// <summary>
         /// Gets the method's underlying name.
@@ -224,15 +223,15 @@ namespace ThriftSharp.Internals
         /// </summary>
         public ThriftMethod( string name, Type returnType, bool isOneWay,
                              IThriftValueConverter returnValueConverter,
-                             IList<ThriftMethodParameter> parameters, IList<ThriftThrowsClause> exceptions,
+                             IReadOnlyList<ThriftMethodParameter> parameters, IReadOnlyList<ThriftThrowsClause> exceptions,
                              string underlyingName )
         {
             Name = name;
             ReturnType = returnType;
             IsOneWay = isOneWay;
             ReturnValueConverter = returnValueConverter;
-            Parameters = parameters.CopyAsReadOnly();
-            Exceptions = exceptions.CopyAsReadOnly();
+            Parameters = parameters;
+            Exceptions = exceptions;
             UnderlyingName = underlyingName;
         }
     }
@@ -250,16 +249,16 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the service's methods.
         /// </summary>
-        public readonly ReadOnlyCollection<ThriftMethod> Methods;
+        public readonly IReadOnlyList<ThriftMethod> Methods;
 
 
         /// <summary>
         /// Initializes a new instance of the ThriftService class with the specified values.
         /// </summary>
-        public ThriftService( string name, IList<ThriftMethod> methods )
+        public ThriftService( string name, IReadOnlyList<ThriftMethod> methods )
         {
             Name = name;
-            Methods = methods.CopyAsReadOnly();
+            Methods = methods;
         }
     }
 }

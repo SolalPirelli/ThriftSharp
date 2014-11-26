@@ -173,15 +173,7 @@ namespace ThriftSharp.Internals
                 }
 
                 Id = ThriftTypeId.List;
-
-                if ( TypeInfo.IsArray )
-                {
-                    CollectionTypeInfo = TypeInfo;
-                }
-                else
-                {
-                    CollectionTypeInfo = collectionInterface.GetTypeInfo();
-                }
+                CollectionTypeInfo = TypeInfo.IsArray ? TypeInfo : collectionInterface.GetTypeInfo();
                 return;
             }
 

@@ -5,7 +5,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -22,16 +21,16 @@ namespace ThriftSharp.Internals
         // Cached common values
         private static class Cache
         {
-            public static ConstructorInfo CollectionHeaderConstructor =
+            public static readonly ConstructorInfo CollectionHeaderConstructor =
                 typeof( ThriftCollectionHeader ).GetTypeInfo().DeclaredConstructors.First();
 
-            public static ConstructorInfo MapHeaderConstructor =
+            public static readonly ConstructorInfo MapHeaderConstructor =
                 typeof( ThriftMapHeader ).GetTypeInfo().DeclaredConstructors.First();
 
-            public static PropertyInfo FieldItem =
-                typeof( ReadOnlyCollection<ThriftField> ).GetTypeInfo().GetDeclaredProperty( "Item" );
+            public static readonly PropertyInfo FieldItem =
+                typeof( IReadOnlyList<ThriftField> ).GetTypeInfo().GetDeclaredProperty( "Item" );
 
-            public static MethodInfo IEnumeratorMoveNext =
+            public static readonly MethodInfo IEnumeratorMoveNext =
                 typeof( IEnumerator ).GetTypeInfo().GetDeclaredMethod( "MoveNext" );
         }
 
@@ -192,15 +191,14 @@ namespace ThriftSharp.Internals
             var valueParam = Expression.Parameter( typeof( object ), "value" );
             var protocolParam = Expression.Parameter( typeof( IThriftProtocol ), "param" );
 
-            var methodContents = new List<Expression>();
-
-            methodContents.Add(
+            var methodContents = new List<Expression>
+            {
                 Expression.Call(
                     protocolParam,
                     "WriteStructHeader", EmptyTypes,
-                    Expression.Constant( thriftStruct.Header )
+                    Expression.Constant(thriftStruct.Header)
                 )
-            );
+            };
 
             for ( int n = 0; n < thriftStruct.Fields.Count; n++ )
             {

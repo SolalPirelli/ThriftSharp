@@ -33,7 +33,7 @@ namespace ThriftSharp
         /// <summary>
         /// The sequence ID of a message is wrong.
         /// </summary>
-        BadSequenceID = 4,
+        BadSequenceId = 4,
 
         /// <summary>
         /// The server did not send a result when one was expected.

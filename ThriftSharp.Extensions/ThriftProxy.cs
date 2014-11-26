@@ -16,6 +16,10 @@ namespace ThriftSharp
     /// </summary>
     public static class ThriftProxy
     {
+        // Attributes for all generated public methods
+        private const MethodAttributes GeneratedMethodAttributes =
+            MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig;
+
         /// <summary>
         /// Creates a proxy for the specified interface type using the specified protocol.
         /// </summary>
@@ -46,12 +50,10 @@ namespace ThriftSharp
             // Generate the methods
             foreach ( var m in typeof( T ).GetMethods( BindingFlags.Public | BindingFlags.Instance ) )
             {
-                // Define the method attributes
-                var methodAttrs = MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig;
                 // Define the method parameter types
                 var methodParamTypes = m.GetParameters().Select( p => p.ParameterType ).ToArray();
                 // Create the method
-                var methodBuilder = typeBuilder.DefineMethod( m.Name, methodAttrs, m.ReturnType, methodParamTypes );
+                var methodBuilder = typeBuilder.DefineMethod( m.Name, GeneratedMethodAttributes, m.ReturnType, methodParamTypes );
                 // Get the method's parameters
                 var parameters = m.GetParameters();
 

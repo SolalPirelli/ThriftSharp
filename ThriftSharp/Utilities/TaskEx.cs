@@ -18,7 +18,7 @@ namespace ThriftSharp.Utilities
         /// </summary>
         public static Task<TResult> FromAsync<TResult>( Func<AsyncCallback, object, IAsyncResult> beginMethod, Func<IAsyncResult, TResult> endMethod, int millisecondsTimeout, CancellationToken token )
         {
-            return Task.Factory.FromAsync( beginMethod, res => endMethod( res ), null ).TimeoutAfter( millisecondsTimeout, token );
+            return Task.Factory.FromAsync( beginMethod, endMethod, null ).TimeoutAfter( millisecondsTimeout, token );
         }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace ThriftSharp.Utilities
             var tokenSource = CancellationTokenSource.CreateLinkedTokenSource( timeoutSource.Token, token );
 
             var timeoutTask = Task.Delay( millisecondsTimeout, tokenSource.Token )
-                                  .ContinueWith( _ => default( TResult ) );
+                                  .ContinueWith( _ => default( TResult ), tokenSource.Token );
 
             var continuationState = Tuple.Create( timeoutSource, timeoutTask );
 
@@ -62,7 +62,7 @@ namespace ThriftSharp.Utilities
                                default:
                                    throw new InvalidOperationException( "This should never happen." );
                            }
-                       }, continuationState );
+                       }, continuationState, tokenSource.Token );
         }
     }
 }

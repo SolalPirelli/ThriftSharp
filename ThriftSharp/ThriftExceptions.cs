@@ -107,7 +107,7 @@ namespace ThriftSharp
         {
             return new ThriftParsingException( "The map type '{0}' is not supported."
                                              + Environment.NewLine
-                                             + "Supported types are IDictionary<K,V> and any concrete implementation with a parameterless constructor.",
+                                             + "Supported types are IDictionary<TKey, TValue> and any concrete implementation with a parameterless constructor.",
                                                typeInfo.FullName );
         }
 
@@ -129,7 +129,8 @@ namespace ThriftSharp
         {
             return new ThriftParsingException( "The list type '{0}' is not supported."
                                              + Environment.NewLine
-                                             + "Supported types are arrays, ICollection<T>, IList<T>, and any concrete implementation of ICollection<T> or IList<T> with a parameterless constructor.",
+                                             + "Supported types are arrays, ICollection<T>, IList<T> "
+                                             + "and any concrete implementation of these interfaces with a parameterless constructor.",
                                                typeInfo.FullName );
         }
 

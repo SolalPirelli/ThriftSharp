@@ -16,3 +16,6 @@
 # MSTest results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
+
+# NuGet build results
+*.nupkg

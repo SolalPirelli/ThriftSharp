@@ -140,7 +140,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static Expression CreateReader( ParameterExpression protocolParam, ThriftType thriftType )
         {
-            if ( thriftType.TypeInfo == Cache.StringTypeInfo )
+            if ( thriftType.TypeInfo.Equals( Cache.StringTypeInfo ) )
             {
                 return Expression.Call( protocolParam, "ReadString", EmptyTypes );
             }

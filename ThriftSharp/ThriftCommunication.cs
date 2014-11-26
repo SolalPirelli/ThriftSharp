@@ -25,13 +25,13 @@ namespace ThriftSharp
         /// <param name="timeout">Optional. The timeout in milliseconds. The default is 5 seconds; use -1 for an infinite timeout.</param>
         /// <param name="headers">Optional. The headers to use with the requests. No additional headers by default.</param>    
         /// <returns>A finished ThriftCommunication object.</returns>
-        ThriftCommunication OverHttp( string url, int timeout = 5000, IDictionary<string, string> headers = null );
+        ThriftCommunication OverHttp( string url, int timeout = 5000, IReadOnlyDictionary<string, string> headers = null );
     }
 
     /// <summary>
     /// Builds a Thrift communication method.
     /// </summary>
-    public sealed class ThriftCommunication : IThriftTransportPicker, IFluent
+    public sealed class ThriftCommunication : IThriftTransportPicker
     {
         private readonly Func<IThriftTransport, IThriftProtocol> _protocolCreator;
         private readonly Func<CancellationToken, IThriftTransport> _transportFactory;
@@ -83,7 +83,7 @@ namespace ThriftSharp
         /// <param name="timeout">Optional. The timeout in milliseconds. The default is 5 seconds; use -1 for an infinite timeout.</param>
         /// <param name="headers">Optional. The headers to use with the requests. No additional headers by default.</param>
         /// <returns>A finished ThriftCommunication object.</returns>
-        ThriftCommunication IThriftTransportPicker.OverHttp( string url, int timeout, IDictionary<string, string> headers )
+        ThriftCommunication IThriftTransportPicker.OverHttp( string url, int timeout, IReadOnlyDictionary<string, string> headers )
         {
             Validation.IsNeitherNullNorWhitespace( url, () => url );
 

@@ -15,16 +15,14 @@ namespace ThriftSharp.Transport
     /// <summary>
     /// Transports binary data over HTTP POST requests.
     /// </summary>
-    internal sealed class ThriftHttpTransport : IThriftTransport, IDisposable
+    internal sealed class ThriftHttpTransport : IThriftTransport
     {
         private const string ThriftContentType = "application/x-thrift";
         private const string ThriftHttpMethod = "POST";
 
-        private static readonly byte[] OneByteBuffer = new byte[1];
-
         private readonly string _url;
         private readonly CancellationToken _token;
-        private readonly IDictionary<string, string> _headers;
+        private readonly IReadOnlyDictionary<string, string> _headers;
         private readonly int _timeout;
 
         private readonly MemoryStream _outputStream;
@@ -39,7 +37,7 @@ namespace ThriftSharp.Transport
         /// <param name="token">The cancellation token that will cancel asynchronous tasks.</param>
         /// <param name="headers">The HTTP headers to include with every request.</param>
         /// <param name="timeout">The timeout in milliseconds (or -1 for an infinite timeout).</param>
-        public ThriftHttpTransport( string url, CancellationToken token, IDictionary<string, string> headers, int timeout )
+        public ThriftHttpTransport( string url, CancellationToken token, IReadOnlyDictionary<string, string> headers, int timeout )
         {
             _url = url;
             _token = token;
@@ -150,8 +148,8 @@ namespace ThriftSharp.Transport
         /// </summary>
         public void Dispose()
         {
-            GC.SuppressFinalize( this );
             Dispose( true );
+            GC.SuppressFinalize( this );
         }
 
         /// <summary>

@@ -50,7 +50,6 @@
     <Compile Include="ThriftValueConverter.cs" />
     <Compile Include="Utilities\CollectionHelper.cs" />
     <Compile Include="Utilities\IFluent.cs" />
-    <Compile Include="Utilities\ListExtensions.cs" />
     <Compile Include="Utilities\Option.cs" />
     <Compile Include="Internals\ThriftHeaders.cs" />
     <Compile Include="Internals\ThriftMessageType.cs" />
