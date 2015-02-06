@@ -339,7 +339,7 @@ namespace ThriftSharp.Internals
                     typeof( ThriftReader ),
                     "Read",
                     EmptyTypes,
-                    Expression.Constant( thriftType.Struct ), protocolParam
+                    Expression.Constant( thriftType.Struct ), protocolParam, Expression.Constant( true )
                 ),
                 thriftType.TypeInfo.AsType()
             );
@@ -494,8 +494,13 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Reads the specified struct from the specified protocol.
         /// </summary>
-        public static object Read( ThriftStruct thriftStruct, IThriftProtocol protocol )
+        public static object Read( ThriftStruct thriftStruct, IThriftProtocol protocol, bool cache )
         {
+            if ( !cache )
+            {
+                return CreateCompiledReader( thriftStruct )( protocol );
+            }
+
             if ( !_knownReaders.ContainsKey( thriftStruct ) )
             {
                 _knownReaders.Add( thriftStruct, CreateCompiledReader( thriftStruct ) );

@@ -104,7 +104,7 @@ let run x = x |> Async.Ignore |> Async.RunSynchronously
 
 let read<'T> prot =
     let thriftStruct = ThriftAttributesParser.ParseStruct(typeof<'T>.GetTypeInfo())
-    ThriftReader.Read(thriftStruct, prot) :?> 'T
+    ThriftReader.Read(thriftStruct, prot, true) :?> 'T
 
 let write prot obj =
     let thriftStruct = ThriftAttributesParser.ParseStruct(obj.GetType().GetTypeInfo())

@@ -30,7 +30,6 @@ type MemoryLeakTests() =
                                    StructEnd
                                    MessageEnd])
         let meth = ThriftMethod("test", typeof<Simple>, false, null, [| |], [| |], "Test")
-        let result = ThriftMessageReader.Read(prot, meth)
-        let resultRef = System.WeakReference(result)
+        let resultRef = System.WeakReference(ThriftMessageReader.Read(prot, meth))
         System.GC.Collect()
         resultRef.IsAlive <=> false

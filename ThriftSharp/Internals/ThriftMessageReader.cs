@@ -59,7 +59,7 @@ namespace ThriftSharp.Internals
         {
             // Server exception (not a declared one)
             var exceptionStruct = ThriftAttributesParser.ParseStruct( typeof( ThriftProtocolException ).GetTypeInfo() );
-            var exception = ThriftReader.Read( exceptionStruct, protocol );
+            var exception = ThriftReader.Read( exceptionStruct, protocol, true );
             protocol.ReadMessageEnd();
             return (ThriftProtocolException) exception;
         }
@@ -81,7 +81,7 @@ namespace ThriftSharp.Internals
             }
 
             var retStAndVal = MakeReturnStruct( method );
-            ThriftReader.Read( retStAndVal.Item1, protocol );
+            ThriftReader.Read( retStAndVal.Item1, protocol, false );
             protocol.ReadMessageEnd();
             // Dispose of it now that we have finished reading and writing
             // using() is quite dangerous in this case because of async stuff happening

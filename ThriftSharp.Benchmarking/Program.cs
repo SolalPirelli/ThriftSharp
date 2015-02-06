@@ -98,7 +98,7 @@ namespace ThriftSharp.Benchmarking
                     watch.Start();
                 }
 
-                ThriftReader.Read( personStruct, protocol );
+                ThriftReader.Read( personStruct, protocol, true );
 
                 watch.Stop();
             }
