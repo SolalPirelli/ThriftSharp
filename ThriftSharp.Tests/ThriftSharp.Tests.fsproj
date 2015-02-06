@@ -67,6 +67,7 @@
     <Compile Include="StructsTests.fs" />
     <Compile Include="BinaryProtocolTests.fs" />
     <Compile Include="ServiceCallTests.fs" />
+    <Compile Include="SpecificTests.fs" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
