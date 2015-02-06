@@ -1,6 +1,5 @@
-﻿// Copyright (c) 2014 Solal Pirelli
+﻿// Copyright (c) 2014-15 Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details).
-// Redistributions of this source code must retain the above copyright notice.
 
 using System;
 using System.Collections.Generic;
@@ -84,7 +83,7 @@ namespace ThriftSharp.Internals
             ThriftReader.Read( retStAndVal.Item1, protocol, false );
             protocol.ReadMessageEnd();
             // Dispose of it now that we have finished reading and writing
-            // using() is quite dangerous in this case because of async stuff happening
+            // using() is dangerous in this case because of async stuff happening
             protocol.Dispose();
 
             if ( retStAndVal.Item2.HasValue )
