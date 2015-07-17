@@ -15,16 +15,9 @@ namespace ThriftSharp.Benchmarking
     {
         private MemoryStream _memory = new MemoryStream();
 
-        public byte ReadByte()
+        public void ReadBytes( byte[] output )
         {
-            return (byte) _memory.ReadByte();
-        }
-
-        public byte[] ReadBytes( int length )
-        {
-            byte[] buffer = new byte[length];
-            _memory.Read( buffer, 0, length );
-            return buffer;
+            _memory.Read( output, 0, output.Length );
         }
 
         public void WriteByte( byte b )

@@ -47,29 +47,12 @@ namespace ThriftSharp.Transport
 
 
         /// <summary>
-        /// Reads an unsigned byte.
+        /// Reads unsigned bytes, and puts them in the specified array.
         /// </summary>
-        /// <returns>An unsigned byte.</returns>
-        public byte ReadByte()
+        /// <param name="output">The array in which to read bytes. It will be overwritten completely.</param>
+        public void ReadBytes( byte[] output )
         {
-            int result = _inputStream.ReadByte();
-            if ( result == -1 )
-            {
-                throw new InvalidOperationException( "There are no bytes left to be read." );
-            }
-            return (byte) result;
-        }
-
-        /// <summary>
-        /// Reads an array of unsigned bytes of the specified length.
-        /// </summary>
-        /// <param name="length">The length.</param>
-        /// <returns>An array of unsigned bytes.</returns>
-        public byte[] ReadBytes( int length )
-        {
-            byte[] buffer = new byte[length];
-            _inputStream.Read( buffer, 0, length );
-            return buffer;
+            _inputStream.Read( output, 0, output.Length );
         }
 
         /// <summary>

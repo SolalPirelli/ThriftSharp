@@ -29,16 +29,9 @@ namespace ThriftSharp.Transport
         Task FlushAndReadAsync();
 
         /// <summary>
-        /// Reads an unsigned byte.
+        /// Reads unsigned bytes, and puts them in the specified array.
         /// </summary>
-        /// <returns>An unsigned byte.</returns>
-        byte ReadByte();
-
-        /// <summary>
-        /// Reads an array of unsigned bytes of the specified length.
-        /// </summary>
-        /// <param name="length">The length.</param>
-        /// <returns>An array of unsigned bytes.</returns>
-        byte[] ReadBytes( int length );
+        /// <param name="output">The array in which to read bytes. It will be overwritten completely.</param>
+        void ReadBytes( byte[] output );
     }
 }

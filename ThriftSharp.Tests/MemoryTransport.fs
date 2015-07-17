@@ -14,9 +14,10 @@ type MemoryTransport(toRead: byte list) =
     let toRead = Queue(toRead)
 
     let write values = for value in values do writtenVals <- value::writtenVals
-    let read len = [| for x = 1 to len do
-                          if toRead.Count > 0 then yield toRead.Dequeue()
-                          else failwith "Not enough bytes were read." |]
+    let read (out: byte[]) = 
+        for x = 0 to out.Length - 1 do
+            if toRead.Count > 0 then out.[x] <- toRead.Dequeue()
+            else failwith "Not enough bytes were read."
 
     member x.WrittenValues with get() = List.rev writtenVals
     member x.IsEmpty with get() = toRead.Count = 0
@@ -35,15 +36,12 @@ type MemoryTransport(toRead: byte list) =
             if hasRead then failwith "Cannot write after a read. Close the transport first."
             write bs
 
-        member x.ReadByte() =
-            (x :> IThriftTransport).ReadBytes(1).[0]
-            
-        member x.ReadBytes(len) =
+        member x.ReadBytes(out) =
             if isDisposed then
                 failwith "Already disposed."
             if not hasRead then
                 hasRead <- true
-            read len
+            read out
 
         member x.FlushAndReadAsync() =
             if isDisposed then

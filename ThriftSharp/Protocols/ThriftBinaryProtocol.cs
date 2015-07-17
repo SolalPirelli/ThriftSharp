@@ -19,8 +19,8 @@ namespace ThriftSharp.Protocols
         // A mask used to store more information in the message size field.
         private const uint VersionMask = 0xffff0000;
 
-        // PERF: Cached buffers for writing i16, i32 and i64
-        private readonly byte[] i16Buffer = new byte[2], i32Buffer = new byte[4], i64Buffer = new byte[8];
+        // PERF: Cached buffers for reading/writing 1-, 2-, 4- and 8-byte elements
+        private readonly byte[] buffer1 = new byte[1], buffer2 = new byte[2], buffer4 = new byte[4], buffer8 = new byte[8];
 
         private readonly IThriftTransport _transport;
 
@@ -56,9 +56,13 @@ namespace ThriftSharp.Protocols
             else
             {
                 // Old protocol version
-                byte[] nameBytes = _transport.ReadBytes( size );
+                byte[] nameBytes = new byte[size];
+                _transport.ReadBytes( nameBytes );
                 string name = Encoding.UTF8.GetString( nameBytes, 0, nameBytes.Length );
-                var type = (ThriftMessageType) _transport.ReadByte();
+
+                _transport.ReadBytes( buffer1 );
+                var type = (ThriftMessageType) buffer1[0];
+
                 int id = ReadInt32();
                 return new ThriftMessageHeader( id, name, type );
             }
@@ -90,14 +94,14 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public ThriftFieldHeader ReadFieldHeader()
         {
-            byte tid = _transport.ReadByte();
-            if ( tid == ThriftFieldHeader.Stop )
+            _transport.ReadBytes( buffer1 );
+            if ( buffer1[0] == ThriftFieldHeader.Stop )
             {
                 return null;
             }
 
             short id = ReadInt16();
-            return new ThriftFieldHeader( id, "", (ThriftTypeId) tid );
+            return new ThriftFieldHeader( id, "", (ThriftTypeId) buffer1[0] );
         }
 
         /// <summary>
@@ -111,9 +115,9 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public ThriftCollectionHeader ReadListHeader()
         {
-            byte tid = _transport.ReadByte();
+            _transport.ReadBytes( buffer1 );
             int count = ReadInt32();
-            return new ThriftCollectionHeader( count, (ThriftTypeId) tid );
+            return new ThriftCollectionHeader( count, (ThriftTypeId) buffer1[0] );
         }
 
         /// <summary>
@@ -127,9 +131,9 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public ThriftCollectionHeader ReadSetHeader()
         {
-            byte tid = _transport.ReadByte();
+            _transport.ReadBytes( buffer1 );
             int count = ReadInt32();
-            return new ThriftCollectionHeader( count, (ThriftTypeId) tid );
+            return new ThriftCollectionHeader( count, (ThriftTypeId) buffer1[0] );
         }
 
         /// <summary>
@@ -143,10 +147,9 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public ThriftMapHeader ReadMapHeader()
         {
-            var keyTypeId = _transport.ReadByte();
-            var valueTypeId = _transport.ReadByte();
+            _transport.ReadBytes( buffer2 );
             int count = ReadInt32();
-            return new ThriftMapHeader( count, (ThriftTypeId) keyTypeId, (ThriftTypeId) valueTypeId );
+            return new ThriftMapHeader( count, (ThriftTypeId) buffer2[0], (ThriftTypeId) buffer2[1] );
         }
 
         /// <summary>
@@ -160,7 +163,8 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public bool ReadBoolean()
         {
-            return _transport.ReadByte() != 0;
+            _transport.ReadBytes( buffer1 );
+            return buffer1[0] != 0;
         }
 
         /// <summary>
@@ -168,7 +172,8 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public sbyte ReadSByte()
         {
-            return (sbyte) _transport.ReadByte();
+            _transport.ReadBytes( buffer1 );
+            return (sbyte) buffer1[0];
         }
 
         /// <summary>
@@ -184,7 +189,8 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public short ReadInt16()
         {
-            return BitConverter.ToInt16( ReadBigEndianBytes( 2 ), 0 );
+            _transport.ReadBytes( buffer2 );
+            return (short) ( ( buffer2[0] << 8 ) | ( buffer2[1] ) );
         }
 
         /// <summary>
@@ -192,7 +198,8 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public int ReadInt32()
         {
-            return BitConverter.ToInt32( ReadBigEndianBytes( 4 ), 0 );
+            _transport.ReadBytes( buffer4 );
+            return ( buffer4[0] << 24 ) | ( buffer4[1] << 16 ) | ( buffer4[2] << 8 ) | ( buffer4[3] );
         }
 
         /// <summary>
@@ -200,7 +207,18 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public long ReadInt64()
         {
-            return BitConverter.ToInt64( ReadBigEndianBytes( 8 ), 0 );
+            _transport.ReadBytes( buffer8 );
+            unchecked
+            {
+                return ( (long) buffer8[0] << 56 ) |
+                       ( (long) buffer8[1] << 48 ) |
+                       ( (long) buffer8[2] << 40 ) |
+                       ( (long) buffer8[3] << 32 ) |
+                       ( (long) buffer8[4] << 24 ) |
+                       ( (long) buffer8[5] << 16 ) |
+                       ( (long) buffer8[6] << 8 ) |
+                       ( (long) buffer8[7] );
+            }
         }
 
         /// <summary>
@@ -209,7 +227,8 @@ namespace ThriftSharp.Protocols
         public string ReadString()
         {
             int length = ReadInt32();
-            byte[] bytes = _transport.ReadBytes( length );
+            byte[] bytes = new byte[length];
+            _transport.ReadBytes( bytes );
             return Encoding.UTF8.GetString( bytes, 0, bytes.Length );
         }
 
@@ -220,27 +239,14 @@ namespace ThriftSharp.Protocols
         {
             int length = ReadInt32();
             // The array must be converted, not just casted, otherwise weird stuff happens when it's used
-            byte[] bytes = _transport.ReadBytes( length );
+            byte[] bytes = new byte[length];
+            _transport.ReadBytes( bytes );
             sbyte[] sbytes = new sbyte[length];
             for ( int n = 0; n < length; n++ )
             {
                 sbytes[n] = (sbyte) bytes[n];
             }
             return sbytes;
-        }
-
-        /// <summary>
-        /// Not part of the IThriftProtocol interface.
-        /// Reads an array of unsigned bytes of the specified length representing a number, ensuring they are in big-endian order.
-        /// </summary>
-        private byte[] ReadBigEndianBytes( int length )
-        {
-            byte[] bytes = _transport.ReadBytes( length );
-            if ( BitConverter.IsLittleEndian )
-            {
-                Array.Reverse( bytes );
-            }
-            return bytes;
         }
 
 
@@ -369,9 +375,9 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteInt16( short value )
         {
-            i16Buffer[0] = (byte) ( value >> 8 );
-            i16Buffer[1] = (byte) value;
-            _transport.WriteBytes( i16Buffer );
+            buffer2[0] = (byte) ( value >> 8 );
+            buffer2[1] = (byte) value;
+            _transport.WriteBytes( buffer2 );
         }
 
         /// <summary>
@@ -379,11 +385,11 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteInt32( int value )
         {
-            i32Buffer[0] = (byte) ( value >> 24 );
-            i32Buffer[1] = (byte) ( value >> 16 );
-            i32Buffer[2] = (byte) ( value >> 8 );
-            i32Buffer[3] = (byte) value;
-            _transport.WriteBytes( i32Buffer );
+            buffer4[0] = (byte) ( value >> 24 );
+            buffer4[1] = (byte) ( value >> 16 );
+            buffer4[2] = (byte) ( value >> 8 );
+            buffer4[3] = (byte) value;
+            _transport.WriteBytes( buffer4 );
         }
 
         /// <summary>
@@ -391,15 +397,15 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteInt64( long value )
         {
-            i64Buffer[0] = (byte) ( value >> 56 );
-            i64Buffer[1] = (byte) ( value >> 48 );
-            i64Buffer[2] = (byte) ( value >> 40 );
-            i64Buffer[3] = (byte) ( value >> 32 );
-            i64Buffer[4] = (byte) ( value >> 24 );
-            i64Buffer[5] = (byte) ( value >> 16 );
-            i64Buffer[6] = (byte) ( value >> 8 );
-            i64Buffer[7] = (byte) value;
-            _transport.WriteBytes( i64Buffer );
+            buffer8[0] = (byte) ( value >> 56 );
+            buffer8[1] = (byte) ( value >> 48 );
+            buffer8[2] = (byte) ( value >> 40 );
+            buffer8[3] = (byte) ( value >> 32 );
+            buffer8[4] = (byte) ( value >> 24 );
+            buffer8[5] = (byte) ( value >> 16 );
+            buffer8[6] = (byte) ( value >> 8 );
+            buffer8[7] = (byte) value;
+            _transport.WriteBytes( buffer8 );
         }
 
         /// <summary>

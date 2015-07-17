@@ -14,11 +14,12 @@ namespace ThriftSharp.Benchmarking
 {
     /* Benchmarks results on an i7-4710HQ in Release mode without debugging:
      * (100 warmup iterations, 100,000 iterations)
+     * 
      * ThriftSharp v2.4.0.0
-     * Read, simple   00:00:00.0000012
-     * Read, complex  00:00:00.0000028
-     * Write, simple  00:00:00.0000016
-     * Write, complex 00:00:00.0000030
+     * Read, simple   00:00:00.0000010
+     * Read, complex  00:00:00.0000023
+     * Write, simple  00:00:00.0000013
+     * Write, complex 00:00:00.0000025
      * 
      * Thrift v0.9.1.3
      * Read, simple   00:00:00.0000022
