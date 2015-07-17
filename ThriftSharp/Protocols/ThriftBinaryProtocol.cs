@@ -19,8 +19,10 @@ namespace ThriftSharp.Protocols
         // A mask used to store more information in the message size field.
         private const uint VersionMask = 0xffff0000;
 
-        private readonly IThriftTransport _transport;
+        // PERF: Cached buffers for writing i16, i32 and i64
+        private readonly byte[] i16Buffer = new byte[2], i32Buffer = new byte[4], i64Buffer = new byte[8];
 
+        private readonly IThriftTransport _transport;
 
         /// <summary>
         /// Initializes a new instance of the ThriftBinaryProtocol class using the specified binary transport.
@@ -274,7 +276,7 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteFieldHeader( ThriftFieldHeader header )
         {
-            WriteByte( (byte) header.FieldTypeId );
+            _transport.WriteByte( (byte) header.FieldTypeId );
             WriteInt16( header.Id );
         }
 
@@ -289,7 +291,7 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteFieldStop()
         {
-            WriteByte( ThriftFieldHeader.Stop );
+            _transport.WriteByte( ThriftFieldHeader.Stop );
         }
 
         /// <summary>
@@ -297,7 +299,7 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteListHeader( ThriftCollectionHeader header )
         {
-            WriteByte( (byte) header.ElementTypeId );
+            _transport.WriteByte( (byte) header.ElementTypeId );
             WriteInt32( header.Count );
         }
 
@@ -312,7 +314,7 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteSetHeader( ThriftCollectionHeader header )
         {
-            WriteByte( (byte) header.ElementTypeId );
+            _transport.WriteByte( (byte) header.ElementTypeId );
             WriteInt32( header.Count );
         }
 
@@ -327,8 +329,8 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteMapHeader( ThriftMapHeader header )
         {
-            WriteByte( (byte) header.KeyTypeId );
-            WriteByte( (byte) header.ValueTypeId );
+            _transport.WriteByte( (byte) header.KeyTypeId );
+            _transport.WriteByte( (byte) header.ValueTypeId );
             WriteInt32( header.Count );
         }
 
@@ -343,7 +345,7 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteBoolean( bool value )
         {
-            WriteByte( value ? (byte) 1 : (byte) 0 );
+            _transport.WriteByte( value ? (byte) 1 : (byte) 0 );
         }
 
         /// <summary>
@@ -351,7 +353,7 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteSByte( sbyte value )
         {
-            WriteByte( (byte) value );
+            _transport.WriteByte( (byte) value );
         }
 
         /// <summary>
@@ -367,7 +369,9 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteInt16( short value )
         {
-            WriteBigEndianBytes( BitConverter.GetBytes( value ) );
+            i16Buffer[0] = (byte) ( 0xff & ( value >> 8 ) );
+            i16Buffer[1] = (byte) ( 0xff & value );
+            _transport.WriteBytes( i16Buffer );
         }
 
         /// <summary>
@@ -375,7 +379,11 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteInt32( int value )
         {
-            WriteBigEndianBytes( BitConverter.GetBytes( value ) );
+            i32Buffer[0] = (byte) ( 0xff & ( value >> 24 ) );
+            i32Buffer[1] = (byte) ( 0xff & ( value >> 16 ) );
+            i32Buffer[2] = (byte) ( 0xff & ( value >> 8 ) );
+            i32Buffer[3] = (byte) ( 0xff & value );
+            _transport.WriteBytes( i32Buffer );
         }
 
         /// <summary>
@@ -383,7 +391,15 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteInt64( long value )
         {
-            WriteBigEndianBytes( BitConverter.GetBytes( value ) );
+            i64Buffer[0] = (byte) ( 0xff & ( value >> 56 ) );
+            i64Buffer[1] = (byte) ( 0xff & ( value >> 48 ) );
+            i64Buffer[2] = (byte) ( 0xff & ( value >> 40 ) );
+            i64Buffer[3] = (byte) ( 0xff & ( value >> 32 ) );
+            i64Buffer[4] = (byte) ( 0xff & ( value >> 24 ) );
+            i64Buffer[5] = (byte) ( 0xff & ( value >> 16 ) );
+            i64Buffer[6] = (byte) ( 0xff & ( value >> 8 ) );
+            i64Buffer[7] = (byte) ( 0xff & value );
+            _transport.WriteBytes( i64Buffer );
         }
 
         /// <summary>
@@ -412,30 +428,6 @@ namespace ThriftSharp.Protocols
         {
             return _transport.FlushAndReadAsync();
         }
-
-
-        /// <summary>
-        /// Not part of the IThriftProtocol interface.
-        /// Writes the specified unsigned byte.
-        /// </summary>
-        private void WriteByte( byte b )
-        {
-            _transport.WriteByte( b );
-        }
-
-        /// <summary>
-        /// Not part of the IThriftProtocol interface.
-        /// Writes the specified array of unsigned bytes representing a number, ensuring it is in big-endian order.
-        /// </summary>
-        private void WriteBigEndianBytes( byte[] bytes )
-        {
-            if ( BitConverter.IsLittleEndian )
-            {
-                Array.Reverse( bytes );
-            }
-            _transport.WriteBytes( bytes );
-        }
-
 
         #region IDisposable implementation
         ~ThriftBinaryProtocol()
