@@ -99,7 +99,7 @@ namespace ThriftSharp.Internals
                     while ( true )
                     {
                         var fieldHeader = protocol.ReadFieldHeader();
-                        if ( fieldHeader == null )
+                        if ( fieldHeader.IsEmpty() )
                         {
                             break;
                         }
@@ -378,9 +378,10 @@ namespace ThriftSharp.Internals
                             Expression.Call( protocolParam, "ReadFieldHeader", EmptyTypes )
                         ),
                         Expression.IfThen(
-                            Expression.Equal(
+                            Expression.Call(
                                 fieldHeaderVar,
-                                Expression.Constant( null )
+                                "IsEmpty",
+                                EmptyTypes
                             ),
                             Expression.Break( endOfLoop )
                         ),

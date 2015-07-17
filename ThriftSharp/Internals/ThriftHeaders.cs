@@ -6,7 +6,7 @@ namespace ThriftSharp.Internals
     /// <summary>
     /// Header of Thrift collections (List and Set).
     /// </summary>
-    internal sealed class ThriftCollectionHeader
+    internal struct ThriftCollectionHeader
     {
         /// <summary>
         /// Gets the number of elements in the collection.
@@ -34,7 +34,7 @@ namespace ThriftSharp.Internals
     /// <summary>
     /// Header of Thrift maps.
     /// </summary>
-    internal sealed class ThriftMapHeader
+    internal struct ThriftMapHeader
     {
         /// <summary>
         /// Gets the number of elements in the map.
@@ -69,7 +69,7 @@ namespace ThriftSharp.Internals
     /// <summary>
     /// Header of Thrift fields.
     /// </summary>
-    internal sealed class ThriftFieldHeader
+    internal struct ThriftFieldHeader
     {
         /// <summary>
         /// Indicates the end of fields in a struct.
@@ -120,14 +120,20 @@ namespace ThriftSharp.Internals
         {
             Id = id;
             Name = name;
+            FieldType = null;
             FieldTypeId = fieldTypeId;
+        }
+
+        public bool IsEmpty()
+        {
+            return Id == 0 && Name == null && FieldType == null && FieldTypeId == 0;
         }
     }
 
     /// <summary>
     /// Header of Thrift structs.
     /// </summary>
-    internal sealed class ThriftStructHeader
+    internal struct ThriftStructHeader
     {
         /// <summary>
         /// Gets the struct's name.
@@ -148,15 +154,9 @@ namespace ThriftSharp.Internals
     /// <summary>
     /// Header of Thrift messages.
     /// </summary>
-    internal sealed class ThriftMessageHeader
+    internal struct ThriftMessageHeader
     {
-        /// <summary>
-        /// Gets the message's ID.
-        /// </summary>
-        /// <remarks>
-        /// Apparently unused.
-        /// </remarks>
-        public readonly int Id;
+        // N.B. Thrift# does not implement message sequence IDs, as they aren't useful in languages with async/await
 
         /// <summary>
         /// Gets the message's name.
@@ -172,12 +172,10 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Initializes a new instance of the ThriftMessageHeader class with the specified values.
         /// </summary>
-        /// <param name="id">The message ID.</param>
         /// <param name="name">The message name.</param>
         /// <param name="messageType">The message type.</param>
-        public ThriftMessageHeader( int id, string name, ThriftMessageType messageType )
+        public ThriftMessageHeader( string name, ThriftMessageType messageType )
         {
-            Id = id;
             Name = name;
             MessageType = messageType;
         }

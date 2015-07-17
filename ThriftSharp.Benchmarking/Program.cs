@@ -16,13 +16,13 @@ namespace ThriftSharp.Benchmarking
      * (100 warmup iterations, 100,000 iterations)
      * 
      * ThriftSharp v2.4.0.0
-     * Read, simple   00:00:00.0000010
-     * Read, complex  00:00:00.0000023
-     * Write, simple  00:00:00.0000013
-     * Write, complex 00:00:00.0000025
+     * Read, simple   00:00:00.0000011
+     * Read, complex  00:00:00.0000024
+     * Write, simple  00:00:00.0000014
+     * Write, complex 00:00:00.0000026
      * 
      * Thrift v0.9.1.3
-     * Read, simple   00:00:00.0000022
+     * Read, simple   00:00:00.0000023
      * Read, complex  00:00:00.0000030
      * Write, simple  00:00:00.0000004
      * Write, complex 00:00:00.0000010

@@ -53,7 +53,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static void Write( IThriftProtocol protocol, ThriftMethod method, object[] args )
         {
-            var msg = new ThriftMessageHeader( 0, method.Name, method.IsOneWay ? ThriftMessageType.OneWay : ThriftMessageType.Call );
+            var msg = new ThriftMessageHeader( method.Name, method.IsOneWay ? ThriftMessageType.OneWay : ThriftMessageType.Call );
             var paramSt = MakeParametersStruct( method, args );
 
             protocol.WriteMessageHeader( msg );

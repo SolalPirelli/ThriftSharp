@@ -11,7 +11,7 @@ open ThriftSharp.Internals
 
 [<NoComparison>]
 type ThriftProtocolValue =
-    | MessageHeader of int * string * ThriftMessageType
+    | MessageHeader of string * ThriftMessageType
     | MessageEnd
     | StructHeader of string
     | StructEnd
@@ -50,7 +50,7 @@ type MemoryProtocol(toRead: ThriftProtocolValue list) =
 
     interface IThriftProtocol with
         member x.WriteMessageHeader(h) =
-           write (MessageHeader (h.Id, h.Name, h.MessageType))
+           write (MessageHeader (h.Name, h.MessageType))
 
         member x.WriteMessageEnd() =
             write MessageEnd
@@ -118,7 +118,7 @@ type MemoryProtocol(toRead: ThriftProtocolValue list) =
 
         member x.ReadMessageHeader() =
             match read() with
-            | MessageHeader (id, name, typ) -> ThriftMessageHeader(id, name, typ)
+            | MessageHeader (name, typ) -> ThriftMessageHeader(name, typ)
             | x -> failwithf "Expected a message header, got %A" x
 
         member x.ReadMessageEnd() =
@@ -139,7 +139,7 @@ type MemoryProtocol(toRead: ThriftProtocolValue list) =
         member x.ReadFieldHeader() =
             match read() with
             | FieldHeader (id, name, typ) -> ThriftFieldHeader(id, name, typ)
-            | FieldStop -> null
+            | FieldStop -> Unchecked.defaultof<ThriftFieldHeader>
             | x -> failwithf "Expected a field header or stop, got %A" x
 
         member x.ReadFieldEnd() =

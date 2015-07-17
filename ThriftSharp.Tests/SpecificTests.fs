@@ -16,7 +16,7 @@ type MemoryLeakTests() =
     // Regression test
     [<Test>]
     member x.``No reference is kept to returned objects``() =
-        let prot = MemoryProtocol([MessageHeader (0, "Test", ThriftMessageType.Reply)
+        let prot = MemoryProtocol([MessageHeader ("Test", ThriftMessageType.Reply)
                                    StructHeader ""
                                    FieldHeader (0s, "", tid 12)
                                    StructHeader "Simple"

@@ -40,6 +40,9 @@ namespace ThriftSharp.Protocols
         public ThriftMessageHeader ReadMessageHeader()
         {
             int size = ReadInt32();
+
+            string name;
+            ThriftMessageType type;
             if ( size < 0 )
             {
                 uint version = (uint) size & VersionMask;
@@ -48,24 +51,23 @@ namespace ThriftSharp.Protocols
                     throw new ThriftProtocolException( ThriftProtocolExceptionType.InvalidProtocol );
                 }
 
-                var type = (ThriftMessageType) ( size & 0xFF );
-                string name = ReadString();
-                int id = ReadInt32();
-                return new ThriftMessageHeader( id, name, type );
+                name = ReadString();
+                type = (ThriftMessageType) ( size & 0xFF );
             }
             else
             {
                 // Old protocol version
                 byte[] nameBytes = new byte[size];
                 _transport.ReadBytes( nameBytes );
-                string name = Encoding.UTF8.GetString( nameBytes, 0, nameBytes.Length );
+                name = Encoding.UTF8.GetString( nameBytes, 0, nameBytes.Length );
 
                 _transport.ReadBytes( buffer1 );
-                var type = (ThriftMessageType) buffer1[0];
-
-                int id = ReadInt32();
-                return new ThriftMessageHeader( id, name, type );
+                type = (ThriftMessageType) buffer1[0];
             }
+
+
+            ReadInt32(); // Message sequence ID
+            return new ThriftMessageHeader( name, type );
         }
 
         /// <summary>
@@ -80,7 +82,7 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public ThriftStructHeader ReadStructHeader()
         {
-            return new ThriftStructHeader( "" );
+            return default( ThriftStructHeader );
         }
 
         /// <summary>
@@ -97,7 +99,7 @@ namespace ThriftSharp.Protocols
             _transport.ReadBytes( buffer1 );
             if ( buffer1[0] == ThriftFieldHeader.Stop )
             {
-                return null;
+                return default( ThriftFieldHeader );
             }
 
             short id = ReadInt16();
@@ -254,7 +256,7 @@ namespace ThriftSharp.Protocols
         {
             WriteInt32( (int) ( Version1 | (uint) header.MessageType ) );
             WriteString( header.Name );
-            WriteInt32( header.Id );
+            WriteInt32( 0 ); // Message sequence ID
         }
 
         /// <summary>

@@ -115,7 +115,7 @@ let readMsgAsync<'T> prot name =
 
 
 let writeMsgAsync<'T> methodName args = async {
-    let m = MemoryProtocol([MessageHeader (0, "", ThriftMessageType.Reply)
+    let m = MemoryProtocol([MessageHeader ("", ThriftMessageType.Reply)
                             StructHeader ""
                             FieldStop
                             StructEnd

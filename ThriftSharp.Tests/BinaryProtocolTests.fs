@@ -22,11 +22,11 @@ type Tests()  =
             [0x80; 0x01; 0x00; 0x01 // version & message type (int32)
              0x00; 0x00; 0x00; 0x07 // "Message" length in UTF-8
              0x4D; 0x65; 0x73; 0x73; 0x61; 0x67; 0x65 // "Message" in UTF-8 (string)
-             0x00; 0x00; 0x00; 0x02] // ID (int32)
+             0x00; 0x00; 0x00; 0x00] // ID (int32)
             --
             fun p -> p.ReadMessageHeader, p.WriteMessageHeader
             ==
-            ThriftMessageHeader(2, "Message", ThriftMessageType.Call)
+            ThriftMessageHeader("Message", ThriftMessageType.Call)
         )
 
     [<Test>]
@@ -39,7 +39,7 @@ type Tests()  =
             --
             fun p -> p.ReadMessageHeader, p.WriteMessageHeader
             ==
-            ThriftMessageHeader(0, "Me", ThriftMessageType.OneWay)
+            ThriftMessageHeader("Me", ThriftMessageType.OneWay)
         )
 
     [<Test>]
@@ -48,11 +48,11 @@ type Tests()  =
             [0x80; 0x01; 0x00; 0x02 // version & message type (int32)
              0x00; 0x00; 0x00; 0x07 // "Message" length in UTF-8 (int32)
              0x4D; 0x65; 0x73; 0x73; 0x61; 0x67; 0x65 // "Message" in UTF-8 (string)
-             0x00; 0x00; 0x00; 0x02] // ID (int32)
+             0x00; 0x00; 0x00; 0x00] // ID (int32)
             --
             fun p -> p.ReadMessageHeader, p.WriteMessageHeader
             ==
-            ThriftMessageHeader(2, "Message", ThriftMessageType.Reply)
+            ThriftMessageHeader("Message", ThriftMessageType.Reply)
         )
 
     [<Test>]
@@ -65,7 +65,7 @@ type Tests()  =
             --
             fun p -> p.ReadMessageHeader, p.WriteMessageHeader
             ==
-            ThriftMessageHeader(0, "Me", ThriftMessageType.Exception)
+            ThriftMessageHeader("Me", ThriftMessageType.Exception)
         )
 
     [<Test>]
@@ -425,15 +425,16 @@ type Reading() =
             [0x00; 0x00; 0x00; 0x07 // "Message" length in UTF-8 (int32)
              0x4D; 0x65; 0x73; 0x73; 0x61; 0x67; 0x65 // "Message" in UTF-8 (string)
              0x03 // Message type (byte)
-             0x00; 0x00; 0x00; 0x09] // ID (int32)
+             0x00; 0x00; 0x00; 0x00] // ID (int32)
         let trans = MemoryTransport(data |> List.map byte)
-        ThriftBinaryProtocol(trans).ReadMessageHeader() <=> ThriftMessageHeader(9, "Message", ThriftMessageType.Exception)
+        ThriftBinaryProtocol(trans).ReadMessageHeader() <=> ThriftMessageHeader("Message", ThriftMessageType.Exception)
         trans.IsEmpty <=> true
 
     [<Test>]
     member x.``FieldStop``() =
         let trans = MemoryTransport([0uy])
-        ThriftBinaryProtocol(trans).ReadFieldHeader() <=> null
+        let header = ThriftBinaryProtocol(trans).ReadFieldHeader()
+        header.IsEmpty() <=> true
         trans.IsEmpty <=> true
 
 [<TestClass>]

@@ -91,13 +91,13 @@ type Tests() =
         x.Test (
             fun s -> s.NoArgs() |> awaitNonGenTask
             -
-            [MessageHeader (0, "NoArgs", ThriftMessageType.Call)
+            [MessageHeader ("NoArgs", ThriftMessageType.Call)
              StructHeader ""
              FieldStop
              StructEnd
              MessageEnd]
             --
-            [MessageHeader (0, "", ThriftMessageType.Reply)
+            [MessageHeader ("", ThriftMessageType.Reply)
              StructHeader ""
              FieldStop
              StructEnd
@@ -111,13 +111,13 @@ type Tests() =
         x.TestException (
             fun s -> s.NoArgs() |> awaitNonGenTask
             -
-            [MessageHeader (0, "NoArgs", ThriftMessageType.Call)
+            [MessageHeader ("NoArgs", ThriftMessageType.Call)
              StructHeader ""
              FieldStop
              StructEnd
              MessageEnd]
             --
-            [MessageHeader (0, "", ThriftMessageType.Exception)
+            [MessageHeader ("", ThriftMessageType.Exception)
              StructHeader "TApplicationException"
              FieldHeader (1s, "message", tid 11)
              String "Error"
@@ -137,7 +137,7 @@ type Tests() =
         x.Test (
             fun s -> s.OneArg(1) |> awaitNonGenTask
             -
-            [MessageHeader (0, "OneArg", ThriftMessageType.Call)
+            [MessageHeader ("OneArg", ThriftMessageType.Call)
              StructHeader ""
              FieldHeader (1s, "arg", tid 8)
              Int32 1
@@ -146,7 +146,7 @@ type Tests() =
              StructEnd
              MessageEnd]
             --
-            [MessageHeader (0, "", ThriftMessageType.Reply)
+            [MessageHeader ("", ThriftMessageType.Reply)
              StructHeader ""
              FieldStop
              StructEnd
@@ -160,13 +160,13 @@ type Tests() =
         x.Test (
             fun s -> s.WithReturn() |> Async.AwaitTask
             -
-            [MessageHeader (0, "WithReturn", ThriftMessageType.Call)
+            [MessageHeader ("WithReturn", ThriftMessageType.Call)
              StructHeader ""
              FieldStop
              StructEnd
              MessageEnd]
             --
-            [MessageHeader (0, "", ThriftMessageType.Reply)
+            [MessageHeader ("", ThriftMessageType.Reply)
              StructHeader ""
              FieldHeader (0s, "", tid 8)
              Int32 1
@@ -184,7 +184,7 @@ type Tests() =
         x.Test (
             fun s -> s.Cancellable(1, source.Token) |> awaitNonGenTask
             -
-            [MessageHeader (0, "Cancellable", ThriftMessageType.Call)
+            [MessageHeader ("Cancellable", ThriftMessageType.Call)
              StructHeader ""
              FieldHeader (1s, "arg", tid 8)
              Int32 1
@@ -193,7 +193,7 @@ type Tests() =
              StructEnd
              MessageEnd]
             --
-            [MessageHeader (0, "", ThriftMessageType.Reply)
+            [MessageHeader ("", ThriftMessageType.Reply)
              StructHeader ""
              FieldStop
              StructEnd
@@ -211,7 +211,7 @@ type Tests() =
         x.Test (
             fun s -> s.Cancellable(1, source.Token) |> awaitNonGenTask
             -
-            [MessageHeader (0, "Cancellable", ThriftMessageType.Call)
+            [MessageHeader ("Cancellable", ThriftMessageType.Call)
              StructHeader ""
              FieldHeader (1s, "arg", tid 8)
              Int32 1
@@ -220,7 +220,7 @@ type Tests() =
              StructEnd
              MessageEnd]
             --
-            [MessageHeader (0, "", ThriftMessageType.Reply)
+            [MessageHeader ("", ThriftMessageType.Reply)
              StructHeader ""
              FieldStop
              StructEnd
@@ -234,7 +234,7 @@ type Tests() =
         x.Test (
             fun s -> s.Complex("x", 1.0, [| 1; 2 |]) |> Async.AwaitTask
             -
-            [MessageHeader (0, "Complex", ThriftMessageType.Call)
+            [MessageHeader ("Complex", ThriftMessageType.Call)
              StructHeader ""
              FieldHeader (1s, "arg1", tid 11)
              String "x"
@@ -252,7 +252,7 @@ type Tests() =
              StructEnd
              MessageEnd]
             --
-            [MessageHeader (0, "", ThriftMessageType.Reply)
+            [MessageHeader ("", ThriftMessageType.Reply)
              StructHeader ""
              FieldHeader (0s, "", tid 15)
              ListHeader (3, tid 11)
@@ -273,13 +273,13 @@ type Tests() =
         x.Test (
             fun s -> s.ConvertedReturn() |> Async.AwaitTask
             -
-            [MessageHeader (0, "ConvertedReturn", ThriftMessageType.Call)
+            [MessageHeader ("ConvertedReturn", ThriftMessageType.Call)
              StructHeader ""
              FieldStop
              StructEnd
              MessageEnd]
             --
-            [MessageHeader (0, "", ThriftMessageType.Reply)
+            [MessageHeader ("", ThriftMessageType.Reply)
              StructHeader ""
              FieldHeader (0s, "", tid 8)
              Int32 787708800
@@ -296,13 +296,13 @@ type Tests() =
         x.Test (
             fun s -> s.WithException() |> Async.AwaitTask
             -
-            [MessageHeader (0, "WithException", ThriftMessageType.Call)
+            [MessageHeader ("WithException", ThriftMessageType.Call)
              StructHeader ""
              FieldStop
              StructEnd
              MessageEnd]
             --
-            [MessageHeader (0, "", ThriftMessageType.Reply)
+            [MessageHeader ("", ThriftMessageType.Reply)
              StructHeader ""
              FieldHeader (0s, "", tid 8)
              Int32 1
@@ -319,13 +319,13 @@ type Tests() =
         x.TestException (
             fun s -> s.WithException() |> Async.AwaitTask
             -
-            [MessageHeader (0, "WithException", ThriftMessageType.Call)
+            [MessageHeader ("WithException", ThriftMessageType.Call)
              StructHeader ""
              FieldStop
              StructEnd
              MessageEnd]
             --
-            [MessageHeader (0, "", ThriftMessageType.Reply)
+            [MessageHeader ("", ThriftMessageType.Reply)
              StructHeader ""
              FieldHeader (1s, "exn", tid 12)
              StructHeader ("MyException")
@@ -347,7 +347,7 @@ type Tests() =
         x.Test (
             fun s -> s.OneWay() |> awaitNonGenTask
             -
-            [MessageHeader (0, "OneWay", ThriftMessageType.OneWay)
+            [MessageHeader ("OneWay", ThriftMessageType.OneWay)
              StructHeader ""
              FieldStop
              StructEnd
