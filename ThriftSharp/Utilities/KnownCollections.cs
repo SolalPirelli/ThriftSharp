@@ -11,10 +11,9 @@ namespace ThriftSharp.Utilities
     /// <summary>
     /// Utility class to get concrete types from collection types.
     /// </summary>
-    public static class CollectionHelper
+    internal static class KnownCollections
     {
-        // Known interface collection implementations
-        private static readonly Dictionary<Type, Type> KnownImplementations = new Dictionary<Type, Type>
+        private static readonly Dictionary<Type, Type> Implementations = new Dictionary<Type, Type>
         {
             { typeof( ISet<> ), typeof( HashSet<> ) },
             { typeof( ICollection<> ), typeof( List<> ) },
@@ -29,7 +28,7 @@ namespace ThriftSharp.Utilities
         public static bool CanBeMapped( TypeInfo typeInfo )
         {
             return typeInfo.IsArray
-                || ( typeInfo.IsGenericType && KnownImplementations.ContainsKey( typeInfo.GetGenericTypeDefinition() ) )
+                || ( typeInfo.IsGenericType && Implementations.ContainsKey( typeInfo.GetGenericTypeDefinition() ) )
                 || ( !typeInfo.IsAbstract && !typeInfo.IsInterface && typeInfo.DeclaredConstructors.Any( c => c.GetParameters().Length == 0 ) );
         }
 
@@ -43,7 +42,7 @@ namespace ThriftSharp.Utilities
         {
             if ( typeInfo.IsInterface )
             {
-                return KnownImplementations[typeInfo.GetGenericTypeDefinition()].MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo();
+                return Implementations[typeInfo.GetGenericTypeDefinition()].MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo();
             }
             return typeInfo;
         }

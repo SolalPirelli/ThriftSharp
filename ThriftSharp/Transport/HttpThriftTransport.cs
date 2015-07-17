@@ -14,7 +14,7 @@ namespace ThriftSharp.Transport
     /// <summary>
     /// Transports binary data over HTTP POST requests.
     /// </summary>
-    internal sealed class ThriftHttpTransport : IThriftTransport
+    internal sealed class HttpThriftTransport : IThriftTransport
     {
         private const string ThriftContentType = "application/x-thrift";
         private const string ThriftHttpMethod = "POST";
@@ -25,8 +25,7 @@ namespace ThriftSharp.Transport
         private readonly int _timeout;
 
         private readonly MemoryStream _outputStream;
-        private byte[] _receivedBytes;
-        private int _receivedBytesIndex;
+        private MemoryStream _inputStream;
 
 
         /// <summary>
@@ -36,7 +35,7 @@ namespace ThriftSharp.Transport
         /// <param name="token">The cancellation token that will cancel asynchronous tasks.</param>
         /// <param name="headers">The HTTP headers to include with every request.</param>
         /// <param name="timeout">The timeout in milliseconds (or -1 for an infinite timeout).</param>
-        public ThriftHttpTransport( string url, CancellationToken token, IReadOnlyDictionary<string, string> headers, int timeout )
+        public HttpThriftTransport( string url, CancellationToken token, IReadOnlyDictionary<string, string> headers, int timeout )
         {
             _url = url;
             _token = token;
@@ -53,11 +52,12 @@ namespace ThriftSharp.Transport
         /// <returns>An unsigned byte.</returns>
         public byte ReadByte()
         {
-            if ( _receivedBytesIndex == _receivedBytes.Length )
+            int result = _inputStream.ReadByte();
+            if ( result == -1 )
             {
                 throw new InvalidOperationException( "There are no bytes left to be read." );
             }
-            return _receivedBytes[_receivedBytesIndex++];
+            return (byte) result;
         }
 
         /// <summary>
@@ -67,14 +67,8 @@ namespace ThriftSharp.Transport
         /// <returns>An array of unsigned bytes.</returns>
         public byte[] ReadBytes( int length )
         {
-            if ( _receivedBytesIndex + length >= _receivedBytes.Length )
-            {
-                throw new InvalidOperationException( "There are not enough bytes left to be read." );
-            }
-
             byte[] buffer = new byte[length];
-            Array.Copy( _receivedBytes, _receivedBytesIndex, buffer, 0, length );
-            _receivedBytesIndex += length;
+            _inputStream.Read( buffer, 0, length );
             return buffer;
         }
 
@@ -113,31 +107,24 @@ namespace ThriftSharp.Transport
                 request.Headers[header.Key] = header.Value;
             }
 
-            using ( var requestStream = await TaskEx.FromAsync( request.BeginGetRequestStream, request.EndGetRequestStream, _timeout, _token ) )
+            using ( var requestStream = await request.GetRequestStreamAsync().TimeoutAfter( _timeout ) )
             {
                 _outputStream.WriteTo( requestStream );
-                requestStream.Flush();
+                _outputStream.Dispose();
+
+                await requestStream.FlushAsync( _token );
             }
 
-            // This call *must* appear before the GetResponse call
-            // Silverlight and WP8 throw NotSupportedException otherwise.
-            _outputStream.Dispose();
-
-            var response = await TaskEx.FromAsync( request.BeginGetResponse, request.EndGetResponse, _timeout, _token );
-
-            using ( var responseStream = new MemoryStream() )
-            {
-                await response.GetResponseStream().CopyToAsync( responseStream );
-                _receivedBytes = responseStream.ToArray();
-                _receivedBytesIndex = 0;
-            }
+            var response = await request.GetResponseAsync().TimeoutAfter( _timeout );
+            _inputStream = new MemoryStream();
+            await response.GetResponseStream().CopyToAsync( _inputStream );
         }
 
         #region IDisposable implementation
         /// <summary>
         /// Finalizes this instance.
         /// </summary>
-        ~ThriftHttpTransport()
+        ~HttpThriftTransport()
         {
             Dispose( false );
         }
@@ -160,6 +147,10 @@ namespace ThriftSharp.Transport
             if ( _outputStream != null )
             {
                 _outputStream.Dispose();
+            }
+            if ( _inputStream != null )
+            {
+                _inputStream.Dispose();
             }
         }
         #endregion

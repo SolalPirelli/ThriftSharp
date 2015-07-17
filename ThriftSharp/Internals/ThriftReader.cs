@@ -222,7 +222,7 @@ namespace ThriftSharp.Internals
                 string readHeaderMethodName = "Read" + thriftType.Id.ToString() + "Header";
                 string readEndMethodName = "Read" + thriftType.Id.ToString() + "End";
 
-                var collectionType = CollectionHelper.GetInstantiableVersion( thriftType.TypeInfo ).AsType();
+                var collectionType = KnownCollections.GetInstantiableVersion( thriftType.TypeInfo ).AsType();
                 var collectionVar = Expression.Variable( collectionType );
                 var headerVar = Expression.Variable( typeof( ThriftCollectionHeader ) );
                 var countVar = Expression.Variable( typeof( int ) );
@@ -274,7 +274,7 @@ namespace ThriftSharp.Internals
             }
             if ( thriftType.Id == ThriftTypeId.Map )
             {
-                var mapType = CollectionHelper.GetInstantiableVersion( thriftType.TypeInfo ).AsType();
+                var mapType = KnownCollections.GetInstantiableVersion( thriftType.TypeInfo ).AsType();
                 var mapVar = Expression.Variable( mapType );
                 var headerVar = Expression.Variable( typeof( ThriftMapHeader ) );
                 var countVar = Expression.Variable( typeof( int ) );

@@ -10,58 +10,66 @@ namespace ThriftSharp.Utilities
     /// <summary>
     /// Task utility methods.
     /// </summary>
-    public static class TaskEx
+    /// <remarks>
+    /// The naming of this class is not optimal, but a class named TaskExtensions already exists in S.T.Tasks.
+    /// </remarks>
+    internal static class TaskEx
     {
+        // The following two methods are adapted from http://blogs.msdn.com/b/pfxteam/archive/2011/11/10/10235834.aspx
+
         /// <summary>
-        /// Creates a Task from the old .NET async model, with a timeout.
+        /// Makes the <see cref="Task{TResult}" /> timeout after the specified amount of time.
         /// </summary>
-        public static Task<TResult> FromAsync<TResult>( Func<AsyncCallback, object, IAsyncResult> beginMethod, Func<IAsyncResult, TResult> endMethod, int millisecondsTimeout, CancellationToken token )
+        /// <remarks>
+        /// This method assumes millisecondsTimeout != 0 and does not optimize for that edge case
+        /// </remarks>
+        public static Task<TResult> TimeoutAfter<TResult>( this Task<TResult> task, int millisecondsTimeout )
         {
-            return Task.Factory.FromAsync( beginMethod, endMethod, null ).TimeoutAfter( millisecondsTimeout, token );
+            if ( task.IsCompleted || millisecondsTimeout == Timeout.Infinite )
+            {
+                return task;
+            }
+
+            var resultSource = new TaskCompletionSource<TResult>();
+            var timeoutSource = new CancellationTokenSource();
+
+            Task.Delay( millisecondsTimeout, timeoutSource.Token )
+                .ContinueWith( ( _, state ) => ( (TaskCompletionSource<TResult>) state ).TrySetCanceled(), resultSource );
+
+            task.ContinueWith(
+                ( antecedent, state ) =>
+                {
+                    var tuple = (Tuple<CancellationTokenSource, TaskCompletionSource<TResult>>) state;
+                    tuple.Item1.Cancel();
+                    MarshalTaskResults( antecedent, tuple.Item2 );
+                },
+                Tuple.Create( timeoutSource, resultSource ),
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default
+            );
+
+            return resultSource.Task;
         }
 
-        /// <summary>
-        /// Returns a Task that times out after the specified timeout, 
-        /// or executes the current task if it completes before the timeout occurs.
-        /// </summary>
-        private static Task<TResult> TimeoutAfter<TResult>( this Task<TResult> task, int millisecondsTimeout, CancellationToken token )
+        private static void MarshalTaskResults<TResult>( Task<TResult> source, TaskCompletionSource<TResult> proxy )
         {
-            var timeoutSource = new CancellationTokenSource();
-            var tokenSource = CancellationTokenSource.CreateLinkedTokenSource( timeoutSource.Token, token );
+            switch ( source.Status )
+            {
+                case TaskStatus.Faulted:
+                    proxy.TrySetException( source.Exception );
+                    break;
 
-            var timeoutTask = Task.Delay( millisecondsTimeout, tokenSource.Token )
-                                  .ContinueWith( _ => default( TResult ), tokenSource.Token );
+                case TaskStatus.Canceled:
+                    proxy.TrySetCanceled();
+                    break;
 
-            var continuationState = Tuple.Create( timeoutSource, timeoutTask );
+                case TaskStatus.RanToCompletion:
+                    proxy.TrySetResult( source.Result );
+                    break;
+            }
 
-            return Task.WhenAny( task, timeoutTask )
-                       .ContinueWith( ( t, s ) =>
-                       {
-                           var state = (Tuple<CancellationTokenSource, Task<TResult>>) s;
-
-                           if ( t.Result == state.Item2 )
-                           {
-                               throw new OperationCanceledException();
-                           }
-
-                           state.Item1.Cancel();
-                           state.Item1.Dispose();
-
-                           switch ( t.Result.Status )
-                           {
-                               case TaskStatus.Faulted:
-                                   throw t.Result.Exception.Flatten().InnerException;
-
-                               case TaskStatus.Canceled:
-                                   throw new OperationCanceledException();
-
-                               case TaskStatus.RanToCompletion:
-                                   return t.Result.Result;
-
-                               default:
-                                   throw new InvalidOperationException( "This should never happen." );
-                           }
-                       }, continuationState, tokenSource.Token );
+            throw new InvalidOperationException( "This should never happen." );
         }
     }
 }

@@ -14,7 +14,7 @@ namespace ThriftSharp
     {
         /// <summary>
         /// Prevents a default instance of the ThriftParsingException class from being created.
-        /// This is meant to force customers to use one of the static factory methods.
+        /// This is meant to force the use one of the static factory methods.
         /// </summary>
         private ThriftParsingException( string message, params object[] args )
             : base( string.Format( message, args ) ) { }

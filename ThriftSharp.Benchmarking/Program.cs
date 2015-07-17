@@ -12,20 +12,19 @@ using ThriftSharp.Protocols;
 
 namespace ThriftSharp.Benchmarking
 {
-    /* Benchmarks results on an i7-3612QM in Release mode without debugging:
+    /* Benchmarks results on an i7-4710HQ in Release mode without debugging:
      * (100 warmup iterations, 100,000 iterations)
-     * 
-     * ThriftSharp v2.2.0.0
-     * Read, simple   00:00:00.0000016
-     * Read, complex  00:00:00.0000032
-     * Write, simple  00:00:00.0000020
-     * Write, complex 00:00:00.0000035
+     * ThriftSharp v2.4.0.0
+     * Read, simple   00:00:00.0000012
+     * Read, complex  00:00:00.0000028
+     * Write, simple  00:00:00.0000016
+     * Write, complex 00:00:00.0000030
      * 
      * Thrift v0.9.1.3
-     * Read, simple   00:00:00.0000030
-     * Read, complex  00:00:00.0000039
-     * Write, simple  00:00:00.0000006
-     * Write, complex 00:00:00.0000013
+     * Read, simple   00:00:00.0000022
+     * Read, complex  00:00:00.0000030
+     * Write, simple  00:00:00.0000004
+     * Write, complex 00:00:00.0000010
      */
     public sealed class Program
     {
@@ -144,9 +143,8 @@ namespace ThriftSharp.Benchmarking
             for ( int n = 0; n < Iterations + WarmupIterations; n++ )
             {
                 // clean up
-                GC.Collect();
+                GC.Collect( GC.MaxGeneration, GCCollectionMode.Forced );
                 GC.WaitForPendingFinalizers();
-                GC.Collect();
 
                 if ( n >= WarmupIterations )
                 {
@@ -167,9 +165,8 @@ namespace ThriftSharp.Benchmarking
             for ( int n = 0; n < Iterations + WarmupIterations; n++ )
             {
                 // clean up
-                GC.Collect();
+                GC.Collect( GC.MaxGeneration, GCCollectionMode.Forced );
                 GC.WaitForPendingFinalizers();
-                GC.Collect();
 
                 if ( n >= WarmupIterations )
                 {

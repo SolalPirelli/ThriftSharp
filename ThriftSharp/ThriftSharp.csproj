@@ -11,7 +11,7 @@
     <RootNamespace>ThriftSharp</RootNamespace>
     <AssemblyName>ThriftSharp</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
+    <TargetFrameworkProfile>Profile111</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>
@@ -48,7 +48,7 @@
     <Compile Include="ThriftCommunication.cs" />
     <Compile Include="ThriftDateConverters.cs" />
     <Compile Include="ThriftValueConverter.cs" />
-    <Compile Include="Utilities\CollectionHelper.cs" />
+    <Compile Include="Utilities\KnownCollections.cs" />
     <Compile Include="Utilities\IFluent.cs" />
     <Compile Include="Utilities\Option.cs" />
     <Compile Include="Internals\ThriftHeaders.cs" />
@@ -63,10 +63,10 @@
     <Compile Include="Internals\ThriftType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocols\IThriftProtocol.cs" />
-    <Compile Include="Utilities\ReflectionEx.cs" />
+    <Compile Include="Utilities\ReflectionExtensions.cs" />
     <Compile Include="Internals\ThriftAttributesParser.cs" />
     <Compile Include="ThriftAttributes.cs" />
-    <Compile Include="Transport\ThriftHttpTransport.cs" />
+    <Compile Include="Transport\HttpThriftTransport.cs" />
     <Compile Include="Transport\IThriftTransport.cs" />
     <Compile Include="Utilities\TaskEx.cs" />
     <Compile Include="Utilities\Validation.cs" />

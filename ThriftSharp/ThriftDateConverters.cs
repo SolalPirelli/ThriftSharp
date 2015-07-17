@@ -11,8 +11,7 @@ namespace ThriftSharp
     /// </summary>
     /// <remarks>
     /// Consider using <see cref="ThriftUnixDateOffsetConverter" /> instead; 
-    /// the <see cref="DateTimeOffset" /> class replaces the old <see cref="DateTime" /> class 
-    /// for most use cases.
+    /// the <see cref="DateTimeOffset" /> class replaces the old <see cref="DateTime" /> class for most use cases.
     /// </remarks>
     public sealed class ThriftUnixDateConverter : ThriftValueConverter<int, DateTime>
     {
@@ -45,12 +44,10 @@ namespace ThriftSharp
     /// </summary>
     /// <remarks>
     /// Consider using <see cref="ThriftUnixLongDateOffsetConverter" /> instead; 
-    /// the <see cref="DateTimeOffset" /> class replaces the old <see cref="DateTime" /> class 
-    /// for most use cases.
+    /// the <see cref="DateTimeOffset" /> class replaces the old <see cref="DateTime" /> class for most use cases.
     /// </remarks>
     public sealed class ThriftUnixDate64Converter : ThriftValueConverter<long, DateTime>
     {
-        // The Unix time start: Jan. 1, 1970 00:00:00 UTC.
         private static readonly DateTime UnixTimeStart = new DateTime( 1970, 1, 1, 0, 0, 0, DateTimeKind.Utc );
 
         /// <summary>
@@ -80,12 +77,10 @@ namespace ThriftSharp
     /// </summary>
     /// <remarks>
     /// Consider using <see cref="ThriftJavaDateOffsetConverter" /> instead; 
-    /// the <see cref="DateTimeOffset" /> class replaces the old <see cref="DateTime" /> class 
-    /// for most use cases.
+    /// the <see cref="DateTimeOffset" /> class replaces the old <see cref="DateTime" /> class for most use cases.
     /// </remarks>
     public sealed class ThriftJavaDateConverter : ThriftValueConverter<long, DateTime>
     {
-        // The Java time start: Jan. 1, 1970 00:00:00 UTC.
         private static readonly DateTime JavaTimeStart = new DateTime( 1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc );
 
         /// <summary>
@@ -145,7 +140,6 @@ namespace ThriftSharp
     /// </summary>
     public sealed class ThriftUnixLongDateOffsetConverter : ThriftValueConverter<long, DateTimeOffset>
     {
-        // The Unix time start: Jan. 1, 1970 00:00:00 UTC.
         private static readonly DateTimeOffset UnixTimeStart = new DateTimeOffset( 1970, 1, 1, 0, 0, 0, TimeSpan.Zero );
 
         /// <summary>
@@ -175,7 +169,6 @@ namespace ThriftSharp
     /// </summary>
     public sealed class ThriftJavaDateOffsetConverter : ThriftValueConverter<long, DateTimeOffset>
     {
-        // The Java time start: Jan. 1, 1970 00:00:00 UTC.
         private static readonly DateTimeOffset JavaTimeStart = new DateTimeOffset( 1970, 1, 1, 0, 0, 0, 0, TimeSpan.Zero );
 
         /// <summary>

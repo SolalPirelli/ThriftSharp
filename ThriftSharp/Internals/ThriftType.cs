@@ -117,7 +117,7 @@ namespace ThriftSharp.Internals
 
             if ( TypeInfo.IsEnum )
             {
-                if ( TypeInfo.GetAttribute<ThriftEnumAttribute>() == null )
+                if ( TypeInfo.GetCustomAttribute<ThriftEnumAttribute>() == null )
                 {
                     throw ThriftParsingException.EnumWithoutAttribute( TypeInfo );
                 }
@@ -140,7 +140,7 @@ namespace ThriftSharp.Internals
             var mapInterface = TypeInfo.GetGenericInterface( typeof( IDictionary<,> ) );
             if ( mapInterface != null )
             {
-                if ( !CollectionHelper.CanBeMapped( TypeInfo ) )
+                if ( !KnownCollections.CanBeMapped( TypeInfo ) )
                 {
                     throw ThriftParsingException.UnsupportedMap( TypeInfo );
                 }
@@ -153,7 +153,7 @@ namespace ThriftSharp.Internals
             var setInterface = TypeInfo.GetGenericInterface( typeof( ISet<> ) );
             if ( setInterface != null )
             {
-                if ( !CollectionHelper.CanBeMapped( TypeInfo ) )
+                if ( !KnownCollections.CanBeMapped( TypeInfo ) )
                 {
                     throw ThriftParsingException.UnsupportedSet( TypeInfo );
                 }
@@ -166,7 +166,7 @@ namespace ThriftSharp.Internals
             var collectionInterface = TypeInfo.GetGenericInterface( typeof( ICollection<> ) );
             if ( collectionInterface != null )
             {
-                if ( !CollectionHelper.CanBeMapped( TypeInfo ) )
+                if ( !KnownCollections.CanBeMapped( TypeInfo ) )
                 {
                     throw ThriftParsingException.UnsupportedList( TypeInfo );
                 }

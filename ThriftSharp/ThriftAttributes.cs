@@ -91,7 +91,7 @@ namespace ThriftSharp
     /// <summary>
     /// Required attribute for Thrift structs.
     /// </summary>
-    [AttributeUsage( AttributeTargets.Class | AttributeTargets.Struct )]
+    [AttributeUsage( AttributeTargets.Class )]
     public sealed class ThriftStructAttribute : Attribute
     {
         /// <summary>
@@ -271,7 +271,7 @@ namespace ThriftSharp
                 throw new ArgumentException( "The type must inherit from IThriftValueConverter." );
             }
 
-            Converter = (IThriftValueConverter) ReflectionEx.Create( typeInfo );
+            Converter = (IThriftValueConverter) ReflectionExtensions.Create( typeInfo );
         }
     }
 }

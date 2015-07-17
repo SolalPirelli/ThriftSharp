@@ -73,7 +73,7 @@ let ok argTypes retType isOneWay thrownExns =
     thriftService.Methods.Count <=> 1
     thriftService.Methods.[0].Name <=> methodName
     thriftService.Methods.[0].Parameters |> List.ofSeq |> List.map (fun p -> p.TypeInfo.AsType()) <=> argTypes
-    thriftService.Methods.[0].ReturnType <=> ReflectionEx.UnwrapTask( retType )
+    thriftService.Methods.[0].ReturnType <=> ReflectionExtensions.UnwrapTaskType( retType )
     thriftService.Methods.[0].IsOneWay <=> isOneWay
     thriftService.Methods.[0].Exceptions |> List.ofSeq |> List.map (fun e -> e.ExceptionTypeInfo.AsType()) <=> thrownExns
 

@@ -86,7 +86,7 @@ namespace ThriftSharp
         {
             Validation.IsNeitherNullNorWhitespace( url, () => url );
 
-            return new ThriftCommunication( this, token => new ThriftHttpTransport( url, token, headers ?? new Dictionary<string, string>(), timeout ) );
+            return new ThriftCommunication( this, token => new HttpThriftTransport( url, token, headers ?? new Dictionary<string, string>(), timeout ) );
         }
 
 

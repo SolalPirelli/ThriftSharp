@@ -19,6 +19,12 @@ namespace ThriftSharp
         private const MethodAttributes GeneratedMethodAttributes =
             MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig;
 
+        // We need to call Thrift.CallMethodAsync<T>, which is internal...
+        // so we have to use a public proxy method, which takes an 'object' instead of a 'ThriftService'
+        // since the latter is also internal.
+        private static MethodInfo CallMethodAsyncMethod =
+            typeof( SpecialProxy ).GetTypeInfo().GetDeclaredMethod( "CallMethodAsync" );
+
         /// <summary>
         /// Creates a proxy for the specified interface type using the specified protocol.
         /// </summary>
@@ -87,21 +93,16 @@ namespace ThriftSharp
                 }
 
                 // Get the return type for the CallMethodAsync method, i.e. the unwrapped return type...
-                var unwrappedReturnType = ReflectionEx.UnwrapTask( m.ReturnType );
+                var unwrappedReturnType = ReflectionExtensions.UnwrapTaskType( m.ReturnType );
                 if ( unwrappedReturnType == typeof( void ) )
                 {
                     // ... or object if there is none
                     unwrappedReturnType = typeof( object );
                 }
 
-                // Now we have a problem: We need to call Thrift.CallMethodAsync<T>, which is internal...
-                // so we have to use a public proxy method, which takes an 'object' instead of a 'ThriftService'
-                // since the latter is also internal.
-
                 // Get the CallMethodAsync method
-                var proxiedMethod = typeof( SpecialProxy ).GetMethods()
-                                                          .First( tm => tm.Name == "CallMethodAsync" )
-                                                          .MakeGenericMethod( unwrappedReturnType );
+                var proxiedMethod = CallMethodAsyncMethod.MakeGenericMethod( unwrappedReturnType );
+
                 // Load the instance to load a field
                 gen.Emit( OpCodes.Ldarg_0 );
                 // Load the first argument of CallMethodAsync (the communication)
@@ -124,14 +125,14 @@ namespace ThriftSharp
             }
 
             // Get the instance type
-            var instanceType = typeBuilder.CreateType();
+            var instanceTypeInfo = typeBuilder.CreateTypeInfo();
             // Create the instance
-            var instance = (T) ReflectionEx.Create( instanceType.GetTypeInfo() );
+            var instance = (T) ReflectionExtensions.Create( instanceTypeInfo );
 
             // Set the "service" field
-            instanceType.GetField( serviceField.Name ).SetValue( instance, service );
+            instanceTypeInfo.GetDeclaredField( serviceField.Name ).SetValue( instance, service );
             // Set the "communication" field
-            instanceType.GetField( commField.Name ).SetValue( instance, communication );
+            instanceTypeInfo.GetDeclaredField( commField.Name ).SetValue( instance, communication );
 
             // Return the instance.
             return instance;
