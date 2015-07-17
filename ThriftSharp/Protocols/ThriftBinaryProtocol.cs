@@ -242,10 +242,7 @@ namespace ThriftSharp.Protocols
             byte[] bytes = new byte[length];
             _transport.ReadBytes( bytes );
             sbyte[] sbytes = new sbyte[length];
-            for ( int n = 0; n < length; n++ )
-            {
-                sbytes[n] = (sbyte) bytes[n];
-            }
+            Buffer.BlockCopy( bytes, 0, sbytes, 0, length );
             return sbytes;
         }
 
@@ -424,7 +421,9 @@ namespace ThriftSharp.Protocols
         public void WriteBinary( sbyte[] value )
         {
             WriteInt32( value.Length );
-            _transport.WriteBytes( (byte[]) (Array) value );
+            byte[] bytes = new byte[value.Length];
+            Buffer.BlockCopy( value, 0, bytes, 0, value.Length );
+            _transport.WriteBytes( bytes );
         }
 
         /// <summary>
