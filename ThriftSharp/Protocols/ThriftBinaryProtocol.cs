@@ -369,8 +369,8 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteInt16( short value )
         {
-            i16Buffer[0] = (byte) ( 0xff & ( value >> 8 ) );
-            i16Buffer[1] = (byte) ( 0xff & value );
+            i16Buffer[0] = (byte) ( value >> 8 );
+            i16Buffer[1] = (byte) value;
             _transport.WriteBytes( i16Buffer );
         }
 
@@ -379,10 +379,10 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteInt32( int value )
         {
-            i32Buffer[0] = (byte) ( 0xff & ( value >> 24 ) );
-            i32Buffer[1] = (byte) ( 0xff & ( value >> 16 ) );
-            i32Buffer[2] = (byte) ( 0xff & ( value >> 8 ) );
-            i32Buffer[3] = (byte) ( 0xff & value );
+            i32Buffer[0] = (byte) ( value >> 24 );
+            i32Buffer[1] = (byte) ( value >> 16 );
+            i32Buffer[2] = (byte) ( value >> 8 );
+            i32Buffer[3] = (byte) value;
             _transport.WriteBytes( i32Buffer );
         }
 
@@ -391,14 +391,14 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public void WriteInt64( long value )
         {
-            i64Buffer[0] = (byte) ( 0xff & ( value >> 56 ) );
-            i64Buffer[1] = (byte) ( 0xff & ( value >> 48 ) );
-            i64Buffer[2] = (byte) ( 0xff & ( value >> 40 ) );
-            i64Buffer[3] = (byte) ( 0xff & ( value >> 32 ) );
-            i64Buffer[4] = (byte) ( 0xff & ( value >> 24 ) );
-            i64Buffer[5] = (byte) ( 0xff & ( value >> 16 ) );
-            i64Buffer[6] = (byte) ( 0xff & ( value >> 8 ) );
-            i64Buffer[7] = (byte) ( 0xff & value );
+            i64Buffer[0] = (byte) ( value >> 56 );
+            i64Buffer[1] = (byte) ( value >> 48 );
+            i64Buffer[2] = (byte) ( value >> 40 );
+            i64Buffer[3] = (byte) ( value >> 32 );
+            i64Buffer[4] = (byte) ( value >> 24 );
+            i64Buffer[5] = (byte) ( value >> 16 );
+            i64Buffer[6] = (byte) ( value >> 8 );
+            i64Buffer[7] = (byte) value;
             _transport.WriteBytes( i64Buffer );
         }
 
