@@ -16,14 +16,14 @@ namespace ThriftSharp.Internals
         // Maps .NET types to Thrift type IDs for the Thrift primitive types
         private static readonly Dictionary<Type, ThriftTypeId> PrimitiveIds = new Dictionary<Type, ThriftTypeId>
         {
-            { typeof(bool), ThriftTypeId.Boolean },
-            { typeof(sbyte), ThriftTypeId.SByte },
-            { typeof(double), ThriftTypeId.Double },
-            { typeof(short), ThriftTypeId.Int16 },
-            { typeof(int), ThriftTypeId.Int32 },
-            { typeof(long), ThriftTypeId.Int64 },
-            { typeof(string), ThriftTypeId.Binary },
-            { typeof(sbyte[]), ThriftTypeId.Binary }
+            { typeof( bool ), ThriftTypeId.Boolean },
+            { typeof( sbyte ), ThriftTypeId.SByte },
+            { typeof( double ), ThriftTypeId.Double },
+            { typeof( short ), ThriftTypeId.Int16 },
+            { typeof( int ), ThriftTypeId.Int32 },
+            { typeof( long ), ThriftTypeId.Int64 },
+            { typeof( string ), ThriftTypeId.Binary },
+            { typeof( sbyte[] ), ThriftTypeId.Binary }
         };
 
         // Known .NET types to Thrift types mappings
@@ -39,18 +39,6 @@ namespace ThriftSharp.Internals
         /// Gets the TypeInfo of the underlying type.
         /// </summary>
         public readonly TypeInfo TypeInfo;
-
-
-        /// <summary>
-        /// Gets a value indicating whether the type is a primitive.
-        /// </summary>
-        public readonly bool IsPrimitive;
-
-
-        /// <summary>
-        /// Gets a value indicating whether the underlying type is an enum.
-        /// </summary>
-        public readonly bool IsEnum;
 
 
         /// <summary>
@@ -109,14 +97,12 @@ namespace ThriftSharp.Internals
             if ( underlyingNullableType != null )
             {
                 NullableType = ThriftType.Get( underlyingNullableType );
-                IsPrimitive = true;
                 Id = NullableType.Id;
                 return;
             }
 
             if ( PrimitiveIds.ContainsKey( type ) )
             {
-                IsPrimitive = true;
                 Id = PrimitiveIds[type];
                 return;
             }
@@ -132,8 +118,6 @@ namespace ThriftSharp.Internals
                     throw ThriftParsingException.NonInt32Enum( TypeInfo );
                 }
 
-                IsEnum = true;
-                IsPrimitive = true;
                 Id = ThriftTypeId.Int32;
                 return;
             }

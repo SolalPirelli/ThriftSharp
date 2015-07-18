@@ -271,7 +271,7 @@ namespace ThriftSharp.Internals
                     return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadInt16 );
 
                 case ThriftTypeId.Int32:
-                    if ( thriftType.IsEnum )
+                    if ( thriftType.TypeInfo.IsEnum )
                     {
                         return Expression.Convert(
                             Expression.Call( protocolParam, Methods.IThriftProtocol_ReadInt32 ),
