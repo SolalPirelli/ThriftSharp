@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
 using ThriftSharp.Protocols;
 using ThriftSharp.Utilities;
 
@@ -15,17 +14,6 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftStructReader
     {
-        // Cached common values
-        private static class Cache
-        {
-            public static readonly TypeInfo StringTypeInfo = typeof( string ).GetTypeInfo();
-        }
-
-        // Empty Types array, widely used in expression trees
-        private static readonly Type[] EmptyTypes = new Type[0];
-
-
-        // Cached compiled readers
         private static readonly Dictionary<ThriftStruct, Func<IThriftProtocol, object>> _knownReaders
             = new Dictionary<ThriftStruct, Func<IThriftProtocol, object>>();
 
@@ -125,7 +113,7 @@ namespace ThriftSharp.Internals
                     Expression.Call(
                         typeof( ThriftSerializationException ),
                         "TypeIdMismatch",
-                        EmptyTypes,
+                        Types.EmptyTypes,
                         Expression.Constant( expected ),
                         actual
                     )
@@ -139,16 +127,16 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static Expression ForType( ParameterExpression protocolParam, ThriftType thriftType )
         {
-            if ( thriftType.TypeInfo.Equals( Cache.StringTypeInfo ) )
+            if ( thriftType.TypeInfo.Equals( TypeInfos.String ) )
             {
-                return Expression.Call( protocolParam, "ReadString", EmptyTypes );
+                return Expression.Call( protocolParam, "ReadString", Types.EmptyTypes );
             }
 
             // force the conversion
             if ( thriftType.IsEnum || thriftType.NullableType != null )
             {
                 return Expression.Convert(
-                    Expression.Call( protocolParam, "Read" + thriftType.Id.ToString(), EmptyTypes ),
+                    Expression.Call( protocolParam, "Read" + thriftType.Id.ToString(), Types.EmptyTypes ),
                     thriftType.TypeInfo.AsType()
                 );
             }
@@ -156,7 +144,7 @@ namespace ThriftSharp.Internals
             // also handles nullables thanks to implicit conversions
             if ( thriftType.IsPrimitive )
             {
-                return Expression.Call( protocolParam, "Read" + thriftType.Id.ToString(), EmptyTypes );
+                return Expression.Call( protocolParam, "Read" + thriftType.Id.ToString(), Types.EmptyTypes );
             }
 
             if ( thriftType.Id == ThriftTypeId.List && thriftType.CollectionTypeInfo.IsArray )
@@ -174,7 +162,7 @@ namespace ThriftSharp.Internals
                     new[] { arrayVar, headerVar, countVar },
                     Expression.Assign(
                         headerVar,
-                        Expression.Call( protocolParam, "ReadListHeader", EmptyTypes )
+                        Expression.Call( protocolParam, "ReadListHeader", Types.EmptyTypes )
                     ),
                     CreateTypeIdAssert(
                         thriftType.ElementType.Id,
@@ -211,7 +199,7 @@ namespace ThriftSharp.Internals
                         ),
                         endOfLoop
                     ),
-                    Expression.Call( protocolParam, "ReadListEnd", EmptyTypes ),
+                    Expression.Call( protocolParam, "ReadListEnd", Types.EmptyTypes ),
                     // return value:
                     arrayVar
                 );
@@ -234,7 +222,7 @@ namespace ThriftSharp.Internals
                     new[] { collectionVar, headerVar, countVar },
                     Expression.Assign(
                         headerVar,
-                        Expression.Call( protocolParam, readHeaderMethodName, EmptyTypes )
+                        Expression.Call( protocolParam, readHeaderMethodName, Types.EmptyTypes )
                     ),
                     CreateTypeIdAssert(
                         thriftType.ElementType.Id,
@@ -259,7 +247,7 @@ namespace ThriftSharp.Internals
                                 Expression.Call(
                                     collectionVar,
                                     "Add",
-                                    EmptyTypes,
+                                    Types.EmptyTypes,
                                     ForType( protocolParam, thriftType.ElementType )
                                 ),
                                 Expression.PostIncrementAssign( countVar )
@@ -267,7 +255,7 @@ namespace ThriftSharp.Internals
                         ),
                         endOfLoop
                     ),
-                    Expression.Call( protocolParam, readEndMethodName, EmptyTypes ),
+                    Expression.Call( protocolParam, readEndMethodName, Types.EmptyTypes ),
                     // return value:
                     collectionVar
                 );
@@ -290,7 +278,7 @@ namespace ThriftSharp.Internals
                     ),
                     Expression.Assign(
                         headerVar,
-                        Expression.Call( protocolParam, "ReadMapHeader", EmptyTypes )
+                        Expression.Call( protocolParam, "ReadMapHeader", Types.EmptyTypes )
                     ),
                     CreateTypeIdAssert(
                         thriftType.KeyType.Id,
@@ -318,7 +306,7 @@ namespace ThriftSharp.Internals
                                 Expression.Call(
                                     mapVar,
                                     "Add",
-                                    EmptyTypes,
+                                    Types.EmptyTypes,
                                     ForType( protocolParam, thriftType.KeyType ),
                                     ForType( protocolParam, thriftType.ValueType )
                                 ),
@@ -327,7 +315,7 @@ namespace ThriftSharp.Internals
                         ),
                         endOfLoop
                     ),
-                    Expression.Call( protocolParam, "ReadMapEnd", EmptyTypes ),
+                    Expression.Call( protocolParam, "ReadMapEnd", Types.EmptyTypes ),
                     // return value:
                     mapVar
                 );
@@ -337,7 +325,7 @@ namespace ThriftSharp.Internals
                 Expression.Call(
                     typeof( ThriftStructReader ),
                     "Read",
-                    EmptyTypes,
+                    Types.EmptyTypes,
                     Expression.Constant( thriftType.Struct ), protocolParam
                 ),
                 thriftType.TypeInfo.AsType()
@@ -411,7 +399,7 @@ namespace ThriftSharp.Internals
                             Expression.Call(
                                 Expression.Constant( tup.Item1.Converter ),
                                 "Convert",
-                                EmptyTypes,
+                                Types.EmptyTypes,
                                 expr
                             )
                         );
@@ -423,7 +411,7 @@ namespace ThriftSharp.Internals
                                 Expression.Call(
                                     Expression.Constant( tup.Item1.Converter ),
                                     "Convert",
-                                    EmptyTypes,
+                                    Types.EmptyTypes,
                                     Expression.Convert(
                                         expr,
                                         tup.Item1.Type.NullableType.TypeInfo.AsType()
@@ -448,7 +436,7 @@ namespace ThriftSharp.Internals
                             Expression.Call(
                                 setFieldsVar,
                                 "Add",
-                                EmptyTypes,
+                                Types.EmptyTypes,
                                 Expression.Constant( tup.Item1.Id )
                             ),
                             Expression.Empty()  // void return value
@@ -461,7 +449,7 @@ namespace ThriftSharp.Internals
             var skipper = Expression.Call(
                 typeof( ThriftStructReader ),
                 "Skip",
-                EmptyTypes,
+                Types.EmptyTypes,
                 Expression.Field( fieldHeaderVar, "TypeId" ),
                 protocolParam
             );
@@ -489,13 +477,13 @@ namespace ThriftSharp.Internals
                 ),
                 
                 // ignore the return value, it's useless
-                Expression.Call( protocolParam, "ReadStructHeader", EmptyTypes ),
+                Expression.Call( protocolParam, "ReadStructHeader", Types.EmptyTypes ),
 
                 Expression.Loop(
                     Expression.Block(
                         Expression.Assign(
                             fieldHeaderVar,
-                            Expression.Call( protocolParam, "ReadFieldHeader", EmptyTypes )
+                            Expression.Call( protocolParam, "ReadFieldHeader", Types.EmptyTypes )
                         ),
                         Expression.IfThen(
                             Expression.Equal(
@@ -508,12 +496,12 @@ namespace ThriftSharp.Internals
                             Expression.Break( endOfLoop )
                         ),
                         fieldAssignment,
-                        Expression.Call( protocolParam, "ReadFieldEnd", EmptyTypes )
+                        Expression.Call( protocolParam, "ReadFieldEnd", Types.EmptyTypes )
                     ),
                     endOfLoop
                 ),
                 
-                Expression.Call( protocolParam, "ReadStructEnd", EmptyTypes ),
+                Expression.Call( protocolParam, "ReadStructEnd", Types.EmptyTypes ),
             };
 
             // now check for required fields & default values
@@ -527,7 +515,7 @@ namespace ThriftSharp.Internals
                                 Expression.Call(
                                     setFieldsVar,
                                     "Contains",
-                                    EmptyTypes,
+                                    Types.EmptyTypes,
                                     Expression.Constant( tup.Item1.Id )
                                 )
                             ),
@@ -535,7 +523,7 @@ namespace ThriftSharp.Internals
                                 Expression.Call(
                                     typeof( ThriftSerializationException ),
                                     "MissingRequiredField",
-                                    EmptyTypes,
+                                    Types.EmptyTypes,
                                     Expression.Constant( tup.Item1.Name )
                                 )
                             )
@@ -550,7 +538,7 @@ namespace ThriftSharp.Internals
                                 Expression.Call(
                                     setFieldsVar,
                                     "Contains",
-                                    EmptyTypes,
+                                    Types.EmptyTypes,
                                     Expression.Constant( tup.Item1.Id )
                                 )
                             ),

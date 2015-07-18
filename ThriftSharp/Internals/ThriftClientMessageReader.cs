@@ -3,10 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using ThriftSharp.Protocols;
+using ThriftSharp.Utilities;
 
 namespace ThriftSharp.Internals
 {
@@ -15,28 +15,8 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftClientMessageReader
     {
-        private static class Cache
-        {
-            public static readonly MethodInfo EnumIsDefinedMethod =
-                typeof( Enum ).GetTypeInfo().GetDeclaredMethod( "IsDefined" );
-
-            public static readonly ConstructorInfo ThriftProtocolExceptionConstructor =
-                typeof( ThriftProtocolException ).GetTypeInfo().DeclaredConstructors.First( c => c.GetParameters().Length == 1 );
-
-            public static readonly MethodInfo ReadStructMethod =
-                typeof( ThriftStructReader ).GetTypeInfo().GetDeclaredMethod( "Read" );
-
-            public static readonly ThriftStruct ThriftProtocolExceptionStruct =
-                ThriftAttributesParser.ParseStruct( typeof( ThriftProtocolException ).GetTypeInfo() );
-
-            public static readonly TypeInfo VoidTypeInfo =
-                typeof( void ).GetTypeInfo();
-
-            public static readonly MethodInfo DisposeMethod =
-                typeof( IDisposable ).GetTypeInfo().GetDeclaredMethod( "Dispose" );
-        }
-
-        private static Type[] EmptyTypes = new Type[0];
+        private static readonly ThriftStruct ThriftProtocolExceptionStruct =
+                  ThriftAttributesParser.ParseStruct( typeof( ThriftProtocolException ).GetTypeInfo() );
 
         private static readonly Dictionary<ThriftMethod, Func<IThriftProtocol, object>> _knownReaders =
             new Dictionary<ThriftMethod, Func<IThriftProtocol, object>>();
@@ -53,7 +33,7 @@ namespace ThriftSharp.Internals
             ParameterExpression hasReturnVariable = null;
             ParameterExpression returnVariable = null;
 
-            if ( method.ReturnValue.UnderlyingTypeInfo != Cache.VoidTypeInfo )
+            if ( method.ReturnValue.UnderlyingTypeInfo != TypeInfos.Void )
             {
                 hasReturnVariable = Expression.Variable( typeof( bool ), "hasReturn" );
                 returnVariable = Expression.Variable( method.ReturnValue.UnderlyingTypeInfo.AsType(), "returnValue" );
@@ -95,14 +75,14 @@ namespace ThriftSharp.Internals
                     Expression.Call(
                         protocolParam,
                         "ReadMessageHeader",
-                        EmptyTypes
+                        Types.EmptyTypes
                     )
                 ),
 
                 Expression.IfThen(
                     Expression.IsFalse(
                         Expression.Call(
-                            Cache.EnumIsDefinedMethod,
+                            Methods.Enum_IsDefined,
                             Expression.Constant( typeof( ThriftMessageType ) ),
                             Expression.Convert(
                                 Expression.Field(
@@ -115,7 +95,7 @@ namespace ThriftSharp.Internals
                     ),
                     Expression.Throw(
                         Expression.New(
-                            Cache.ThriftProtocolExceptionConstructor,
+                            Constructors.ThriftProtocolException,
                             Expression.Constant( ThriftProtocolExceptionType.InvalidMessageType )
                         )
                     )
@@ -131,8 +111,8 @@ namespace ThriftSharp.Internals
                     ),
                     Expression.Throw(
                         Expression.Call(
-                            Cache.ReadStructMethod,
-                            Expression.Constant( Cache.ThriftProtocolExceptionStruct ), protocolParam
+                            Methods.ThriftStructReader_Read,
+                            Expression.Constant( ThriftProtocolExceptionStruct ), protocolParam
                         )
                     )
                 ),
@@ -142,14 +122,14 @@ namespace ThriftSharp.Internals
                 Expression.Call(
                     protocolParam,
                     "ReadMessageEnd",
-                    EmptyTypes
+                    Types.EmptyTypes
                 ),
 
                 // Dispose of it now that we have finished reading and writing
                 // using() is dangerous in this case because of async stuff happening
                 Expression.Call(
                     protocolParam,
-                    Cache.DisposeMethod
+                    Methods.IDisposable_Dispose
                 )
             };
 
@@ -163,7 +143,7 @@ namespace ThriftSharp.Internals
                         ),
                         Expression.Throw(
                             Expression.New(
-                                Cache.ThriftProtocolExceptionConstructor,
+                                Constructors.ThriftProtocolException,
                                 Expression.Constant( ThriftProtocolExceptionType.MissingResult )
                             )
                         )

@@ -3,10 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using ThriftSharp.Protocols;
+using ThriftSharp.Utilities;
 
 namespace ThriftSharp.Internals
 {
@@ -15,18 +14,6 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftClientMessageWriter
     {
-        private static class Cache
-        {
-            public static readonly ConstructorInfo StructHeaderConstructor =
-                typeof( ThriftStructHeader ).GetTypeInfo().DeclaredConstructors.First();
-
-            public static readonly ConstructorInfo MessageHeaderConstructor =
-                typeof( ThriftMessageHeader ).GetTypeInfo().DeclaredConstructors.First();
-        }
-
-        private static Type[] EmptyTypes = new Type[0];
-
-        // Cached compiled writers
         private static readonly Dictionary<ThriftMethod, Action<object[], IThriftProtocol>> _knownWriters =
             new Dictionary<ThriftMethod, Action<object[], IThriftProtocol>>();
 
@@ -43,9 +30,9 @@ namespace ThriftSharp.Internals
                 Expression.Call(
                     protocolParam,
                     "WriteMessageHeader",
-                    EmptyTypes,
+                    Types.EmptyTypes,
                     Expression.New(
-                        Cache.MessageHeaderConstructor,
+                        Constructors.ThriftMessageHeader,
                         Expression.Constant( method.Name ),
                         Expression.Constant( method.IsOneWay ? ThriftMessageType.OneWay : ThriftMessageType.Call )
                     )
@@ -54,9 +41,9 @@ namespace ThriftSharp.Internals
                 Expression.Call(
                     protocolParam,
                     "WriteStructHeader",
-                    EmptyTypes,
+                    Types.EmptyTypes,
                     Expression.New(
-                        Cache.StructHeaderConstructor,
+                        Constructors.ThriftStructHeader,
                         Expression.Constant("")
                     )
                 )
@@ -76,9 +63,9 @@ namespace ThriftSharp.Internals
                 methodContents.Add( ThriftStructWriter.ForField( protocolParam, method.Parameters[n], getParamExpr ) );
             }
 
-            methodContents.Add( Expression.Call( protocolParam, "WriteFieldStop", EmptyTypes ) );
-            methodContents.Add( Expression.Call( protocolParam, "WriteStructEnd", EmptyTypes ) );
-            methodContents.Add( Expression.Call( protocolParam, "WriteMessageEnd", EmptyTypes ) );
+            methodContents.Add( Expression.Call( protocolParam, "WriteFieldStop", Types.EmptyTypes ) );
+            methodContents.Add( Expression.Call( protocolParam, "WriteStructEnd", Types.EmptyTypes ) );
+            methodContents.Add( Expression.Call( protocolParam, "WriteMessageEnd", Types.EmptyTypes ) );
 
             return Expression.Lambda<Action<object[], IThriftProtocol>>(
                 Expression.Block( methodContents ),

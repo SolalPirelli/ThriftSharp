@@ -2,7 +2,6 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -17,28 +16,6 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftStructWriter
     {
-        // Cached common values
-        private static class Cache
-        {
-            public static readonly ConstructorInfo CollectionHeaderConstructor =
-                typeof( ThriftCollectionHeader ).GetTypeInfo().DeclaredConstructors.First();
-
-            public static readonly ConstructorInfo MapHeaderConstructor =
-                typeof( ThriftMapHeader ).GetTypeInfo().DeclaredConstructors.First();
-
-            public static readonly ConstructorInfo FieldHeaderConstructor =
-                typeof( ThriftFieldHeader ).GetTypeInfo().DeclaredConstructors.First();
-
-            public static readonly MethodInfo IEnumeratorMoveNextMethod =
-                typeof( IEnumerator ).GetTypeInfo().GetDeclaredMethod( "MoveNext" );
-        }
-
-        // TODO: Centralize that
-        // Empty Types array, widely used in expression trees
-        private static readonly Type[] EmptyTypes = new Type[0];
-
-
-        // Cached compiled writers
         private static readonly Dictionary<ThriftStruct, Action<object, IThriftProtocol>> _knownWriters
             = new Dictionary<ThriftStruct, Action<object, IThriftProtocol>>();
 
@@ -61,7 +38,7 @@ namespace ThriftSharp.Internals
                 }
 
                 string methodName = "Write" + ( thriftType.TypeInfo.AsType() == typeof( string ) ? "String" : thriftType.Id.ToString() );
-                return Expression.Call( protocolParam, methodName, EmptyTypes, value );
+                return Expression.Call( protocolParam, methodName, Types.EmptyTypes, value );
             }
 
             if ( thriftType.CollectionTypeInfo != null )
@@ -83,9 +60,9 @@ namespace ThriftSharp.Internals
                 var writeHeaderExpr =
                     Expression.Call(
                         protocolParam,
-                        writeHeader, EmptyTypes,
+                        writeHeader, Types.EmptyTypes,
                         Expression.New(
-                            Cache.CollectionHeaderConstructor,
+                            Constructors.ThriftCollectionHeader,
                             Expression.Property( value, countPropertyName ),
                             Expression.Constant( thriftType.ElementType.Id )
                         )
@@ -108,7 +85,7 @@ namespace ThriftSharp.Internals
                 var loopExpr = Expression.Loop(
                     Expression.IfThenElse(
                         Expression.IsTrue(
-                            Expression.Call( enumeratorVar, Cache.IEnumeratorMoveNextMethod )
+                            Expression.Call( enumeratorVar, Methods.IEnumerator_MoveNext )
                         ),
                         ForType(
                             protocolParam, thriftType.ElementType,
@@ -118,7 +95,7 @@ namespace ThriftSharp.Internals
                     ),
                     endOfLoop
                 );
-                var writeEndExpr = Expression.Call( protocolParam, writeEnd, EmptyTypes );
+                var writeEndExpr = Expression.Call( protocolParam, writeEnd, Types.EmptyTypes );
 
                 return Expression.Block( new[] { enumeratorVar }, writeHeaderExpr, enumeratorAssign, loopExpr, writeEndExpr );
             }
@@ -131,9 +108,9 @@ namespace ThriftSharp.Internals
                 var enumeratorType = enumerableTypeInfo.GetDeclaredMethod( "GetEnumerator" ).ReturnType;
                 var writeHeaderExpr =
                     Expression.Call(
-                        protocolParam, "WriteMapHeader", EmptyTypes,
+                        protocolParam, "WriteMapHeader", Types.EmptyTypes,
                         Expression.New(
-                           Cache.MapHeaderConstructor,
+                           Constructors.ThriftMapHeader,
                            Expression.Property( value, "Count" ),
                            Expression.Constant( thriftType.KeyType.Id ),
                            Expression.Constant( thriftType.ValueType.Id )
@@ -154,7 +131,7 @@ namespace ThriftSharp.Internals
                     Expression.IfThenElse(
                         Expression.IsTrue(
                     // Can't use the string-using Call() overload because MoveNext is only declared on the non-generic IEnumerator
-                            Expression.Call( enumeratorVar, Cache.IEnumeratorMoveNextMethod )
+                            Expression.Call( enumeratorVar, Methods.IEnumerator_MoveNext )
                         ),
                         Expression.Block(
                             ForType( protocolParam, thriftType.KeyType,
@@ -168,7 +145,7 @@ namespace ThriftSharp.Internals
                     ),
                     endOfLoop
                 );
-                var writeEndExpr = Expression.Call( protocolParam, "WriteMapEnd", EmptyTypes );
+                var writeEndExpr = Expression.Call( protocolParam, "WriteMapEnd", Types.EmptyTypes );
 
                 return Expression.Block( new[] { enumeratorVar }, writeHeaderExpr, enumeratorAssign, loopExpr, writeEndExpr );
             }
@@ -176,7 +153,7 @@ namespace ThriftSharp.Internals
             return Expression.Call(
                 typeof( ThriftStructWriter ),
                 "Write",
-                EmptyTypes,
+                Types.EmptyTypes,
                 Expression.Constant( thriftType.Struct ), value, protocolParam
             );
         }
@@ -193,7 +170,7 @@ namespace ThriftSharp.Internals
             {
                 Expression.Call(
                     protocolParam,
-                    "WriteStructHeader", EmptyTypes,
+                    "WriteStructHeader", Types.EmptyTypes,
                     Expression.Constant(thriftStruct.Header)
                 )
             };
@@ -211,8 +188,8 @@ namespace ThriftSharp.Internals
                 methodContents.Add( ForField( protocolParam, field, getFieldExpr ) );
             }
 
-            methodContents.Add( Expression.Call( protocolParam, "WriteFieldStop", EmptyTypes ) );
-            methodContents.Add( Expression.Call( protocolParam, "WriteStructEnd", EmptyTypes ) );
+            methodContents.Add( Expression.Call( protocolParam, "WriteFieldStop", Types.EmptyTypes ) );
+            methodContents.Add( Expression.Call( protocolParam, "WriteStructEnd", Types.EmptyTypes ) );
 
             return Expression.Lambda<Action<object, IThriftProtocol>>(
                 Expression.Block( methodContents ),
@@ -234,7 +211,7 @@ namespace ThriftSharp.Internals
                     getter = Expression.Call(
                         Expression.Constant( field.Converter ),
                         "ConvertBack",
-                        EmptyTypes,
+                        Types.EmptyTypes,
                         getter
                     );
                 }
@@ -244,7 +221,7 @@ namespace ThriftSharp.Internals
                         Expression.Call(
                             Expression.Constant( field.Converter ),
                             "ConvertBack",
-                            EmptyTypes,
+                            Types.EmptyTypes,
                             Expression.Convert(
                                 getter,
                                 Nullable.GetUnderlyingType( field.UnderlyingTypeInfo.AsType() )
@@ -265,16 +242,16 @@ namespace ThriftSharp.Internals
                 Expression.Call(
                     protocolParam,
                     "WriteFieldHeader",
-                    EmptyTypes,
+                    Types.EmptyTypes,
                     Expression.New(
-                        Cache.FieldHeaderConstructor,
+                        Constructors.ThriftFieldHeader,
                         Expression.Constant( field.Id ),
                         Expression.Constant( field.Name ),
                         Expression.Constant( field.Type.Id )
                     )
                 ),
                 read,
-                Expression.Call( protocolParam, "WriteFieldEnd", EmptyTypes )
+                Expression.Call( protocolParam, "WriteFieldEnd", Types.EmptyTypes )
             );
 
 
@@ -287,7 +264,7 @@ namespace ThriftSharp.Internals
                         Expression.Call(
                             typeof( ThriftSerializationException ),
                             "RequiredFieldIsNull",
-                            EmptyTypes,
+                            Types.EmptyTypes,
                             Expression.Constant( field.Name )
                         )
                     );
