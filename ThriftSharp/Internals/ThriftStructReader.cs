@@ -38,74 +38,6 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Creates an expression reading the specified array type.
-        /// </summary>
-        private static Expression CreateReaderForArray( ParameterExpression protocolParam, ThriftType thriftType )
-        {
-            var arrayType = thriftType.CollectionTypeInfo.AsType();
-            var itemType = thriftType.ElementType.TypeInfo.AsType();
-            var arrayVar = Expression.Variable( arrayType );
-            var headerVar = Expression.Variable( typeof( ThriftCollectionHeader ) );
-            var lengthVar = Expression.Variable( typeof( int ) );
-
-            var endOfLoop = Expression.Label();
-
-            return Expression.Block(
-                arrayType,
-                new[] { arrayVar, headerVar, lengthVar },
-
-                Expression.Assign(
-                    headerVar,
-                    Expression.Call( protocolParam, Methods.IThriftProtocol_ReadListHeader )
-                ),
-
-                CreateTypeIdAssert(
-                    thriftType.ElementType.Id,
-                    Expression.Field( headerVar, Fields.ThriftCollectionHeader_ElementTypeId )
-                ),
-
-                Expression.Assign(
-                    arrayVar,
-                    Expression.NewArrayBounds(
-                        itemType,
-                        Expression.Field( headerVar, Fields.ThriftCollectionHeader_Count )
-                    )
-                ),
-
-                Expression.Assign(
-                    lengthVar,
-                    Expression.Constant( 0 )
-                ),
-
-                Expression.Loop(
-                    Expression.IfThenElse(
-                        Expression.Equal(
-                            lengthVar,
-                            Expression.Field( headerVar, Fields.ThriftCollectionHeader_Count )
-                        ),
-                        Expression.Break( endOfLoop ),
-                        Expression.Block(
-                            Expression.Assign(
-                                Expression.ArrayAccess(
-                                    arrayVar,
-                                    lengthVar
-                                ),
-                                CreateReaderForType( protocolParam, thriftType.ElementType )
-                            ),
-                            Expression.PostIncrementAssign( lengthVar )
-                        )
-                    ),
-                    endOfLoop
-                ),
-
-                Expression.Call( protocolParam, Methods.IThriftProtocol_ReadListEnd ),
-
-                // return value
-                arrayVar
-            );
-        }
-
-        /// <summary>
         /// Creates an expression reading the specified map type.
         /// </summary>
         private static Expression CreateReaderForMap( ParameterExpression protocolParam, ThriftType thriftType )
@@ -171,6 +103,74 @@ namespace ThriftSharp.Internals
 
                 // return value
                 mapVar
+            );
+        }
+
+        /// <summary>
+        /// Creates an expression reading the specified array type.
+        /// </summary>
+        private static Expression CreateReaderForArray( ParameterExpression protocolParam, ThriftType thriftType )
+        {
+            var arrayType = thriftType.CollectionTypeInfo.AsType();
+            var itemType = thriftType.ElementType.TypeInfo.AsType();
+            var arrayVar = Expression.Variable( arrayType );
+            var headerVar = Expression.Variable( typeof( ThriftCollectionHeader ) );
+            var lengthVar = Expression.Variable( typeof( int ) );
+
+            var endOfLoop = Expression.Label();
+
+            return Expression.Block(
+                arrayType,
+                new[] { arrayVar, headerVar, lengthVar },
+
+                Expression.Assign(
+                    headerVar,
+                    Expression.Call( protocolParam, Methods.IThriftProtocol_ReadListHeader )
+                ),
+
+                CreateTypeIdAssert(
+                    thriftType.ElementType.Id,
+                    Expression.Field( headerVar, Fields.ThriftCollectionHeader_ElementTypeId )
+                ),
+
+                Expression.Assign(
+                    arrayVar,
+                    Expression.NewArrayBounds(
+                        itemType,
+                        Expression.Field( headerVar, Fields.ThriftCollectionHeader_Count )
+                    )
+                ),
+
+                Expression.Assign(
+                    lengthVar,
+                    Expression.Constant( 0 )
+                ),
+
+                Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.Equal(
+                            lengthVar,
+                            Expression.Field( headerVar, Fields.ThriftCollectionHeader_Count )
+                        ),
+                        Expression.Break( endOfLoop ),
+                        Expression.Block(
+                            Expression.Assign(
+                                Expression.ArrayAccess(
+                                    arrayVar,
+                                    lengthVar
+                                ),
+                                CreateReaderForType( protocolParam, thriftType.ElementType )
+                            ),
+                            Expression.PostIncrementAssign( lengthVar )
+                        )
+                    ),
+                    endOfLoop
+                ),
+
+                Expression.Call( protocolParam, Methods.IThriftProtocol_ReadListEnd ),
+
+                // return value
+                arrayVar
             );
         }
 

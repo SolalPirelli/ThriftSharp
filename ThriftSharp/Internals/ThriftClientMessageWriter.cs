@@ -60,7 +60,7 @@ namespace ThriftSharp.Internals
                         method.Parameters[n].WireType
                     );
 
-                methodContents.Add( ThriftStructWriter.ForField( protocolParam, method.Parameters[n], getParamExpr ) );
+                methodContents.Add( ThriftStructWriter.CreateWriterForField( protocolParam, method.Parameters[n], getParamExpr ) );
             }
 
             methodContents.Add( Expression.Call( protocolParam, "WriteFieldStop", Types.EmptyTypes ) );

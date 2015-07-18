@@ -39,14 +39,23 @@ namespace ThriftSharp.Utilities
     {
         public static readonly MethodInfo
             IEnumerator_MoveNext = typeof( IEnumerator ).GetTypeInfo().GetDeclaredMethod( "MoveNext" ),
+
             IDisposable_Dispose = typeof( IDisposable ).GetTypeInfo().GetDeclaredMethod( "Dispose" ),
+
             Enum_IsDefined = typeof( Enum ).GetTypeInfo().GetDeclaredMethod( "IsDefined" ),
+
             HashSetOfShort_Add = TypeInfos.HashSetOfShort.GetDeclaredMethod( "Add" ),
             HashSetOfShort_Contains = TypeInfos.HashSetOfShort.GetDeclaredMethod( "Contains" ),
+
             ThriftStructReader_Read = TypeInfos.ThriftStructReader.GetDeclaredMethod( "Read" ),
             ThriftStructReader_Skip = TypeInfos.ThriftStructReader.GetDeclaredMethod( "Skip" ),
+
+            ThriftStructWriter_Write = typeof( ThriftStructWriter ).GetTypeInfo().GetDeclaredMethod( "Write" ),
+
             ThriftSerializationException_TypeIdMismatch = TypeInfos.ThriftSerializationException.GetDeclaredMethod( "TypeIdMismatch" ),
             ThriftSerializationException_MissingRequiredField = TypeInfos.ThriftSerializationException.GetDeclaredMethod( "MissingRequiredField" ),
+            ThriftSerializationException_RequiredFieldIsNull = TypeInfos.ThriftSerializationException.GetDeclaredMethod( "RequiredFieldIsNull" ),
+
             IThriftProtocol_ReadBoolean = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadBoolean" ),
             IThriftProtocol_ReadSByte = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadSByte" ),
             IThriftProtocol_ReadDouble = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadDouble" ),
@@ -55,6 +64,8 @@ namespace ThriftSharp.Utilities
             IThriftProtocol_ReadInt64 = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadInt64" ),
             IThriftProtocol_ReadString = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadString" ),
             IThriftProtocol_ReadBinary = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadBinary" ),
+            IThriftProtocol_ReadMessageHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadMessageHeader" ),
+            IThriftProtocol_ReadMessageEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadMessageEnd" ),
             IThriftProtocol_ReadStructHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadStructHeader" ),
             IThriftProtocol_ReadStructEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadStructEnd" ),
             IThriftProtocol_ReadFieldHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadFieldHeader" ),
@@ -64,7 +75,28 @@ namespace ThriftSharp.Utilities
             IThriftProtocol_ReadListHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadListHeader" ),
             IThriftProtocol_ReadListEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadListEnd" ),
             IThriftProtocol_ReadSetHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadSetHeader" ),
-            IThriftProtocol_ReadSetEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadSetEnd" );
+            IThriftProtocol_ReadSetEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "ReadSetEnd" ),
+
+            IThriftProtocol_WriteBoolean = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteBoolean" ),
+            IThriftProtocol_WriteSByte = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteSByte" ),
+            IThriftProtocol_WriteDouble = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteDouble" ),
+            IThriftProtocol_WriteInt16 = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteInt16" ),
+            IThriftProtocol_WriteInt32 = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteInt32" ),
+            IThriftProtocol_WriteInt64 = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteInt64" ),
+            IThriftProtocol_WriteString = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteString" ),
+            IThriftProtocol_WriteBinary = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteBinary" ),
+            IThriftProtocol_WriteMessageHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteMessageHeader" ),
+            IThriftProtocol_WriteMessageEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteMessageEnd" ),
+            IThriftProtocol_WriteStructHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteStructHeader" ),
+            IThriftProtocol_WriteStructEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteStructEnd" ),
+            IThriftProtocol_WriteFieldHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteFieldHeader" ),
+            IThriftProtocol_WriteFieldEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteFieldEnd" ),
+            IThriftProtocol_WriteMapHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteMapHeader" ),
+            IThriftProtocol_WriteMapEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteMapEnd" ),
+            IThriftProtocol_WriteListHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteListHeader" ),
+            IThriftProtocol_WriteListEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteListEnd" ),
+            IThriftProtocol_WriteSetHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteSetHeader" ),
+            IThriftProtocol_WriteSetEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteSetEnd" );
     }
 
     internal static class Fields
