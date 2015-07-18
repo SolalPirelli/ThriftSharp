@@ -90,6 +90,7 @@ namespace ThriftSharp.Utilities
             IThriftProtocol_WriteStructHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteStructHeader" ),
             IThriftProtocol_WriteStructEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteStructEnd" ),
             IThriftProtocol_WriteFieldHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteFieldHeader" ),
+            IThriftProtocol_WriteFieldStop = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteFieldStop" ),
             IThriftProtocol_WriteFieldEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteFieldEnd" ),
             IThriftProtocol_WriteMapHeader = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteMapHeader" ),
             IThriftProtocol_WriteMapEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteMapEnd" ),
@@ -102,6 +103,7 @@ namespace ThriftSharp.Utilities
     internal static class Fields
     {
         public static readonly FieldInfo
+            ThriftMessageHeader_MessageType = typeof( ThriftMessageHeader ).GetTypeInfo().GetDeclaredField( "MessageType" ),
             ThriftMapHeader_KeyTypeId = TypeInfos.ThriftMapHeader.GetDeclaredField( "KeyTypeId" ),
             ThriftMapHeader_ValueTypeId = TypeInfos.ThriftMapHeader.GetDeclaredField( "ValueTypeId" ),
             ThriftMapHeader_Count = TypeInfos.ThriftMapHeader.GetDeclaredField( "Count" ),

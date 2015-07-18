@@ -25,18 +25,18 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Creates a compiled reader for the specified method.
         /// </summary>
-        private static Func<IThriftProtocol, object> ForMethod( ThriftMethod method )
+        private static Func<IThriftProtocol, object> CreateCompiledReaderForMethod( ThriftMethod method )
         {
-            var protocolParam = Expression.Parameter( typeof( IThriftProtocol ), "protocol" );
+            var protocolParam = Expression.Parameter( typeof( IThriftProtocol ) );
 
-            var headerVariable = Expression.Variable( typeof( ThriftMessageHeader ), "header" );
+            var headerVariable = Expression.Variable( typeof( ThriftMessageHeader ) );
             ParameterExpression hasReturnVariable = null;
             ParameterExpression returnVariable = null;
 
             if ( method.ReturnValue.UnderlyingTypeInfo != TypeInfos.Void )
             {
-                hasReturnVariable = Expression.Variable( typeof( bool ), "hasReturn" );
-                returnVariable = Expression.Variable( method.ReturnValue.UnderlyingTypeInfo.AsType(), "returnValue" );
+                hasReturnVariable = Expression.Variable( typeof( bool ) );
+                returnVariable = Expression.Variable( method.ReturnValue.UnderlyingTypeInfo.AsType() );
             }
 
             var fieldsAndSetters = new Dictionary<ThriftField, Func<Expression, Expression>>();
@@ -71,8 +71,7 @@ namespace ThriftSharp.Internals
                     headerVariable,
                     Expression.Call(
                         protocolParam,
-                        "ReadMessageHeader",
-                        Types.EmptyTypes
+                        Methods.IThriftProtocol_ReadMessageHeader
                     )
                 ),
 
@@ -82,10 +81,7 @@ namespace ThriftSharp.Internals
                             Methods.Enum_IsDefined,
                             Expression.Constant( typeof( ThriftMessageType ) ),
                             Expression.Convert(
-                                Expression.Field(
-                                    headerVariable,
-                                    "MessageType"
-                                ),
+                                Expression.Field( headerVariable, Fields.ThriftMessageHeader_MessageType ),
                                 typeof( object )
                             )
                         )
@@ -100,10 +96,7 @@ namespace ThriftSharp.Internals
 
                 Expression.IfThen(
                     Expression.Equal(
-                        Expression.Field(
-                            headerVariable,
-                            "MessageType"
-                        ),
+                        Expression.Field(  headerVariable,Fields.ThriftMessageHeader_MessageType  ),
                         Expression.Constant( ThriftMessageType.Exception )
                     ),
                     Expression.Throw(
@@ -116,39 +109,27 @@ namespace ThriftSharp.Internals
 
                 ThriftStructReader.CreateReaderForFields( protocolParam, fieldsAndSetters ),
 
-                Expression.Call(
-                    protocolParam,
-                    "ReadMessageEnd",
-                    Types.EmptyTypes
-                ),
+                Expression.Call( protocolParam, Methods.IThriftProtocol_ReadMessageEnd ),
 
-                // Dispose of it now that we have finished reading and writing
-                // using() is dangerous in this case because of async stuff happening
-                Expression.Call(
-                    protocolParam,
-                    Methods.IDisposable_Dispose
-                )
+                Expression.Call( protocolParam, Methods.IDisposable_Dispose )
             };
 
             if ( returnVariable != null )
             {
-                statements.Add(
-                    Expression.IfThen(
-                        Expression.Equal(
-                            hasReturnVariable,
-                            Expression.Constant( false )
-                        ),
-                        Expression.Throw(
-                            Expression.New(
-                                Constructors.ThriftProtocolException,
-                                Expression.Constant( ThriftProtocolExceptionType.MissingResult )
-                            )
+                statements.Add( Expression.IfThen(
+                    Expression.Equal(
+                        hasReturnVariable,
+                        Expression.Constant( false )
+                    ),
+                    Expression.Throw(
+                        Expression.New(
+                            Constructors.ThriftProtocolException,
+                            Expression.Constant( ThriftProtocolExceptionType.MissingResult )
                         )
-                    )
+                    ) )
                 );
             }
 
-            // return value
             if ( returnVariable == null )
             {
                 statements.Add( Expression.Constant( null ) );
@@ -175,7 +156,7 @@ namespace ThriftSharp.Internals
         {
             if ( !_knownReaders.ContainsKey( method ) )
             {
-                _knownReaders.Add( method, ForMethod( method ) );
+                _knownReaders.Add( method, CreateCompiledReaderForMethod( method ) );
             }
 
             return _knownReaders[method]( protocol );
