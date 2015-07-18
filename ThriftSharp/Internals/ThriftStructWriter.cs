@@ -200,14 +200,14 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static Action<object, IThriftProtocol> CreateCompiledWriterForStruct( ThriftStruct thriftStruct )
         {
-            var valueParam = Expression.Parameter( typeof( object ), "value" );
-            var protocolParam = Expression.Parameter( typeof( IThriftProtocol ), "param" );
+            var valueParam = Expression.Parameter( typeof( object ) );
+            var protocolParam = Expression.Parameter( typeof( IThriftProtocol ) );
 
             var methodContents = new List<Expression>
             {
                 Expression.Call(
                     protocolParam,
-                    "WriteStructHeader", Types.EmptyTypes,
+                    Methods.IThriftProtocol_WriteStructHeader,
                     Expression.Constant(thriftStruct.Header)
                 )
             };
@@ -225,13 +225,12 @@ namespace ThriftSharp.Internals
                 methodContents.Add( CreateWriterForField( protocolParam, field, getFieldExpr ) );
             }
 
-            methodContents.Add( Expression.Call( protocolParam, "WriteFieldStop", Types.EmptyTypes ) );
-            methodContents.Add( Expression.Call( protocolParam, "WriteStructEnd", Types.EmptyTypes ) );
+            methodContents.Add( Expression.Call( protocolParam, Methods.IThriftProtocol_WriteFieldStop ) );
+            methodContents.Add( Expression.Call( protocolParam, Methods.IThriftProtocol_WriteStructEnd ) );
 
             return Expression.Lambda<Action<object, IThriftProtocol>>(
                 Expression.Block( methodContents ),
-                valueParam,
-                protocolParam
+                valueParam, protocolParam
             ).Compile();
         }
 
@@ -248,7 +247,7 @@ namespace ThriftSharp.Internals
                     getter = Expression.Call(
                         Expression.Constant( field.Converter ),
                         "ConvertBack",
-                        Types.EmptyTypes,
+                        Types.None,
                         getter
                     );
                 }
@@ -258,7 +257,7 @@ namespace ThriftSharp.Internals
                         Expression.Call(
                             Expression.Constant( field.Converter ),
                             "ConvertBack",
-                            Types.EmptyTypes,
+                            Types.None,
                             Expression.Convert(
                                 getter,
                                 Nullable.GetUnderlyingType( field.UnderlyingTypeInfo.AsType() )

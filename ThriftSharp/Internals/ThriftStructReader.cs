@@ -89,7 +89,7 @@ namespace ThriftSharp.Internals
                             Expression.Call(
                                 mapVar,
                                 "Add", // TODO make knowncollections prettier
-                                Types.EmptyTypes,
+                                Types.None,
                                 CreateReaderForType( protocolParam, thriftType.KeyType ),
                                 CreateReaderForType( protocolParam, thriftType.ValueType )
                             ),
@@ -224,7 +224,7 @@ namespace ThriftSharp.Internals
                             Expression.Call(
                                 collectionVar,
                                 "Add", // TODO make knowncollections prettier
-                                Types.EmptyTypes,
+                                Types.None,
                                 CreateReaderForType( protocolParam, thriftType.ElementType )
                             ),
                             Expression.PostIncrementAssign( countVar )
@@ -311,7 +311,7 @@ namespace ThriftSharp.Internals
                     return CreateReaderForListOrSet( protocolParam, thriftType );
 
                 default:
-                    throw new InvalidOperationException( "Cannot create a writer for the type " + thriftType.Id );
+                    throw new InvalidOperationException( "Cannot create a reader for the type " + thriftType.Id );
             }
         }
 
@@ -383,7 +383,7 @@ namespace ThriftSharp.Internals
                             Expression.Call(
                                 Expression.Constant( pair.Key.Converter ),
                                 "Convert", // The converter type is unknown here (even the interface since it's generic)
-                                Types.EmptyTypes,
+                                Types.None,
                                 expr
                             )
                         );
@@ -395,7 +395,7 @@ namespace ThriftSharp.Internals
                                 Expression.Call(
                                     Expression.Constant( pair.Key.Converter ),
                                     "Convert", // idem
-                                    Types.EmptyTypes,
+                                    Types.None,
                                     Expression.Convert(
                                         expr,
                                         pair.Key.Type.NullableType.TypeInfo.AsType()

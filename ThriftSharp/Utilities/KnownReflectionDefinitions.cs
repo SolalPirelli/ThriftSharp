@@ -115,6 +115,6 @@ namespace ThriftSharp.Utilities
 
     internal static class Types
     {
-        public static readonly Type[] EmptyTypes = new Type[0];
+        public static readonly Type[] None = new Type[0];
     }
 }
