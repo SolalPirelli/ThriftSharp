@@ -23,13 +23,9 @@ namespace ThriftSharp
         [ThriftField( 2, false, "type" )]
         public ThriftProtocolExceptionType? ExceptionType { get; internal set; }
 
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="ThriftProtocolException" /> class.
+        /// For deserialization purposes only.
         /// </summary>
-        /// <remarks>
-        /// For serialization purposes only.
-        /// </remarks>
         private ThriftProtocolException() { }
 
         /// <summary>

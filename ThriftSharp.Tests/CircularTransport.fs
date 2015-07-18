@@ -12,9 +12,6 @@ type CircularTransport() =
     let mutable hasRead = false
 
     interface IThriftTransport with
-        member x.WriteByte(b) =
-            (x :> IThriftTransport).WriteBytes([| b |])
-
         member x.WriteBytes(bs) =
             if hasRead then failwith "Cannot write after a read. Close the transport first."
             stream.Write(bs, 0, bs.Length)

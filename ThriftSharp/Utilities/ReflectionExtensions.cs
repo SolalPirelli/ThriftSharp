@@ -26,13 +26,21 @@ namespace ThriftSharp.Utilities
         }
 
         /// <summary>
+        /// Checks whether the TypeInfo extends the specified type.
+        /// </summary>
+        public static bool Extends( this TypeInfo typeInfo, Type baseType )
+        {
+            return baseType.GetTypeInfo().IsAssignableFrom( typeInfo );
+        }
+
+        /// <summary>
         /// Unwraps a Task if the Type is one, or returns null.
         /// Returns typeof(void) if the Task is not a generic one.
         /// </summary>
         public static Type UnwrapTaskType( Type type )
         {
             var typeInfo = type.GetTypeInfo();
-            if ( typeof( Task ).GetTypeInfo().IsAssignableFrom( typeInfo ) )
+            if ( typeInfo.Extends( typeof( Task ) ) )
             {
                 if ( typeInfo.IsGenericType )
                 {

@@ -3,6 +3,7 @@
 
 module ThriftSharp.Tests.``Specific tests``
 
+open System.Reflection
 open ThriftSharp
 open ThriftSharp.Internals
 
@@ -13,9 +14,8 @@ type Simple() =
 
 [<TestClass>]
 type MemoryLeakTests() =
-    // Regression test
     [<Test>]
-    member x.``No reference is kept to returned objects``() =
+    member x.``[Regression] No reference is kept to returned objects``() =
         let prot = MemoryProtocol([MessageHeader ("Test", ThriftMessageType.Reply)
                                    StructHeader ""
                                    FieldHeader (0s, "", tid 12)
@@ -29,7 +29,7 @@ type MemoryLeakTests() =
                                    FieldStop
                                    StructEnd
                                    MessageEnd])
-        let meth = ThriftMethod("test", typeof<Simple>, false, null, [| |], [| |], "Test")
-        let resultRef = System.WeakReference(ThriftMessageReader.Read(prot, meth))
+        let meth = ThriftMethod("test", false, ThriftField.ReturnValue(typeof<Simple>.GetTypeInfo(), null), [| |], [| |])
+        let resultRef = System.WeakReference(ThriftClientMessageReader.Read(meth, prot))
         System.GC.Collect()
         resultRef.IsAlive <=> false

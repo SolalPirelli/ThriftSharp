@@ -72,11 +72,6 @@ namespace ThriftSharp.Internals
     internal struct ThriftFieldHeader
     {
         /// <summary>
-        /// Indicates the end of fields in a struct.
-        /// </summary>
-        public const byte Stop = 0;
-
-        /// <summary>
         /// Gets the field's ID.
         /// </summary>
         public readonly short Id;
@@ -87,46 +82,21 @@ namespace ThriftSharp.Internals
         public readonly string Name;
 
         /// <summary>
-        /// Gets the field's Thrift type.
-        /// </summary>
-        public readonly ThriftType FieldType;
-
-        /// <summary>
         /// Gets the field's Thrift type ID.
         /// </summary>
-        public readonly ThriftTypeId FieldTypeId;
+        public readonly ThriftTypeId TypeId;
 
         /// <summary>
         /// Initializes a new instance of the ThriftFieldHeader class with the specified values.
         /// </summary>
-        /// <param name="id">The field ID.</param>
-        /// <param name="name">The field name.</param>
-        /// <param name="fieldType">The field type.</param>
-        public ThriftFieldHeader( short id, string name, ThriftType fieldType )
+        /// <param name="id">The field's ID.</param>
+        /// <param name="name">The field's name.</param>
+        /// <param name="typeId">The field's type ID.</param>
+        public ThriftFieldHeader( short id, string name, ThriftTypeId typeId )
         {
             Id = id;
             Name = name;
-            FieldType = fieldType;
-            FieldTypeId = fieldType.Id;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the ThriftFieldHeader class with the specified values.
-        /// </summary>
-        /// <param name="id">The field ID.</param>
-        /// <param name="name">The field name.</param>
-        /// <param name="fieldTypeId">The field type ID.</param>
-        public ThriftFieldHeader( short id, string name, ThriftTypeId fieldTypeId )
-        {
-            Id = id;
-            Name = name;
-            FieldType = null;
-            FieldTypeId = fieldTypeId;
-        }
-
-        public bool IsEmpty()
-        {
-            return Id == 0 && Name == null && FieldType == null && FieldTypeId == 0;
+            TypeId = typeId;
         }
     }
 

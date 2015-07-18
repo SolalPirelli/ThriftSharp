@@ -2,6 +2,7 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using ThriftSharp.Utilities;
 
@@ -162,7 +163,7 @@ namespace ThriftSharp
         /// <summary>
         /// Gets the type of the exception specified by the clause.
         /// </summary>
-        public Type ExceptionType { get; private set; }
+        public TypeInfo ExceptionTypeInfo { get; private set; }
 
 
         /// <summary>
@@ -178,7 +179,7 @@ namespace ThriftSharp
 
             Id = id;
             Name = name;
-            ExceptionType = exceptionType;
+            ExceptionTypeInfo = exceptionType.GetTypeInfo();
         }
     }
 
@@ -251,6 +252,9 @@ namespace ThriftSharp
     [AttributeUsage( AttributeTargets.Property | AttributeTargets.Parameter | AttributeTargets.ReturnValue )]
     public sealed class ThriftConverterAttribute : Attribute
     {
+        private static readonly Dictionary<Type, IThriftValueConverter> _knownConverters =
+            new Dictionary<Type, IThriftValueConverter>();
+
         /// <summary>
         /// Gets the converter.
         /// </summary>
@@ -264,14 +268,18 @@ namespace ThriftSharp
         {
             Validation.IsNotNull( converterType, () => converterType );
 
-            var typeInfo = converterType.GetTypeInfo();
-
-            if ( !typeof( IThriftValueConverter ).GetTypeInfo().IsAssignableFrom( typeInfo ) )
+            if ( !_knownConverters.ContainsKey( converterType ) )
             {
-                throw new ArgumentException( "The type must inherit from IThriftValueConverter." );
+                var typeInfo = converterType.GetTypeInfo();
+                if ( !typeInfo.Extends( typeof( IThriftValueConverter ) ) )
+                {
+                    throw new ArgumentException( "The type must implement IThriftValueConverter." );
+                }
+
+                _knownConverters.Add( converterType, (IThriftValueConverter) ReflectionExtensions.Create( typeInfo ) );
             }
 
-            Converter = (IThriftValueConverter) ReflectionExtensions.Create( typeInfo );
+            Converter = _knownConverters[converterType];
         }
     }
 }

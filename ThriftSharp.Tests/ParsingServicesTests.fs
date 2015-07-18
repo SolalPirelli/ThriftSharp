@@ -4,6 +4,7 @@
 module ThriftSharp.Tests.``Parsing services``
 
 open System
+open System.Linq
 open System.Reflection
 open System.Threading.Tasks
 open Microsoft.FSharp.Quotations
@@ -71,11 +72,13 @@ let ok argTypes retType isOneWay thrownExns =
     thriftService.Name <=> name
     
     thriftService.Methods.Count <=> 1
-    thriftService.Methods.[0].Name <=> methodName
-    thriftService.Methods.[0].Parameters |> List.ofSeq |> List.map (fun p -> p.TypeInfo.AsType()) <=> argTypes
-    thriftService.Methods.[0].ReturnType <=> ReflectionExtensions.UnwrapTaskType( retType )
-    thriftService.Methods.[0].IsOneWay <=> isOneWay
-    thriftService.Methods.[0].Exceptions |> List.ofSeq |> List.map (fun e -> e.ExceptionTypeInfo.AsType()) <=> thrownExns
+    let meth = thriftService.Methods.First()
+    meth.Key <=> iface.GetMethods().[0].Name
+    meth.Value.Name <=> methodName
+    meth.Value.Parameters |> List.ofSeq |> List.map (fun p -> p.TypeInfo.AsType()) <=> argTypes
+    meth.Value.ReturnValue.TypeInfo.AsType() <=> ReflectionExtensions.UnwrapTaskType( retType )
+    meth.Value.IsOneWay <=> isOneWay
+    meth.Value.Exceptions |> List.ofSeq |> List.map (fun e -> e.TypeInfo.AsType()) <=> thrownExns
 
 let fails argTypes retType isOneWay thrownExns =
     let throwsClauses = thrownExns 
@@ -148,4 +151,5 @@ type __() =
         let thriftService = parse<ServiceWithConvertedReturnValue>
 
         thriftService.Methods.Count <=> 1
-        thriftService.Methods.[0].ReturnValueConverter :? ThriftUnixDateConverter <=> true
+        let meth = thriftService.Methods.First()
+        meth.Value.ReturnValue.Converter.GetType() <=> typeof<ThriftUnixDateConverter>

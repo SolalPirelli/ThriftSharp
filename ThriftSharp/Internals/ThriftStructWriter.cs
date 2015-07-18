@@ -15,7 +15,7 @@ namespace ThriftSharp.Internals
     /// <summary>
     /// Writes Thrift structs.
     /// </summary>
-    internal static class ThriftWriter
+    internal static class ThriftStructWriter
     {
         // Cached common values
         private static class Cache
@@ -26,26 +26,27 @@ namespace ThriftSharp.Internals
             public static readonly ConstructorInfo MapHeaderConstructor =
                 typeof( ThriftMapHeader ).GetTypeInfo().DeclaredConstructors.First();
 
-            public static readonly PropertyInfo FieldItem =
-                typeof( IReadOnlyList<ThriftField> ).GetTypeInfo().GetDeclaredProperty( "Item" );
+            public static readonly ConstructorInfo FieldHeaderConstructor =
+                typeof( ThriftFieldHeader ).GetTypeInfo().DeclaredConstructors.First();
 
-            public static readonly MethodInfo IEnumeratorMoveNext =
+            public static readonly MethodInfo IEnumeratorMoveNextMethod =
                 typeof( IEnumerator ).GetTypeInfo().GetDeclaredMethod( "MoveNext" );
         }
 
+        // TODO: Centralize that
         // Empty Types array, widely used in expression trees
         private static readonly Type[] EmptyTypes = new Type[0];
 
 
         // Cached compiled writers
-        private static readonly Dictionary<ThriftStruct, Action<ThriftStruct, object, IThriftProtocol>> _knownWriters
-            = new Dictionary<ThriftStruct, Action<ThriftStruct, object, IThriftProtocol>>();
+        private static readonly Dictionary<ThriftStruct, Action<object, IThriftProtocol>> _knownWriters
+            = new Dictionary<ThriftStruct, Action<object, IThriftProtocol>>();
 
 
         /// <summary>
         /// Creates a writer for the specified type, with the specified protocol and value.
         /// </summary>
-        private static Expression CreateWriter( ParameterExpression protocolParam, ThriftType thriftType, Expression value )
+        private static Expression ForType( ParameterExpression protocolParam, ThriftType thriftType, Expression value )
         {
             if ( thriftType.IsPrimitive )
             {
@@ -107,9 +108,9 @@ namespace ThriftSharp.Internals
                 var loopExpr = Expression.Loop(
                     Expression.IfThenElse(
                         Expression.IsTrue(
-                            Expression.Call( enumeratorVar, Cache.IEnumeratorMoveNext )
+                            Expression.Call( enumeratorVar, Cache.IEnumeratorMoveNextMethod )
                         ),
-                        CreateWriter(
+                        ForType(
                             protocolParam, thriftType.ElementType,
                             Expression.Property( enumeratorVar, "Current" )
                         ),
@@ -153,13 +154,13 @@ namespace ThriftSharp.Internals
                     Expression.IfThenElse(
                         Expression.IsTrue(
                     // Can't use the string-using Call() overload because MoveNext is only declared on the non-generic IEnumerator
-                            Expression.Call( enumeratorVar, Cache.IEnumeratorMoveNext )
+                            Expression.Call( enumeratorVar, Cache.IEnumeratorMoveNextMethod )
                         ),
                         Expression.Block(
-                            CreateWriter( protocolParam, thriftType.KeyType,
+                            ForType( protocolParam, thriftType.KeyType,
                                               Expression.Property( enumeratorCurrentExpr, "Key" )
                             ),
-                            CreateWriter( protocolParam, thriftType.ValueType,
+                            ForType( protocolParam, thriftType.ValueType,
                                               Expression.Property( enumeratorCurrentExpr, "Value" )
                             )
                         ),
@@ -173,20 +174,18 @@ namespace ThriftSharp.Internals
             }
 
             return Expression.Call(
-                       typeof( ThriftWriter ),
-                       "Write", EmptyTypes,
-                       Expression.Constant( thriftType.Struct ),
-                       value,
-                       protocolParam
-                   );
+                typeof( ThriftStructWriter ),
+                "Write",
+                EmptyTypes,
+                Expression.Constant( thriftType.Struct ), value, protocolParam
+            );
         }
 
         /// <summary>
         /// Creates a compiled writer for the specified struct.
         /// </summary>
-        private static Action<ThriftStruct, object, IThriftProtocol> CreateCompiledWriter( ThriftStruct thriftStruct )
+        private static Action<object, IThriftProtocol> ForStruct( ThriftStruct thriftStruct )
         {
-            var structParam = Expression.Parameter( typeof( ThriftStruct ), "struct" );
             var valueParam = Expression.Parameter( typeof( object ), "value" );
             var protocolParam = Expression.Parameter( typeof( IThriftProtocol ), "param" );
 
@@ -199,106 +198,133 @@ namespace ThriftSharp.Internals
                 )
             };
 
-            for ( int n = 0; n < thriftStruct.Fields.Count; n++ )
+            foreach ( var field in thriftStruct.Fields )
             {
-                var field = thriftStruct.Fields[n];
-                var fieldExpr =
-                    Expression.MakeIndex(
-                        Expression.Field( structParam, "Fields" ),
-                        Cache.FieldItem,
-                        new[] { Expression.Constant( n ) }
-                    );
-
-                var fieldType = field.Header.FieldType;
-                var getFieldExpr =
+                var getFieldExpr = Expression.Property(
                     Expression.Convert(
-                        Expression.Call( fieldExpr, "GetValue", EmptyTypes, valueParam ),
-                        fieldType.TypeInfo.AsType()
-                    );
-
-                var writingExpr = Expression.Block(
-                    Expression.Call(
-                        protocolParam,
-                        "WriteFieldHeader", EmptyTypes,
-                        Expression.Constant( field.Header )
+                        valueParam,
+                        thriftStruct.TypeInfo.AsType()
                     ),
-                    CreateWriter( protocolParam, fieldType, getFieldExpr ),
-                    Expression.Call( protocolParam, "WriteFieldEnd", EmptyTypes )
+                    field.BackingProperty
                 );
 
-
-                if ( field.IsRequired && ( fieldType.NullableType != null || fieldType.TypeInfo.IsClass ) )
-                {
-                    var isDefaultExpr = Expression.Equal( Expression.Constant( null ), getFieldExpr );
-
-                    var exceptionExpr =
-                        Expression.Throw(
-                            Expression.Call(
-                                typeof( ThriftSerializationException ),
-                                "RequiredFieldIsNull", EmptyTypes,
-                                Expression.Constant( thriftStruct.Header.Name ),
-                                Expression.Constant( field.Header.Name )
-                            )
-                        );
-
-                    methodContents.Add( Expression.IfThenElse( isDefaultExpr, exceptionExpr, writingExpr ) );
-                }
-                else if ( field.DefaultValue.HasValue || fieldType.NullableType != null || fieldType.TypeInfo.IsClass )
-                {
-                    Expression defaultValueExpr;
-                    // if it has a default value, use it
-                    if ( field.DefaultValue.HasValue )
-                    {
-                        if ( fieldType.TypeInfo.IsClass )
-                        {
-                            // if it's a class, it's OK
-                            defaultValueExpr = Expression.Constant( field.DefaultValue.Value );
-                        }
-                        else
-                        {
-                            // otherwise we need to make the default value a Nullable.
-                            defaultValueExpr =
-                                Expression.New(
-                                   fieldType.TypeInfo // is a nullable of the right type
-                                            .DeclaredConstructors
-                                            .First(), // Nullable<T> only has one ctor,
-                                   Expression.Constant( field.DefaultValue.Value )
-                           );
-                        }
-                    }
-                    else
-                    {
-                        // otherwise it's always a reference type
-                        defaultValueExpr = Expression.Constant( null );
-                    }
-
-                    methodContents.Add(
-                        Expression.IfThen(
-                            Expression.NotEqual(
-                                getFieldExpr,
-                                defaultValueExpr
-                            ),
-                            writingExpr
-                        )
-                    );
-                }
-                else
-                {
-                    methodContents.Add( writingExpr );
-                }
+                methodContents.Add( ForField( protocolParam, field, getFieldExpr ) );
             }
 
             methodContents.Add( Expression.Call( protocolParam, "WriteFieldStop", EmptyTypes ) );
             methodContents.Add( Expression.Call( protocolParam, "WriteStructEnd", EmptyTypes ) );
 
-            return Expression.Lambda<Action<ThriftStruct, object, IThriftProtocol>>(
+            return Expression.Lambda<Action<object, IThriftProtocol>>(
                 Expression.Block( methodContents ),
-                structParam,
                 valueParam,
                 protocolParam
             ).Compile();
         }
 
+
+        /// <summary>
+        /// Creates a writer expression for the specified field with the specified getter, using the specified protocol expression.
+        /// </summary>
+        public static Expression ForField( ParameterExpression protocolParam, ThriftField field, Expression getter )
+        {
+            var fieldType = ThriftType.Get( field.WireTypeInfo.AsType() );
+
+            if ( field.Converter != null )
+            {
+                getter = Expression.Convert(
+                    Expression.Call(
+                        Expression.Constant( field.Converter ),
+                        "ConvertBack",
+                        EmptyTypes,
+                        Expression.Convert(
+                            getter,
+                            typeof( object )
+                        )
+                    ),
+                    field.WireTypeInfo.AsType()
+                );
+            }
+
+            var read = ForType(
+                protocolParam,
+                fieldType,
+                getter
+            );
+
+            var writingExpr = Expression.Block(
+                Expression.Call(
+                    protocolParam,
+                    "WriteFieldHeader",
+                    EmptyTypes,
+                    Expression.New(
+                        Cache.FieldHeaderConstructor,
+                        Expression.Constant( field.Id ),
+                        Expression.Constant( field.Name ),
+                        Expression.Constant( ThriftType.Get( field.WireTypeInfo.AsType() ).Id )
+                    )
+                ),
+                read,
+                Expression.Call( protocolParam, "WriteFieldEnd", EmptyTypes )
+            );
+
+
+            if ( field.IsRequired && ( fieldType.NullableType != null || fieldType.TypeInfo.IsClass ) )
+            {
+                var isDefaultExpr = Expression.Equal( Expression.Constant( null ), getter );
+
+                var exceptionExpr =
+                    Expression.Throw(
+                        Expression.Call(
+                            typeof( ThriftSerializationException ),
+                            "RequiredFieldIsNull",
+                            EmptyTypes,
+                            Expression.Constant( field.Name )
+                        )
+                    );
+
+                return Expression.IfThenElse( isDefaultExpr, exceptionExpr, writingExpr );
+            }
+            if ( field.DefaultValue != null || fieldType.NullableType != null || fieldType.TypeInfo.IsClass )
+            {
+                Expression defaultValueExpr;
+                // if it has a default value, use it
+                if ( field.DefaultValue != null )
+                {
+                    if ( fieldType.TypeInfo.IsClass )
+                    {
+                        // if it's a class, it's OK
+                        defaultValueExpr = Expression.Constant( field.DefaultValue );
+                    }
+                    else
+                    {
+                        // otherwise we need to make the default value a Nullable.
+                        defaultValueExpr =
+                            Expression.New(
+                               fieldType.TypeInfo  // is a nullable of the right type
+                                        .DeclaredConstructors
+                                        .First(), // Nullable<T> only has one ctor
+                               Expression.Constant( field.DefaultValue )
+                       );
+                    }
+                }
+                else
+                {
+                    // otherwise it's always a reference type
+                    defaultValueExpr = Expression.Constant( null );
+                }
+
+                return Expression.IfThen(
+                    Expression.NotEqual(
+                        getter,
+                        defaultValueExpr
+                    ),
+                    writingExpr
+                );
+            }
+
+            return writingExpr;
+
+        }
 
         /// <summary>
         /// Writes the specified value (with the struct also specified) to the specified protocol.
@@ -307,10 +333,10 @@ namespace ThriftSharp.Internals
         {
             if ( !_knownWriters.ContainsKey( thriftStruct ) )
             {
-                _knownWriters.Add( thriftStruct, CreateCompiledWriter( thriftStruct ) );
+                _knownWriters.Add( thriftStruct, ForStruct( thriftStruct ) );
             }
 
-            _knownWriters[thriftStruct]( thriftStruct, value, protocol );
+            _knownWriters[thriftStruct]( value, protocol );
         }
     }
 }

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using ThriftSharp.Protocols;
@@ -14,7 +13,7 @@ namespace ThriftSharp.Internals
     /// <summary>
     /// Reads Thrift structs.
     /// </summary>
-    internal static class ThriftReader
+    internal static class ThriftStructReader
     {
         // Cached common values
         private static class Cache
@@ -99,11 +98,11 @@ namespace ThriftSharp.Internals
                     while ( true )
                     {
                         var fieldHeader = protocol.ReadFieldHeader();
-                        if ( fieldHeader.IsEmpty() )
+                        if ( fieldHeader.TypeId == ThriftTypeId.Empty )
                         {
                             break;
                         }
-                        Skip( fieldHeader.FieldTypeId, protocol );
+                        Skip( fieldHeader.TypeId, protocol );
                         protocol.ReadFieldEnd();
                     }
                     protocol.ReadStructEnd();
@@ -134,10 +133,11 @@ namespace ThriftSharp.Internals
             );
         }
 
+
         /// <summary>
         /// Creates a reader for the specified type, with the specified protocol.
         /// </summary>
-        private static Expression CreateReader( ParameterExpression protocolParam, ThriftType thriftType )
+        private static Expression ForType( ParameterExpression protocolParam, ThriftType thriftType )
         {
             if ( thriftType.TypeInfo.Equals( Cache.StringTypeInfo ) )
             {
@@ -202,7 +202,7 @@ namespace ThriftSharp.Internals
                                 Expression.Assign(
                                     Expression.ArrayAccess( arrayVar, countVar ),
                                     Expression.Convert(
-                                        CreateReader( protocolParam, thriftType.ElementType ),
+                                        ForType( protocolParam, thriftType.ElementType ),
                                         itemType
                                     )
                                 ),
@@ -260,7 +260,7 @@ namespace ThriftSharp.Internals
                                     collectionVar,
                                     "Add",
                                     EmptyTypes,
-                                    CreateReader( protocolParam, thriftType.ElementType )
+                                    ForType( protocolParam, thriftType.ElementType )
                                 ),
                                 Expression.PostIncrementAssign( countVar )
                             )
@@ -319,8 +319,8 @@ namespace ThriftSharp.Internals
                                     mapVar,
                                     "Add",
                                     EmptyTypes,
-                                    CreateReader( protocolParam, thriftType.KeyType ),
-                                    CreateReader( protocolParam, thriftType.ValueType )
+                                    ForType( protocolParam, thriftType.KeyType ),
+                                    ForType( protocolParam, thriftType.ValueType )
                                 ),
                                 Expression.PostIncrementAssign( countVar )
                             )
@@ -335,10 +335,10 @@ namespace ThriftSharp.Internals
 
             return Expression.Convert(
                 Expression.Call(
-                    typeof( ThriftReader ),
+                    typeof( ThriftStructReader ),
                     "Read",
                     EmptyTypes,
-                    Expression.Constant( thriftType.Struct ), protocolParam, Expression.Constant( true )
+                    Expression.Constant( thriftType.Struct ), protocolParam
                 ),
                 thriftType.TypeInfo.AsType()
             );
@@ -347,30 +347,138 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Creates a compiled reader for the specified struct.
         /// </summary>
-        private static Func<IThriftProtocol, object> CreateCompiledReader( ThriftStruct thriftStruct )
+        private static Func<IThriftProtocol, object> ForStruct( ThriftStruct thriftStruct )
         {
             var protocolParam = Expression.Parameter( typeof( IThriftProtocol ) );
 
             var structType = thriftStruct.TypeInfo.AsType();
             var structVar = Expression.Variable( structType );
-            var fieldHeaderVar = Expression.Variable( typeof( ThriftFieldHeader ) );
-            var setFieldsVar = Expression.Variable( typeof( HashSet<short> ) );
+
+            var fieldsAndSetters = new List<Tuple<ThriftField, Func<Expression, Expression>>>();
+            foreach ( var field in thriftStruct.Fields )
+            {
+                fieldsAndSetters.Add( Tuple.Create(
+                    field,
+                    (Func<Expression, Expression>) ( expr => Expression.Assign(
+                        Expression.Property(
+                            structVar,
+                            field.BackingProperty
+                        ),
+                        expr
+                    ) )
+                ) );
+            }
 
             var endOfLoop = Expression.Label();
 
             var body = Expression.Block(
                 structType,
-                new[] { structVar, fieldHeaderVar, setFieldsVar },
+                new[] { structVar },
+
                 Expression.Assign(
                     structVar,
                     Expression.New( structType )
                 ),
+
+                ForFields( protocolParam, fieldsAndSetters ),
+
+                structVar // return value
+            );
+
+            return Expression.Lambda<Func<IThriftProtocol, object>>( body, protocolParam ).Compile();
+        }
+
+
+        /// <summary>
+        /// Creates an expression reading the specified fields, given with their setter expressions, from the specified protocol.
+        /// </summary>
+        public static Expression ForFields( ParameterExpression protocolParam, List<Tuple<ThriftField, Func<Expression, Expression>>> fieldsAndSetters )
+        {
+            var fieldHeaderVar = Expression.Variable( typeof( ThriftFieldHeader ) );
+            var setFieldsVar = Expression.Variable( typeof( HashSet<short> ) );
+
+            var endOfLoop = Expression.Label();
+
+            var fieldCases = new List<SwitchCase>();
+            foreach ( var tup in fieldsAndSetters )
+            {
+                var setter = tup.Item2;
+                if ( tup.Item1.Converter != null )
+                {
+                    setter = expr => tup.Item2(
+                        Expression.Convert(
+                            Expression.Call(
+                                Expression.Constant( tup.Item1.Converter ),
+                                "Convert",
+                                EmptyTypes,
+                                Expression.Convert(
+                                    expr,
+                                    typeof( object )
+                                )
+                            ),
+                            tup.Item1.TypeInfo.AsType()
+                        )
+                    );
+                }
+
+                var ttype = ThriftType.Get( tup.Item1.WireTypeInfo.AsType() );
+
+                fieldCases.Add(
+                    Expression.SwitchCase(
+                        Expression.Block(
+                            CreateTypeIdAssert(
+                                ttype.Id,
+                                Expression.Field( fieldHeaderVar, "TypeId" )
+                            ),
+                            setter(
+                                ForType( protocolParam, ttype )
+                            ),
+                            Expression.Call(
+                                setFieldsVar,
+                                "Add",
+                                EmptyTypes,
+                                Expression.Constant( tup.Item1.Id )
+                            ),
+                            Expression.Empty()  // void return value
+                        ),
+                        Expression.Constant( tup.Item1.Id )
+                    )
+                );
+            }
+
+            var skipper = Expression.Call(
+                typeof( ThriftStructReader ),
+                "Skip",
+                EmptyTypes,
+                Expression.Field( fieldHeaderVar, "TypeId" ),
+                protocolParam
+            );
+
+            Expression fieldAssignment;
+            if ( fieldCases.Count > 0 )
+            {
+                fieldAssignment = Expression.Switch(
+                    Expression.Field( fieldHeaderVar, "Id" ),
+                    skipper,
+                    fieldCases.ToArray()
+                );
+            }
+            else
+            {
+                fieldAssignment = skipper;
+            }
+
+
+            var statements = new List<Expression>
+            {
                 Expression.Assign(
                     setFieldsVar,
                     Expression.New( typeof( HashSet<short> ) )
                 ),
+                
                 // ignore the return value, it's useless
                 Expression.Call( protocolParam, "ReadStructHeader", EmptyTypes ),
+
                 Expression.Loop(
                     Expression.Block(
                         Expression.Assign(
@@ -378,132 +486,87 @@ namespace ThriftSharp.Internals
                             Expression.Call( protocolParam, "ReadFieldHeader", EmptyTypes )
                         ),
                         Expression.IfThen(
-                            Expression.Call(
-                                fieldHeaderVar,
-                                "IsEmpty",
-                                EmptyTypes
+                            Expression.Equal(
+                                Expression.Field(
+                                    fieldHeaderVar,
+                                    "TypeId"
+                                ),
+                                Expression.Constant( ThriftTypeId.Empty )
                             ),
                             Expression.Break( endOfLoop )
                         ),
-                        thriftStruct.Fields.Any() ?
-                            (Expression) Expression.Switch(
-                                Expression.Field( fieldHeaderVar, "Id" ),
-                                Expression.Call(
-                                    typeof( ThriftReader ),
-                                    "Skip",
-                                    EmptyTypes,
-                                    Expression.Field( fieldHeaderVar, "FieldTypeId" ), protocolParam
-                                ),
-                                thriftStruct.Fields.Select( f =>
-                                    Expression.SwitchCase(
-                                        Expression.Block(
-                                            CreateTypeIdAssert(
-                                                f.Header.FieldTypeId,
-                                                Expression.Field( fieldHeaderVar, "FieldTypeId" )
-                                            ),
-                                            Expression.Call(
-                                                Expression.Constant( f ),
-                                                "SetValue",
-                                                EmptyTypes,
-                                        // need to convert 2nd param because boxing isn't automatically done
-                                                structVar, Expression.Convert(
-                                                    CreateReader( protocolParam, f.Header.FieldType ),
-                                                    typeof( object )
-                                                )
-                                            ),
-                                            Expression.Call(
-                                                setFieldsVar,
-                                                "Add",
-                                                EmptyTypes,
-                                                Expression.Constant( f.Header.Id )
-                                            ),
-                                        // void return value
-                                            Expression.Empty()
-                                        ),
-                                        Expression.Constant( f.Header.Id )
-                                    )
-                                ).ToArray()
-                            )
-                        : Expression.Call(
-                              typeof( ThriftReader ),
-                              "Skip",
-                              EmptyTypes,
-                              Expression.Field( fieldHeaderVar, "FieldTypeId" ), protocolParam
-                        ),
+                        fieldAssignment,
                         Expression.Call( protocolParam, "ReadFieldEnd", EmptyTypes )
                     ),
                     endOfLoop
                 ),
+                
                 Expression.Call( protocolParam, "ReadStructEnd", EmptyTypes ),
-                // now check for required fields & default values
-                thriftStruct.Fields.Any() ?
-                    (Expression) Expression.Block(
-                        thriftStruct.Fields.Select( f =>
-                            f.IsRequired ?
-                                (Expression) Expression.IfThen(
-                                    Expression.IsFalse(
-                                        Expression.Call(
-                                            setFieldsVar,
-                                            "Contains",
-                                            EmptyTypes,
-                                            Expression.Constant( f.Header.Id )
-                                        )
-                                    ),
-                                    Expression.Throw(
-                                        Expression.Call(
-                                            typeof( ThriftSerializationException ),
-                                            "MissingRequiredField",
-                                            EmptyTypes,
-                                            Expression.Constant( thriftStruct.Header.Name ),
-                                            Expression.Constant( f.Header.Name )
-                                        )
-                                    )
-                                )
-                            : f.DefaultValue.HasValue ?
-                               (Expression) Expression.IfThen(
-                                    Expression.IsFalse(
-                                        Expression.Call(
-                                            setFieldsVar,
-                                            "Contains",
-                                            EmptyTypes,
-                                            Expression.Constant( f.Header.Id )
-                                        )
-                                    ),
-                                    Expression.Call(
-                                        Expression.Constant( f ),
-                                        "SetValue",
-                                        EmptyTypes,
-                                // same as previous SetValue call
-                                        structVar, Expression.Convert(
-                                            Expression.Constant( f.DefaultValue.Value ),
-                                            typeof( object )
-                                        )
-                                    )
-                                )
-                            : Expression.Empty()
-                        )
-                    )
-                : Expression.Empty(),
-                // return value:
-                structVar
-            );
+            };
 
-            return Expression.Lambda<Func<IThriftProtocol, object>>( body, protocolParam ).Compile();
+            // now check for required fields & default values
+            foreach ( var tup in fieldsAndSetters )
+            {
+                if ( tup.Item1.IsRequired )
+                {
+                    statements.Add(
+                        Expression.IfThen(
+                            Expression.IsFalse(
+                                Expression.Call(
+                                    setFieldsVar,
+                                    "Contains",
+                                    EmptyTypes,
+                                    Expression.Constant( tup.Item1.Id )
+                                )
+                            ),
+                            Expression.Throw(
+                                Expression.Call(
+                                    typeof( ThriftSerializationException ),
+                                    "MissingRequiredField",
+                                    EmptyTypes,
+                                    Expression.Constant( tup.Item1.Name )
+                                )
+                            )
+                        )
+                    );
+                }
+                else if ( tup.Item1.DefaultValue != null )
+                {
+                    statements.Add(
+                        Expression.IfThen(
+                            Expression.IsFalse(
+                                Expression.Call(
+                                    setFieldsVar,
+                                    "Contains",
+                                    EmptyTypes,
+                                    Expression.Constant( tup.Item1.Id )
+                                )
+                            ),
+                            tup.Item2(
+                                Expression.Convert(
+                                    Expression.Constant( tup.Item1.DefaultValue ),
+                                    tup.Item1.TypeInfo.AsType()
+                                )
+                            )
+                        )
+                    );
+                }
+            }
+
+            return Expression.Block(
+                new[] { fieldHeaderVar, setFieldsVar },
+                statements
+            );
         }
 
         /// <summary>
         /// Reads the specified struct from the specified protocol.
         /// </summary>
-        public static object Read( ThriftStruct thriftStruct, IThriftProtocol protocol, bool cache )
+        public static object Read( ThriftStruct thriftStruct, IThriftProtocol protocol )
         {
-            if ( !cache )
-            {
-                return CreateCompiledReader( thriftStruct )( protocol );
-            }
-
             if ( !_knownReaders.ContainsKey( thriftStruct ) )
             {
-                _knownReaders.Add( thriftStruct, CreateCompiledReader( thriftStruct ) );
+                _knownReaders.Add( thriftStruct, ForStruct( thriftStruct ) );
             }
 
             return _knownReaders[thriftStruct]( protocol );

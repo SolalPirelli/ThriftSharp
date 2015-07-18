@@ -80,7 +80,7 @@ namespace ThriftSharp.Benchmarking
             var protocol = new ThriftBinaryProtocol( transport );
 
             // write something to be read
-            ThriftWriter.Write( personStruct, person, protocol );
+            ThriftStructWriter.Write( personStruct, person, protocol );
 
             var watch = new Stopwatch();
             for ( int n = 0; n < Iterations + WarmupIterations; n++ )
@@ -97,7 +97,7 @@ namespace ThriftSharp.Benchmarking
                     watch.Start();
                 }
 
-                ThriftReader.Read( personStruct, protocol, true );
+                ThriftStructReader.Read( personStruct, protocol );
 
                 watch.Stop();
             }
@@ -125,7 +125,7 @@ namespace ThriftSharp.Benchmarking
                     watch.Start();
                 }
 
-                ThriftWriter.Write( personStruct, person, protocol );
+                ThriftStructWriter.Write( personStruct, person, protocol );
 
                 watch.Stop();
 

@@ -56,15 +56,6 @@ namespace ThriftSharp.Transport
         }
 
         /// <summary>
-        /// Writes the specified unsigned byte.
-        /// </summary>
-        /// <param name="b">The unsigned byte.</param>
-        public void WriteByte( byte b )
-        {
-            _outputStream.WriteByte( b );
-        }
-
-        /// <summary>
         /// Writes the specified array of unsigned bytes.
         /// </summary>
         /// <param name="bytes">The array of unsigned bytes.</param>

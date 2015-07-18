@@ -9,6 +9,11 @@ namespace ThriftSharp.Internals
     internal enum ThriftTypeId : byte
     {
         /// <summary>
+        /// Marks the lack of a field.
+        /// </summary>
+        Empty = 0,
+
+        /// <summary>
         /// Boolean.
         /// </summary>
         Boolean = 2,

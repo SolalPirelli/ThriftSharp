@@ -255,7 +255,7 @@ type Reading() =
         let data = [StructHeader "Struct"; FieldHeader (1s, "Field", tid typeId)] @ fieldData @ [FieldEnd; FieldStop; StructEnd] 
         let m = MemoryProtocol(data)
         let thriftStruct = ThriftAttributesParser.ParseStruct(typ.GetTypeInfo())
-        throws<ThriftSerializationException> (fun () -> ThriftReader.Read(thriftStruct, m, true) |> box) |> ignore
+        throws<ThriftSerializationException> (fun () -> ThriftStructReader.Read(thriftStruct, m) |> box) |> ignore
 
 
     override x.Test fieldData typeId (value: 'a) =
@@ -273,7 +273,7 @@ type Reading() =
         
         let m = MemoryProtocol(data)
         let thriftStruct = ThriftAttributesParser.ParseStruct(typ.GetTypeInfo())
-        let structInst = ThriftReader.Read(thriftStruct, m, true)
+        let structInst = ThriftStructReader.Read(thriftStruct, m)
         m.IsEmpty <=> true
         (typ.GetProperty("Field").GetValue(structInst) :?> 'a) <=> value
 

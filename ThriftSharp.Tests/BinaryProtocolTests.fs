@@ -433,8 +433,7 @@ type Reading() =
     [<Test>]
     member x.``FieldStop``() =
         let trans = MemoryTransport([0uy])
-        let header = ThriftBinaryProtocol(trans).ReadFieldHeader()
-        header.IsEmpty() <=> true
+        ThriftBinaryProtocol(trans).ReadFieldHeader().TypeId <=> ThriftTypeId.Empty
         trans.IsEmpty <=> true
 
 [<TestClass>]

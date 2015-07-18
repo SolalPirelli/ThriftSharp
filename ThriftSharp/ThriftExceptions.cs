@@ -147,12 +147,12 @@ namespace ThriftSharp
         /// <summary>
         /// Creates an exception indicating a type was expected to be an exception but wasn't.
         /// </summary>
-        internal static ThriftParsingException NotAnException( TypeInfo typeInfo )
+        internal static ThriftParsingException NotAnException( TypeInfo typeInfo, MethodInfo methodInfo )
         {
-            return new ThriftParsingException( "Type '{0}' was used in a ThriftThrowsClauseAttribute but does not inherit from Exception."
+            return new ThriftParsingException( "Type '{0}' was used in a ThriftThrowsClauseAttribute for method '{1}' but does not inherit from Exception."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftStructAttribute.",
-                                               typeInfo.FullName );
+                                               typeInfo.FullName, methodInfo.Name );
         }
 
         /// <summary>
@@ -246,17 +246,17 @@ namespace ThriftSharp
         /// <summary>
         /// Creates a ThriftSerializationException indicating a required field was null during serialization.
         /// </summary>
-        internal static ThriftSerializationException RequiredFieldIsNull( string structName, string fieldName )
+        internal static ThriftSerializationException RequiredFieldIsNull( string fieldName )
         {
-            return new ThriftSerializationException( "Field '{1}' of struct '{0}' is a required field and cannot be null when writing it.", structName, fieldName );
+            return new ThriftSerializationException( "Field '{0}' is a required field and cannot be null when writing it.", fieldName );
         }
 
         /// <summary>
         /// Creates a ThriftSerializationException indicating a required field was not present during deserialization.
         /// </summary>
-        internal static ThriftSerializationException MissingRequiredField( string structName, string fieldName )
+        internal static ThriftSerializationException MissingRequiredField( string fieldName )
         {
-            return new ThriftSerializationException( "Field '{1}' of struct '{0}' is a required field, but was not present.", structName, fieldName );
+            return new ThriftSerializationException( "Field '{0}' is a required field, but was not present.", fieldName );
         }
 
         /// <summary>

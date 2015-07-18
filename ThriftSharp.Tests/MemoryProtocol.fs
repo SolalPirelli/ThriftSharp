@@ -62,7 +62,7 @@ type MemoryProtocol(toRead: ThriftProtocolValue list) =
             write StructEnd
 
         member x.WriteFieldHeader(h) =
-            write (FieldHeader (h.Id, h.Name, h.FieldTypeId))
+            write (FieldHeader (h.Id, h.Name, h.TypeId))
 
         member x.WriteFieldEnd() =
             write FieldEnd

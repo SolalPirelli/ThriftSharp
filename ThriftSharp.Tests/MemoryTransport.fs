@@ -27,9 +27,6 @@ type MemoryTransport(toRead: byte list) =
     new() = MemoryTransport([])
 
     interface IThriftTransport with
-        member x.WriteByte(b) =
-            (x :> IThriftTransport).WriteBytes([| b |])
-
         member x.WriteBytes(bs) =
             if isDisposed then
                 failwith "Already disposed."

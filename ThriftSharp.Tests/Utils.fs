@@ -103,11 +103,11 @@ let run x = x |> Async.Ignore |> Async.RunSynchronously
 
 let read<'T> prot =
     let thriftStruct = ThriftAttributesParser.ParseStruct(typeof<'T>.GetTypeInfo())
-    ThriftReader.Read(thriftStruct, prot, true) :?> 'T
+    ThriftStructReader.Read(thriftStruct, prot) :?> 'T
 
 let write prot obj =
     let thriftStruct = ThriftAttributesParser.ParseStruct(obj.GetType().GetTypeInfo())
-    ThriftWriter.Write(thriftStruct, obj, prot)
+    ThriftStructWriter.Write(thriftStruct, obj, prot)
 
 let readMsgAsync<'T> prot name =
     let svc = ThriftAttributesParser.ParseService(typeof<'T>.GetTypeInfo())

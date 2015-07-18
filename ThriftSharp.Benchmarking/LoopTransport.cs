@@ -20,11 +20,6 @@ namespace ThriftSharp.Benchmarking
             _memory.Read( output, 0, output.Length );
         }
 
-        public void WriteByte( byte b )
-        {
-            _memory.WriteByte( b );
-        }
-
         public void WriteBytes( byte[] bytes )
         {
             _memory.Write( bytes, 0, bytes.Length );

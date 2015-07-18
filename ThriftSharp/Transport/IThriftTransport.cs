@@ -12,12 +12,6 @@ namespace ThriftSharp.Transport
     internal interface IThriftTransport : IDisposable
     {
         /// <summary>
-        /// Writes the specified unsigned byte.
-        /// </summary>
-        /// <param name="b">The unsigned byte.</param>
-        void WriteByte( byte b );
-
-        /// <summary>
         /// Writes the specified array of unsigned bytes.
         /// </summary>
         /// <param name="bytes">The array of unsigned bytes.</param>

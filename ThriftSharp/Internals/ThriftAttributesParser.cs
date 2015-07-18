@@ -20,42 +20,29 @@ namespace ThriftSharp.Internals
 
         /// <summary>
         /// Parses a Thrift field from the specified PropertyInfo.
-        /// </summary>
-        /// <remarks>
         /// If the PropertyInfo is not declared as a Thrift field, returns null.
-        /// </remarks>
-        private static ThriftField ParseField( PropertyInfo info )
+        /// </summary>
+        private static ThriftField ParseField( PropertyInfo propertyInfo )
         {
-            var attr = info.GetCustomAttribute<ThriftFieldAttribute>();
+            var attr = propertyInfo.GetCustomAttribute<ThriftFieldAttribute>();
             if ( attr == null )
             {
                 return null;
             }
 
-            var fieldTypeInfo = info.PropertyType.GetTypeInfo();
-
-            if ( fieldTypeInfo.IsValueType && !attr.IsRequired && Nullable.GetUnderlyingType( info.PropertyType ) == null )
+            var propertyTypeInfo = propertyInfo.PropertyType.GetTypeInfo();
+            if ( propertyTypeInfo.IsValueType && !attr.IsRequired && Nullable.GetUnderlyingType( propertyInfo.PropertyType ) == null )
             {
-                throw ThriftParsingException.OptionalValueField( info );
+                throw ThriftParsingException.OptionalValueField( propertyInfo );
             }
 
-            var defaultValueAttr = info.GetCustomAttribute<ThriftDefaultValueAttribute>();
-            var defaultValue = defaultValueAttr == null ? new Option() : new Option( defaultValueAttr.Value );
-            var converterAttr = info.GetCustomAttribute<ThriftConverterAttribute>();
+            var defaultValueAttr = propertyInfo.GetCustomAttribute<ThriftDefaultValueAttribute>();
+            var defaultValue = defaultValueAttr == null ? null : defaultValueAttr.Value;
 
-            if ( converterAttr == null )
-            {
-                return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue,
-                                        fieldTypeInfo,
-                                        o => info.GetValue( o, null ),
-                                        ( o, v ) => info.SetValue( o, v, null ) );
-            }
+            var converterAttr = propertyInfo.GetCustomAttribute<ThriftConverterAttribute>();
+            var converter = converterAttr == null ? null : converterAttr.Converter;
 
-            var converter = converterAttr.Converter;
-            return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue,
-                                    converter.FromType.GetTypeInfo(),
-                                    o => converter.ConvertBack( info.GetValue( o, null ) ),
-                                    ( o, v ) => info.SetValue( o, converter.Convert( v ), null ) );
+            return ThriftField.Field( attr.Id, attr.Name, attr.IsRequired, defaultValue, converter, propertyInfo );
         }
 
         /// <summary>
@@ -100,38 +87,38 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Attempts to parse a Thrift method parameter from the specified ParameterInfo.
         /// </summary>
-        private static ThriftMethodParameter ParseMethodParameter( ParameterInfo info )
+        private static ThriftField ParseMethodParameter( ParameterInfo parameterInfo )
         {
-            if ( info.ParameterType == typeof( CancellationToken ) )
+            if ( parameterInfo.ParameterType == typeof( CancellationToken ) )
             {
                 return null;
             }
 
-            var attr = info.GetCustomAttribute<ThriftParameterAttribute>();
+            var attr = parameterInfo.GetCustomAttribute<ThriftParameterAttribute>();
             if ( attr == null )
             {
-                throw ThriftParsingException.ParameterWithoutAttribute( info );
+                throw ThriftParsingException.ParameterWithoutAttribute( parameterInfo );
             }
 
-            var converterAttr = info.GetCustomAttribute<ThriftConverterAttribute>();
+            var converterAttr = parameterInfo.GetCustomAttribute<ThriftConverterAttribute>();
             var converter = converterAttr == null ? null : converterAttr.Converter;
 
-            return new ThriftMethodParameter( attr.Id, attr.Name, info.ParameterType.GetTypeInfo(), converter );
+            return ThriftField.Parameter( attr.Id, attr.Name, parameterInfo.ParameterType.GetTypeInfo(), converter );
         }
 
         /// <summary>
         /// Attempts to parse all "throws" clauses on the specified MethodInfo.
         /// </summary>
-        private static ThriftThrowsClause[] ParseThrowsClauses( MethodInfo info )
+        private static ThriftField[] ParseThrowsClauses( MethodInfo methodInfo )
         {
-            var clauses = info.GetCustomAttributes<ThriftThrowsAttribute>()
-                              .Select( a => new ThriftThrowsClause( a.Id, a.Name, a.ExceptionType.GetTypeInfo() ) )
+            var clauses = methodInfo.GetCustomAttributes<ThriftThrowsAttribute>()
+                              .Select( a => ThriftField.ThrowsClause( a.Id, a.Name, a.ExceptionTypeInfo ) )
                               .ToArray();
 
-            var wrongClause = clauses.FirstOrDefault( c => !typeof( Exception ).GetTypeInfo().IsAssignableFrom( c.ExceptionTypeInfo ) );
+            var wrongClause = clauses.FirstOrDefault( c => !c.TypeInfo.Extends( typeof( Exception ) ) );
             if ( wrongClause != null )
             {
-                throw ThriftParsingException.NotAnException( wrongClause.ExceptionTypeInfo );
+                throw ThriftParsingException.NotAnException( wrongClause.TypeInfo, methodInfo );
             }
 
             return clauses;
@@ -139,45 +126,45 @@ namespace ThriftSharp.Internals
 
         /// <summary>
         /// Parses a Thrift method from the specified MethodInfo.
-        /// </summary>
-        /// <remarks>
         /// If the MethodInfo is not declared as a Thrift method, returns null.
-        /// </remarks>
-        private static ThriftMethod ParseMethod( MethodInfo info )
+        /// </summary>
+        private static ThriftMethod ParseMethod( MethodInfo methodInfo )
         {
-            var attr = info.GetCustomAttribute<ThriftMethodAttribute>();
+            var attr = methodInfo.GetCustomAttribute<ThriftMethodAttribute>();
             if ( attr == null )
             {
-                throw ThriftParsingException.MethodWithoutAttribute( info );
+                throw ThriftParsingException.MethodWithoutAttribute( methodInfo );
             }
 
-            var converterAttr = info.ReturnParameter.GetCustomAttribute<ThriftConverterAttribute>();
-            var converter = converterAttr == null ? null : converterAttr.Converter;
-
-            var throwsClauses = ParseThrowsClauses( info );
-
+            var throwsClauses = ParseThrowsClauses( methodInfo );
             if ( attr.IsOneWay && throwsClauses.Length != 0 )
             {
-                throw ThriftParsingException.OneWayMethodWithExceptions( info );
+                throw ThriftParsingException.OneWayMethodWithExceptions( methodInfo );
             }
 
-            var parameters = info.GetParameters()
+            var unwrapped = ReflectionExtensions.UnwrapTaskType( methodInfo.ReturnType );
+            if ( unwrapped == null )
+            {
+                throw ThriftParsingException.SynchronousMethod( methodInfo );
+            }
+            if ( attr.IsOneWay && unwrapped != typeof( void ) )
+            {
+                throw ThriftParsingException.OneWayMethodWithResult( methodInfo );
+            }
+
+            var parameters = methodInfo.GetParameters()
                                  .Select( ParseMethodParameter )
                                  .Where( p => p != null )
                                  .ToArray();
 
-            var unwrapped = ReflectionExtensions.UnwrapTaskType( info.ReturnType );
-            if ( unwrapped == null )
-            {
-                throw ThriftParsingException.SynchronousMethod( info );
-            }
-            if ( attr.IsOneWay && unwrapped != typeof( void ) )
-            {
-                throw ThriftParsingException.OneWayMethodWithResult( info );
-            }
+            var converterAttr = methodInfo.ReturnParameter.GetCustomAttribute<ThriftConverterAttribute>();
+            var converter = converterAttr == null ? null : converterAttr.Converter;
 
-            return new ThriftMethod( attr.Name, unwrapped, attr.IsOneWay,
-                                     converter, parameters, throwsClauses, info.Name );
+
+            return new ThriftMethod( attr.Name, attr.IsOneWay,
+                                     ThriftField.ReturnValue( unwrapped.GetTypeInfo(), converter ),
+                                     parameters,
+                                     throwsClauses );
         }
 
         /// <summary>
@@ -196,11 +183,8 @@ namespace ThriftSharp.Internals
                 throw ThriftParsingException.ServiceWithoutAttribute( typeInfo );
             }
 
-            var methods = typeInfo.DeclaredMethods
-                                  .Select( ParseMethod )
-                                  .ToArray();
-
-            if ( methods.Length == 0 )
+            var methods = typeInfo.DeclaredMethods.ToDictionary( m => m.Name, ParseMethod );
+            if ( methods.Count == 0 )
             {
                 throw ThriftParsingException.NoMethods( typeInfo );
             }
