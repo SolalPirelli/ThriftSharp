@@ -162,28 +162,28 @@ namespace ThriftSharp.Internals
         public readonly ThriftField ReturnValue;
 
         /// <summary>
-        /// Gets the method's parameters.
-        /// </summary>
-        public readonly IReadOnlyList<ThriftField> Parameters;
-
-        /// <summary>
         /// Gets the method's "throws" clauses.
         /// </summary>
         public readonly IReadOnlyList<ThriftField> Exceptions;
+
+        /// <summary>
+        /// Gets the method's parameters.
+        /// </summary>
+        public readonly IReadOnlyList<ThriftField> Parameters;
 
 
         /// <summary>
         /// Initializes a new instance of the ThriftMethod class with the specified values.
         /// </summary>
         public ThriftMethod( string name, bool isOneWay,
-                             ThriftField returnValue,
-                             IReadOnlyList<ThriftField> parameters, IReadOnlyList<ThriftField> exceptions )
+                             ThriftField returnValue, IReadOnlyList<ThriftField> exceptions,
+                             IReadOnlyList<ThriftField> parameters )
         {
             Name = name;
-            ReturnValue = returnValue;
             IsOneWay = isOneWay;
-            Parameters = parameters;
+            ReturnValue = returnValue;
             Exceptions = exceptions;
+            Parameters = parameters;
         }
     }
 

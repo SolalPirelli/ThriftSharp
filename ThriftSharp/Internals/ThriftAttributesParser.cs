@@ -156,10 +156,7 @@ namespace ThriftSharp.Internals
             var converter = converterAttr == null ? null : converterAttr.Converter;
 
 
-            return new ThriftMethod( attr.Name, attr.IsOneWay,
-                                     ThriftField.ReturnValue( unwrapped.GetTypeInfo(), converter ),
-                                     parameters,
-                                     throwsClauses );
+            return new ThriftMethod( attr.Name, attr.IsOneWay, ThriftField.ReturnValue( unwrapped.GetTypeInfo(), converter ), throwsClauses, parameters );
         }
 
         /// <summary>

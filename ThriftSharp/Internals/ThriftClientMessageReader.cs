@@ -39,14 +39,14 @@ namespace ThriftSharp.Internals
                 returnVariable = Expression.Variable( method.ReturnValue.UnderlyingTypeInfo.AsType(), "returnValue" );
             }
 
-            var fieldsAndSetters = new List<Tuple<ThriftField, Func<Expression, Expression>>>();
+            var fieldsAndSetters = new Dictionary<ThriftField, Func<Expression, Expression>>();
 
             if ( returnVariable != null )
             {
                 // Field 0 is the return value
-                fieldsAndSetters.Add( Tuple.Create(
+                fieldsAndSetters.Add(
                     method.ReturnValue,
-                    (Func<Expression, Expression>) ( expr => Expression.Block(
+                    expr => Expression.Block(
                         Expression.Assign(
                             returnVariable,
                             expr
@@ -55,17 +55,14 @@ namespace ThriftSharp.Internals
                             hasReturnVariable,
                             Expression.Constant( true )
                         )
-                    ) )
-                ) );
+                    )
+                );
             }
 
             // All other fields are declared exceptions
             foreach ( var exception in method.Exceptions )
             {
-                fieldsAndSetters.Add( Tuple.Create(
-                    exception,
-                    new Func<Expression, Expression>( Expression.Throw )
-                ) );
+                fieldsAndSetters.Add( exception, Expression.Throw );
             }
 
             var statements = new List<Expression>
@@ -117,7 +114,7 @@ namespace ThriftSharp.Internals
                     )
                 ),
 
-                ThriftStructReader.ForFields( protocolParam, fieldsAndSetters ),
+                ThriftStructReader.CreateReaderForFields( protocolParam, fieldsAndSetters ),
 
                 Expression.Call(
                     protocolParam,

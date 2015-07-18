@@ -19,9 +19,529 @@ namespace ThriftSharp.Internals
 
 
         /// <summary>
-        /// Skips the specified <see cref="ThriftTypeId"/> from the specified <see cref="IThriftProtocol"/>.
+        /// Creates an expression that checks whether the specified IDs are equal, and throws if they aren't.
         /// </summary>
-        private static void Skip( ThriftTypeId thriftTypeId, IThriftProtocol protocol )
+        private static Expression CreateTypeIdAssert( ThriftTypeId expected, Expression actual )
+        {
+            return Expression.IfThen(
+                Expression.NotEqual(
+                    Expression.Constant( expected ),
+                    actual
+                ),
+                Expression.Throw(
+                    Expression.Call(
+                        Methods.ThriftSerializationException_TypeIdMismatch,
+                        Expression.Constant( expected ), actual
+                    )
+                )
+            );
+        }
+
+        /// <summary>
+        /// Creates an expression reading the specified array type.
+        /// </summary>
+        private static Expression CreateReaderForArray( ParameterExpression protocolParam, ThriftType thriftType )
+        {
+            var arrayType = thriftType.CollectionTypeInfo.AsType();
+            var itemType = thriftType.ElementType.TypeInfo.AsType();
+            var arrayVar = Expression.Variable( arrayType );
+            var headerVar = Expression.Variable( typeof( ThriftCollectionHeader ) );
+            var lengthVar = Expression.Variable( typeof( int ) );
+
+            var endOfLoop = Expression.Label();
+
+            return Expression.Block(
+                arrayType,
+                new[] { arrayVar, headerVar, lengthVar },
+
+                Expression.Assign(
+                    headerVar,
+                    Expression.Call( protocolParam, Methods.IThriftProtocol_ReadListHeader )
+                ),
+
+                CreateTypeIdAssert(
+                    thriftType.ElementType.Id,
+                    Expression.Field( headerVar, Fields.ThriftCollectionHeader_ElementTypeId )
+                ),
+
+                Expression.Assign(
+                    arrayVar,
+                    Expression.NewArrayBounds(
+                        itemType,
+                        Expression.Field( headerVar, Fields.ThriftCollectionHeader_Count )
+                    )
+                ),
+
+                Expression.Assign(
+                    lengthVar,
+                    Expression.Constant( 0 )
+                ),
+
+                Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.Equal(
+                            lengthVar,
+                            Expression.Field( headerVar, Fields.ThriftCollectionHeader_Count )
+                        ),
+                        Expression.Break( endOfLoop ),
+                        Expression.Block(
+                            Expression.Assign(
+                                Expression.ArrayAccess(
+                                    arrayVar,
+                                    lengthVar
+                                ),
+                                CreateReaderForType( protocolParam, thriftType.ElementType )
+                            ),
+                            Expression.PostIncrementAssign( lengthVar )
+                        )
+                    ),
+                    endOfLoop
+                ),
+
+                Expression.Call( protocolParam, Methods.IThriftProtocol_ReadListEnd ),
+
+                // return value
+                arrayVar
+            );
+        }
+
+        /// <summary>
+        /// Creates an expression reading the specified map type.
+        /// </summary>
+        private static Expression CreateReaderForMap( ParameterExpression protocolParam, ThriftType thriftType )
+        {
+            var mapType = KnownCollections.GetInstantiableVersion( thriftType.TypeInfo ).AsType();
+            var mapVar = Expression.Variable( mapType );
+            var headerVar = Expression.Variable( typeof( ThriftMapHeader ) );
+            var countVar = Expression.Variable( typeof( int ) );
+
+            var endOfLoop = Expression.Label();
+
+            return Expression.Block(
+                mapType,
+                new[] { mapVar, headerVar, countVar },
+
+                Expression.Assign(
+                    mapVar,
+                    Expression.New( mapType )
+                ),
+
+                Expression.Assign(
+                    headerVar,
+                    Expression.Call( protocolParam, Methods.IThriftProtocol_ReadMapHeader )
+                ),
+
+                CreateTypeIdAssert(
+                    thriftType.KeyType.Id,
+                    Expression.Field( headerVar, Fields.ThriftMapHeader_KeyTypeId )
+                ),
+
+                CreateTypeIdAssert(
+                    thriftType.ValueType.Id,
+                    Expression.Field( headerVar, Fields.ThriftMapHeader_ValueTypeId )
+                ),
+
+                Expression.Assign(
+                    countVar,
+                    Expression.Constant( 0 )
+                ),
+
+                Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.Equal(
+                            countVar,
+                            Expression.Field( headerVar, Fields.ThriftMapHeader_Count )
+                        ),
+                        Expression.Break( endOfLoop ),
+                        Expression.Block(
+                            Expression.Call(
+                                mapVar,
+                                "Add", // TODO make knowncollections prettier
+                                Types.EmptyTypes,
+                                CreateReaderForType( protocolParam, thriftType.KeyType ),
+                                CreateReaderForType( protocolParam, thriftType.ValueType )
+                            ),
+                            Expression.PostIncrementAssign( countVar )
+                        )
+                    ),
+                    endOfLoop
+                ),
+
+                Expression.Call( protocolParam, Methods.IThriftProtocol_ReadMapEnd ),
+
+                // return value
+                mapVar
+            );
+        }
+
+        /// <summary>
+        /// Creates an expression reading the specified list or set type.
+        /// </summary>
+        private static Expression CreateReaderForListOrSet( ParameterExpression protocolParam, ThriftType thriftType )
+        {
+            var collectionType = KnownCollections.GetInstantiableVersion( thriftType.TypeInfo ).AsType();
+            var collectionVar = Expression.Variable( collectionType );
+            var headerVar = Expression.Variable( typeof( ThriftCollectionHeader ) );
+            var countVar = Expression.Variable( typeof( int ) );
+
+            var endOfLoop = Expression.Label();
+
+            return Expression.Block(
+                collectionType,
+                new[] { collectionVar, headerVar, countVar },
+
+                Expression.Assign(
+                    headerVar,
+                    Expression.Call(
+                        protocolParam,
+                        thriftType.Id == ThriftTypeId.List ? Methods.IThriftProtocol_ReadListHeader : Methods.IThriftProtocol_ReadSetHeader
+                    )
+                ),
+
+                CreateTypeIdAssert(
+                    thriftType.ElementType.Id,
+                   Expression.Field( headerVar, Fields.ThriftCollectionHeader_ElementTypeId )
+                ),
+
+                Expression.Assign(
+                    collectionVar,
+                    Expression.New( collectionType )
+                ),
+
+                Expression.Assign(
+                    countVar,
+                    Expression.Constant( 0 )
+                ),
+
+                Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.Equal(
+                            countVar,
+                            Expression.Field( headerVar, Fields.ThriftCollectionHeader_Count )
+                        ),
+                        Expression.Break( endOfLoop ),
+                        Expression.Block(
+                            Expression.Call(
+                                collectionVar,
+                                "Add", // TODO make knowncollections prettier
+                                Types.EmptyTypes,
+                                CreateReaderForType( protocolParam, thriftType.ElementType )
+                            ),
+                            Expression.PostIncrementAssign( countVar )
+                        )
+                    ),
+                    endOfLoop
+                ),
+
+                Expression.Call(
+                    protocolParam,
+                    thriftType.Id == ThriftTypeId.List ? Methods.IThriftProtocol_ReadListEnd : Methods.IThriftProtocol_ReadSetEnd
+                ),
+
+                // return value
+                collectionVar
+            );
+        }
+
+        /// <summary>
+        /// Creates a reader for the specified type.
+        /// </summary>
+        private static Expression CreateReaderForType( ParameterExpression protocolParam, ThriftType thriftType )
+        {
+            if ( thriftType.NullableType != null )
+            {
+                return Expression.Convert(
+                    CreateReaderForType( protocolParam, thriftType.NullableType ),
+                    thriftType.TypeInfo.AsType()
+                );
+            }
+
+            switch ( thriftType.Id )
+            {
+                case ThriftTypeId.Boolean:
+                    return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadBoolean );
+
+                case ThriftTypeId.SByte:
+                    return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadSByte );
+
+                case ThriftTypeId.Double:
+                    return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadDouble );
+
+                case ThriftTypeId.Int16:
+                    return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadInt16 );
+
+                case ThriftTypeId.Int32:
+                    if ( thriftType.IsEnum )
+                    {
+                        return Expression.Convert(
+                            Expression.Call( protocolParam, Methods.IThriftProtocol_ReadInt32 ),
+                            thriftType.TypeInfo.AsType()
+                        );
+                    }
+                    return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadInt32 );
+
+                case ThriftTypeId.Int64:
+                    return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadInt64 );
+
+                case ThriftTypeId.Binary:
+                    if ( thriftType.TypeInfo == TypeInfos.String )
+                    {
+                        return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadString );
+                    }
+                    return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadBinary );
+
+                case ThriftTypeId.Struct:
+                    return Expression.Convert(
+                        Expression.Call(
+                            Methods.ThriftStructReader_Read,
+                            Expression.Constant( thriftType.Struct ), protocolParam
+                        ),
+                        thriftType.TypeInfo.AsType()
+                    );
+
+                case ThriftTypeId.Map:
+                    return CreateReaderForMap( protocolParam, thriftType );
+
+                case ThriftTypeId.Set:
+                case ThriftTypeId.List:
+                    if ( thriftType.CollectionTypeInfo.IsArray )
+                    {
+                        return CreateReaderForArray( protocolParam, thriftType );
+                    }
+                    return CreateReaderForListOrSet( protocolParam, thriftType );
+
+                default:
+                    throw new InvalidOperationException( "Cannot create a writer for the type " + thriftType.Id );
+            }
+        }
+
+        /// <summary>
+        /// Creates a compiled reader for the specified struct.
+        /// </summary>
+        private static Func<IThriftProtocol, object> CreateCompiledReaderForStruct( ThriftStruct thriftStruct )
+        {
+            var protocolParam = Expression.Parameter( typeof( IThriftProtocol ) );
+
+            var structType = thriftStruct.TypeInfo.AsType();
+            var structVar = Expression.Variable( structType );
+
+            var fieldsAndSetters = new Dictionary<ThriftField, Func<Expression, Expression>>();
+            foreach ( var field in thriftStruct.Fields )
+            {
+                fieldsAndSetters.Add(
+                    field,
+                    expr => Expression.Assign(
+                        Expression.Property(
+                            structVar,
+                            field.BackingProperty
+                        ),
+                        expr
+                    )
+                );
+            }
+
+            var endOfLoop = Expression.Label();
+
+            var body = Expression.Block(
+                structType,
+                new[] { structVar },
+
+                Expression.Assign(
+                    structVar,
+                    Expression.New( structType )
+                ),
+
+                CreateReaderForFields( protocolParam, fieldsAndSetters ),
+
+                // return value
+                structVar
+            );
+
+            return Expression.Lambda<Func<IThriftProtocol, object>>( body, protocolParam ).Compile();
+        }
+
+
+        /// <summary>
+        /// Creates an expression reading the specified fields, given with their setter expressions.
+        /// </summary>
+        public static Expression CreateReaderForFields( ParameterExpression protocolParam, Dictionary<ThriftField, Func<Expression, Expression>> fieldsAndSetters )
+        {
+            var fieldHeaderVar = Expression.Variable( typeof( ThriftFieldHeader ) );
+            var setFieldsVar = Expression.Variable( typeof( HashSet<short> ) );
+
+            var endOfLoop = Expression.Label();
+
+            var fieldCases = new List<SwitchCase>();
+            foreach ( var pair in fieldsAndSetters )
+            {
+                var setter = pair.Value;
+                if ( pair.Key.Converter != null )
+                {
+                    if ( pair.Key.Type.NullableType == null )
+                    {
+                        setter = expr => pair.Value(
+                            Expression.Call(
+                                Expression.Constant( pair.Key.Converter ),
+                                "Convert", // The converter type is unknown here (even the interface since it's generic)
+                                Types.EmptyTypes,
+                                expr
+                            )
+                        );
+                    }
+                    else
+                    {
+                        setter = expr => pair.Value(
+                            Expression.Convert(
+                                Expression.Call(
+                                    Expression.Constant( pair.Key.Converter ),
+                                    "Convert", // idem
+                                    Types.EmptyTypes,
+                                    Expression.Convert(
+                                        expr,
+                                        pair.Key.Type.NullableType.TypeInfo.AsType()
+                                    )
+                                ),
+                                pair.Key.UnderlyingTypeInfo.AsType()
+                            )
+                        );
+                    }
+                }
+
+                fieldCases.Add(
+                    Expression.SwitchCase(
+                        Expression.Block(
+                            CreateTypeIdAssert(
+                                pair.Key.Type.Id,
+                                Expression.Field( fieldHeaderVar, Fields.ThriftFieldHeader_TypeId )
+                            ),
+                            setter(
+                                CreateReaderForType( protocolParam, pair.Key.Type )
+                            ),
+                            Expression.Call(
+                                setFieldsVar,
+                                Methods.HashSetOfShort_Add,
+                                Expression.Constant( pair.Key.Id )
+                            ),
+                    // Need to "return" void here because the default case value does it (skipping fields)
+                            Expression.Empty()
+                        ),
+                        Expression.Constant( pair.Key.Id )
+                    )
+                );
+            }
+
+            var skipper = Expression.Call(
+                Methods.ThriftStructReader_Skip,
+                Expression.Field( fieldHeaderVar, Fields.ThriftFieldHeader_TypeId ), protocolParam
+            );
+
+            Expression fieldAssignment;
+            if ( fieldCases.Count > 0 )
+            {
+                // Switch doesn't support 0 cases
+                fieldAssignment = Expression.Switch(
+                    Expression.Field( fieldHeaderVar, Fields.ThriftFieldHeader_Id ),
+                    skipper,
+                    fieldCases.ToArray()
+                );
+            }
+            else
+            {
+                fieldAssignment = skipper;
+            }
+
+
+            var statements = new List<Expression>
+            {
+                Expression.Assign(
+                    setFieldsVar,
+                    Expression.New( setFieldsVar.Type )
+                ),
+                
+                // ignore the return value, it's useless
+                Expression.Call( protocolParam, Methods.IThriftProtocol_ReadStructHeader ),
+
+                Expression.Loop(
+                    Expression.Block(
+                        Expression.Assign(
+                            fieldHeaderVar,
+                            Expression.Call( protocolParam, Methods.IThriftProtocol_ReadFieldHeader )
+                        ),
+                        Expression.IfThen(
+                            Expression.Equal(
+                                Expression.Field( fieldHeaderVar, Fields.ThriftFieldHeader_TypeId ),
+                                Expression.Constant( ThriftTypeId.Empty )
+                            ),
+                            Expression.Break( endOfLoop )
+                        ),
+                        fieldAssignment,
+                        Expression.Call( protocolParam, Methods.IThriftProtocol_ReadFieldEnd )
+                    ),
+                    endOfLoop
+                ),
+                
+                Expression.Call( protocolParam, Methods.IThriftProtocol_ReadStructEnd ),
+            };
+
+            // now check for required fields & default values
+            foreach ( var pair in fieldsAndSetters )
+            {
+                if ( pair.Key.IsRequired )
+                {
+                    statements.Add(
+                        Expression.IfThen(
+                            Expression.IsFalse(
+                                Expression.Call(
+                                    setFieldsVar,
+                                    Methods.HashSetOfShort_Contains,
+                                    Expression.Constant( pair.Key.Id )
+                                )
+                            ),
+                            Expression.Throw(
+                                Expression.Call(
+                                    Methods.ThriftSerializationException_MissingRequiredField,
+                                    Expression.Constant( pair.Key.Name )
+                                )
+                            )
+                        )
+                    );
+                }
+                else if ( pair.Key.DefaultValue != null )
+                {
+                    statements.Add(
+                        Expression.IfThen(
+                            Expression.IsFalse(
+                                Expression.Call(
+                                    setFieldsVar,
+                                    Methods.HashSetOfShort_Contains,
+                                    Expression.Constant( pair.Key.Id )
+                                )
+                            ),
+                            pair.Value(
+                                Expression.Convert(
+                                    Expression.Constant( pair.Key.DefaultValue ),
+                                    pair.Key.UnderlyingTypeInfo.AsType()
+                                )
+                            )
+                        )
+                    );
+                }
+            }
+
+            return Expression.Block(
+                new[] { fieldHeaderVar, setFieldsVar },
+                statements
+            );
+        }
+
+
+        /// <summary>
+        /// Skips the specified ID from the specified protocol.
+        /// </summary>
+        /// <remarks>
+        /// This method is only called from generated expressions.
+        /// </remarks>
+        public static void Skip( ThriftTypeId thriftTypeId, IThriftProtocol protocol )
         {
             switch ( thriftTypeId )
             {
@@ -99,474 +619,16 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Creates an expression that checks whether the specified <see cref="ThriftTypeId"/>s are equal, 
-        /// and throws a <see cref="ThriftSerializationException"/> if they aren't.
-        /// </summary>
-        private static Expression CreateTypeIdAssert( ThriftTypeId expected, Expression actual )
-        {
-            return Expression.IfThen(
-                Expression.NotEqual(
-                    Expression.Constant( expected ),
-                    actual
-                ),
-                Expression.Throw(
-                    Expression.Call(
-                        typeof( ThriftSerializationException ),
-                        "TypeIdMismatch",
-                        Types.EmptyTypes,
-                        Expression.Constant( expected ),
-                        actual
-                    )
-                )
-            );
-        }
-
-
-        /// <summary>
-        /// Creates a reader for the specified type, with the specified protocol.
-        /// </summary>
-        private static Expression ForType( ParameterExpression protocolParam, ThriftType thriftType )
-        {
-            if ( thriftType.TypeInfo.Equals( TypeInfos.String ) )
-            {
-                return Expression.Call( protocolParam, "ReadString", Types.EmptyTypes );
-            }
-
-            // force the conversion
-            if ( thriftType.IsEnum || thriftType.NullableType != null )
-            {
-                return Expression.Convert(
-                    Expression.Call( protocolParam, "Read" + thriftType.Id.ToString(), Types.EmptyTypes ),
-                    thriftType.TypeInfo.AsType()
-                );
-            }
-
-            // also handles nullables thanks to implicit conversions
-            if ( thriftType.IsPrimitive )
-            {
-                return Expression.Call( protocolParam, "Read" + thriftType.Id.ToString(), Types.EmptyTypes );
-            }
-
-            if ( thriftType.Id == ThriftTypeId.List && thriftType.CollectionTypeInfo.IsArray )
-            {
-                var arrayType = thriftType.CollectionTypeInfo.AsType();
-                var itemType = thriftType.ElementType.TypeInfo.AsType();
-                var arrayVar = Expression.Variable( arrayType );
-                var headerVar = Expression.Variable( typeof( ThriftCollectionHeader ) );
-                var countVar = Expression.Variable( typeof( int ) );
-
-                var endOfLoop = Expression.Label();
-
-                return Expression.Block(
-                    arrayType,
-                    new[] { arrayVar, headerVar, countVar },
-                    Expression.Assign(
-                        headerVar,
-                        Expression.Call( protocolParam, "ReadListHeader", Types.EmptyTypes )
-                    ),
-                    CreateTypeIdAssert(
-                        thriftType.ElementType.Id,
-                        Expression.Field( headerVar, "ElementTypeId" )
-                    ),
-                    Expression.Assign(
-                        arrayVar,
-                        Expression.NewArrayBounds(
-                            itemType,
-                            Expression.Field( headerVar, "Count" )
-                        )
-                    ),
-                    Expression.Assign(
-                        countVar,
-                        Expression.Constant( 0 )
-                    ),
-                    Expression.Loop(
-                        Expression.IfThenElse(
-                            Expression.Equal(
-                                countVar,
-                                Expression.Field( headerVar, "Count" )
-                            ),
-                            Expression.Break( endOfLoop ),
-                            Expression.Block(
-                                Expression.Assign(
-                                    Expression.ArrayAccess( arrayVar, countVar ),
-                                    Expression.Convert(
-                                        ForType( protocolParam, thriftType.ElementType ),
-                                        itemType
-                                    )
-                                ),
-                                Expression.PostIncrementAssign( countVar )
-                            )
-                        ),
-                        endOfLoop
-                    ),
-                    Expression.Call( protocolParam, "ReadListEnd", Types.EmptyTypes ),
-                    // return value:
-                    arrayVar
-                );
-            }
-
-            if ( thriftType.Id == ThriftTypeId.List || thriftType.Id == ThriftTypeId.Set )
-            {
-                string readHeaderMethodName = "Read" + thriftType.Id.ToString() + "Header";
-                string readEndMethodName = "Read" + thriftType.Id.ToString() + "End";
-
-                var collectionType = KnownCollections.GetInstantiableVersion( thriftType.TypeInfo ).AsType();
-                var collectionVar = Expression.Variable( collectionType );
-                var headerVar = Expression.Variable( typeof( ThriftCollectionHeader ) );
-                var countVar = Expression.Variable( typeof( int ) );
-
-                var endOfLoop = Expression.Label();
-
-                return Expression.Block(
-                    collectionType,
-                    new[] { collectionVar, headerVar, countVar },
-                    Expression.Assign(
-                        headerVar,
-                        Expression.Call( protocolParam, readHeaderMethodName, Types.EmptyTypes )
-                    ),
-                    CreateTypeIdAssert(
-                        thriftType.ElementType.Id,
-                       Expression.Field( headerVar, "ElementTypeId" )
-                    ),
-                    Expression.Assign(
-                        collectionVar,
-                        Expression.New( collectionType )
-                    ),
-                    Expression.Assign(
-                        countVar,
-                        Expression.Constant( 0 )
-                    ),
-                    Expression.Loop(
-                        Expression.IfThenElse(
-                            Expression.Equal(
-                                countVar,
-                                Expression.Field( headerVar, "Count" )
-                            ),
-                            Expression.Break( endOfLoop ),
-                            Expression.Block(
-                                Expression.Call(
-                                    collectionVar,
-                                    "Add",
-                                    Types.EmptyTypes,
-                                    ForType( protocolParam, thriftType.ElementType )
-                                ),
-                                Expression.PostIncrementAssign( countVar )
-                            )
-                        ),
-                        endOfLoop
-                    ),
-                    Expression.Call( protocolParam, readEndMethodName, Types.EmptyTypes ),
-                    // return value:
-                    collectionVar
-                );
-            }
-            if ( thriftType.Id == ThriftTypeId.Map )
-            {
-                var mapType = KnownCollections.GetInstantiableVersion( thriftType.TypeInfo ).AsType();
-                var mapVar = Expression.Variable( mapType );
-                var headerVar = Expression.Variable( typeof( ThriftMapHeader ) );
-                var countVar = Expression.Variable( typeof( int ) );
-
-                var endOfLoop = Expression.Label();
-
-                return Expression.Block(
-                    mapType,
-                    new[] { mapVar, headerVar, countVar },
-                    Expression.Assign(
-                        mapVar,
-                        Expression.New( mapType )
-                    ),
-                    Expression.Assign(
-                        headerVar,
-                        Expression.Call( protocolParam, "ReadMapHeader", Types.EmptyTypes )
-                    ),
-                    CreateTypeIdAssert(
-                        thriftType.KeyType.Id,
-                        Expression.Field( headerVar, "KeyTypeId" )
-                    ),
-                    CreateTypeIdAssert(
-                        thriftType.ValueType.Id,
-                        Expression.Field( headerVar, "ValueTypeId" )
-                    ),
-                    Expression.Assign(
-                        countVar,
-                        Expression.Constant( 0 )
-                    ),
-                    Expression.Loop(
-                        Expression.IfThenElse(
-                            Expression.Equal(
-                                countVar,
-                                Expression.Field(
-                                    headerVar,
-                                    "Count"
-                                )
-                            ),
-                            Expression.Break( endOfLoop ),
-                            Expression.Block(
-                                Expression.Call(
-                                    mapVar,
-                                    "Add",
-                                    Types.EmptyTypes,
-                                    ForType( protocolParam, thriftType.KeyType ),
-                                    ForType( protocolParam, thriftType.ValueType )
-                                ),
-                                Expression.PostIncrementAssign( countVar )
-                            )
-                        ),
-                        endOfLoop
-                    ),
-                    Expression.Call( protocolParam, "ReadMapEnd", Types.EmptyTypes ),
-                    // return value:
-                    mapVar
-                );
-            }
-
-            return Expression.Convert(
-                Expression.Call(
-                    typeof( ThriftStructReader ),
-                    "Read",
-                    Types.EmptyTypes,
-                    Expression.Constant( thriftType.Struct ), protocolParam
-                ),
-                thriftType.TypeInfo.AsType()
-            );
-        }
-
-        /// <summary>
-        /// Creates a compiled reader for the specified struct.
-        /// </summary>
-        private static Func<IThriftProtocol, object> ForStruct( ThriftStruct thriftStruct )
-        {
-            var protocolParam = Expression.Parameter( typeof( IThriftProtocol ) );
-
-            var structType = thriftStruct.TypeInfo.AsType();
-            var structVar = Expression.Variable( structType );
-
-            var fieldsAndSetters = new List<Tuple<ThriftField, Func<Expression, Expression>>>();
-            foreach ( var field in thriftStruct.Fields )
-            {
-                fieldsAndSetters.Add( Tuple.Create(
-                    field,
-                    (Func<Expression, Expression>) ( expr => Expression.Assign(
-                        Expression.Property(
-                            structVar,
-                            field.BackingProperty
-                        ),
-                        expr
-                    ) )
-                ) );
-            }
-
-            var endOfLoop = Expression.Label();
-
-            var body = Expression.Block(
-                structType,
-                new[] { structVar },
-
-                Expression.Assign(
-                    structVar,
-                    Expression.New( structType )
-                ),
-
-                ForFields( protocolParam, fieldsAndSetters ),
-
-                structVar // return value
-            );
-
-            return Expression.Lambda<Func<IThriftProtocol, object>>( body, protocolParam ).Compile();
-        }
-
-
-        /// <summary>
-        /// Creates an expression reading the specified fields, given with their setter expressions, from the specified protocol.
-        /// </summary>
-        public static Expression ForFields( ParameterExpression protocolParam, List<Tuple<ThriftField, Func<Expression, Expression>>> fieldsAndSetters )
-        {
-            var fieldHeaderVar = Expression.Variable( typeof( ThriftFieldHeader ) );
-            var setFieldsVar = Expression.Variable( typeof( HashSet<short> ) );
-
-            var endOfLoop = Expression.Label();
-
-            var fieldCases = new List<SwitchCase>();
-            foreach ( var tup in fieldsAndSetters )
-            {
-                var setter = tup.Item2;
-                if ( tup.Item1.Converter != null )
-                {
-                    if ( tup.Item1.Type.NullableType == null )
-                    {
-                        setter = expr => tup.Item2(
-                            Expression.Call(
-                                Expression.Constant( tup.Item1.Converter ),
-                                "Convert",
-                                Types.EmptyTypes,
-                                expr
-                            )
-                        );
-                    }
-                    else
-                    {
-                        setter = expr => tup.Item2(
-                            Expression.Convert(
-                                Expression.Call(
-                                    Expression.Constant( tup.Item1.Converter ),
-                                    "Convert",
-                                    Types.EmptyTypes,
-                                    Expression.Convert(
-                                        expr,
-                                        tup.Item1.Type.NullableType.TypeInfo.AsType()
-                                    )
-                                ),
-                                tup.Item1.UnderlyingTypeInfo.AsType()
-                            )
-                        );
-                    }
-                }
-
-                fieldCases.Add(
-                    Expression.SwitchCase(
-                        Expression.Block(
-                            CreateTypeIdAssert(
-                                tup.Item1.Type.Id,
-                                Expression.Field( fieldHeaderVar, "TypeId" )
-                            ),
-                            setter(
-                                ForType( protocolParam, tup.Item1.Type )
-                            ),
-                            Expression.Call(
-                                setFieldsVar,
-                                "Add",
-                                Types.EmptyTypes,
-                                Expression.Constant( tup.Item1.Id )
-                            ),
-                            Expression.Empty()  // void return value
-                        ),
-                        Expression.Constant( tup.Item1.Id )
-                    )
-                );
-            }
-
-            var skipper = Expression.Call(
-                typeof( ThriftStructReader ),
-                "Skip",
-                Types.EmptyTypes,
-                Expression.Field( fieldHeaderVar, "TypeId" ),
-                protocolParam
-            );
-
-            Expression fieldAssignment;
-            if ( fieldCases.Count > 0 )
-            {
-                fieldAssignment = Expression.Switch(
-                    Expression.Field( fieldHeaderVar, "Id" ),
-                    skipper,
-                    fieldCases.ToArray()
-                );
-            }
-            else
-            {
-                fieldAssignment = skipper;
-            }
-
-
-            var statements = new List<Expression>
-            {
-                Expression.Assign(
-                    setFieldsVar,
-                    Expression.New( typeof( HashSet<short> ) )
-                ),
-                
-                // ignore the return value, it's useless
-                Expression.Call( protocolParam, "ReadStructHeader", Types.EmptyTypes ),
-
-                Expression.Loop(
-                    Expression.Block(
-                        Expression.Assign(
-                            fieldHeaderVar,
-                            Expression.Call( protocolParam, "ReadFieldHeader", Types.EmptyTypes )
-                        ),
-                        Expression.IfThen(
-                            Expression.Equal(
-                                Expression.Field(
-                                    fieldHeaderVar,
-                                    "TypeId"
-                                ),
-                                Expression.Constant( ThriftTypeId.Empty )
-                            ),
-                            Expression.Break( endOfLoop )
-                        ),
-                        fieldAssignment,
-                        Expression.Call( protocolParam, "ReadFieldEnd", Types.EmptyTypes )
-                    ),
-                    endOfLoop
-                ),
-                
-                Expression.Call( protocolParam, "ReadStructEnd", Types.EmptyTypes ),
-            };
-
-            // now check for required fields & default values
-            foreach ( var tup in fieldsAndSetters )
-            {
-                if ( tup.Item1.IsRequired )
-                {
-                    statements.Add(
-                        Expression.IfThen(
-                            Expression.IsFalse(
-                                Expression.Call(
-                                    setFieldsVar,
-                                    "Contains",
-                                    Types.EmptyTypes,
-                                    Expression.Constant( tup.Item1.Id )
-                                )
-                            ),
-                            Expression.Throw(
-                                Expression.Call(
-                                    typeof( ThriftSerializationException ),
-                                    "MissingRequiredField",
-                                    Types.EmptyTypes,
-                                    Expression.Constant( tup.Item1.Name )
-                                )
-                            )
-                        )
-                    );
-                }
-                else if ( tup.Item1.DefaultValue != null )
-                {
-                    statements.Add(
-                        Expression.IfThen(
-                            Expression.IsFalse(
-                                Expression.Call(
-                                    setFieldsVar,
-                                    "Contains",
-                                    Types.EmptyTypes,
-                                    Expression.Constant( tup.Item1.Id )
-                                )
-                            ),
-                            tup.Item2(
-                                Expression.Convert(
-                                    Expression.Constant( tup.Item1.DefaultValue ),
-                                    tup.Item1.UnderlyingTypeInfo.AsType()
-                                )
-                            )
-                        )
-                    );
-                }
-            }
-
-            return Expression.Block(
-                new[] { fieldHeaderVar, setFieldsVar },
-                statements
-            );
-        }
-
-        /// <summary>
         /// Reads the specified struct from the specified protocol.
         /// </summary>
+        /// <remarks>
+        /// This method is only called from generated expressions.
+        /// </remarks>
         public static object Read( ThriftStruct thriftStruct, IThriftProtocol protocol )
         {
             if ( !_knownReaders.ContainsKey( thriftStruct ) )
             {
-                _knownReaders.Add( thriftStruct, ForStruct( thriftStruct ) );
+                _knownReaders.Add( thriftStruct, CreateCompiledReaderForStruct( thriftStruct ) );
             }
 
             return _knownReaders[thriftStruct]( protocol );
