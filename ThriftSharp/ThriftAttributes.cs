@@ -284,6 +284,7 @@ namespace ThriftSharp
                 _knownConverters.Add( converterType, ReflectionExtensions.Create( typeInfo ) );
             }
 
+            ConverterType = converterType;
             Converter = _knownConverters[converterType];
         }
     }
