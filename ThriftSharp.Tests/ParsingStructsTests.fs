@@ -126,7 +126,7 @@ let ok typ isReq =
     thriftStruct.Header.Name <=> name
 
     thriftStruct.Fields.Count <=> 1
-    thriftStruct.Fields.[0].TypeInfo.AsType() <=> typ
+    thriftStruct.Fields.[0].UnderlyingTypeInfo.AsType() <=> typ
     thriftStruct.Fields.[0].IsRequired <=> isReq 
 
 let fails typ isReq =
@@ -139,10 +139,6 @@ let failsOn<'T> =
 
 [<TestClass>]
 type __() =
-    // Errors should be thrown when parsing structs without Thrift fields
-    [<Test>] member __.``Error on no fields``() =        failsOn<StructWithoutFields>
-    [<Test>] member __.``Error on no Thrift fields``() = failsOn<StructWithOnlyUnmarkedFields>
-
     // Required fields of primitive types should be parsed correctly
     [<Test>] member __.``Boolean required field``() = ok typeof<bool> true
     [<Test>] member __.``SByte required field``() =   ok typeof<sbyte> true
@@ -226,7 +222,7 @@ type __() =
     [<Test>] 
     member __.``Self-referencing struct``() = 
         parse<StructWithSelfReference>.Fields |> Seq.sortBy (fun f -> f.Id) 
-                                              |> Seq.map (fun f -> f.TypeInfo.AsType())
+                                              |> Seq.map (fun f -> f.UnderlyingTypeInfo.AsType())
                                               |> List.ofSeq
         <=>
         [ typeof<StructWithSelfReference>

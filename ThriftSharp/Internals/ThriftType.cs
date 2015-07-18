@@ -99,6 +99,12 @@ namespace ThriftSharp.Internals
         {
             TypeInfo = type.GetTypeInfo();
 
+            if ( type == typeof( void ) )
+            {
+                Id = ThriftTypeId.Empty;
+                return;
+            }
+
             Type underlyingNullableType = Nullable.GetUnderlyingType( type );
             if ( underlyingNullableType != null )
             {

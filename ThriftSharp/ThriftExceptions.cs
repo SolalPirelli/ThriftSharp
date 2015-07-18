@@ -21,17 +21,6 @@ namespace ThriftSharp
 
 
         /// <summary>
-        /// Creates an exception indicating a Thrift struct lacked Thrift fields.
-        /// </summary>
-        internal static ThriftParsingException NoFields( TypeInfo typeInfo )
-        {
-            return new ThriftParsingException( "The type '{0}' does not have any Thrift fields and is therefore useless."
-                                             + Environment.NewLine
-                                             + "Please either remove this type and all references to it, mark existing properties with the ThriftFieldAttribute attribute, or add new properties marked with the ThriftFieldAttribute attribute.",
-                                               typeInfo.FullName );
-        }
-
-        /// <summary>
         /// Creates an exception indicating an enum type lacked the appropriate attribute.
         /// </summary>
         internal static ThriftParsingException EnumWithoutAttribute( TypeInfo typeInfo )

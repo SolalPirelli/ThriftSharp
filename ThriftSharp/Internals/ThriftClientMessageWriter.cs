@@ -70,7 +70,7 @@ namespace ThriftSharp.Internals
                             argsParam,
                             Expression.Constant( n )
                         ),
-                        method.Parameters[n].WireTypeInfo.AsType()
+                        method.Parameters[n].WireType
                     );
 
                 methodContents.Add( ThriftStructWriter.ForField( protocolParam, method.Parameters[n], getParamExpr ) );

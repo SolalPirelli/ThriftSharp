@@ -68,11 +68,6 @@ namespace ThriftSharp.Internals
                                      .Where( f => f != null )
                                      .ToArray();
 
-                if ( fields.Length == 0 )
-                {
-                    throw ThriftParsingException.NoFields( typeInfo );
-                }
-
                 // The type may have been added during fields parsing
                 if ( !_knownStructs.ContainsKey( typeInfo ) )
                 {
@@ -115,10 +110,10 @@ namespace ThriftSharp.Internals
                               .Select( a => ThriftField.ThrowsClause( a.Id, a.Name, a.ExceptionTypeInfo ) )
                               .ToArray();
 
-            var wrongClause = clauses.FirstOrDefault( c => !c.TypeInfo.Extends( typeof( Exception ) ) );
+            var wrongClause = clauses.FirstOrDefault( c => !c.UnderlyingTypeInfo.Extends( typeof( Exception ) ) );
             if ( wrongClause != null )
             {
-                throw ThriftParsingException.NotAnException( wrongClause.TypeInfo, methodInfo );
+                throw ThriftParsingException.NotAnException( wrongClause.UnderlyingTypeInfo, methodInfo );
             }
 
             return clauses;

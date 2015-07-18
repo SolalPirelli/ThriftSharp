@@ -252,13 +252,17 @@ namespace ThriftSharp
     [AttributeUsage( AttributeTargets.Property | AttributeTargets.Parameter | AttributeTargets.ReturnValue )]
     public sealed class ThriftConverterAttribute : Attribute
     {
-        private static readonly Dictionary<Type, IThriftValueConverter> _knownConverters =
-            new Dictionary<Type, IThriftValueConverter>();
+        private static readonly Dictionary<Type, object> _knownConverters = new Dictionary<Type, object>();
+
+        /// <summary>
+        /// Gets the converter's type.
+        /// </summary>
+        public Type ConverterType { get; private set; }
 
         /// <summary>
         /// Gets the converter.
         /// </summary>
-        public IThriftValueConverter Converter { get; private set; }
+        internal object Converter { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the ThriftConverterAttribute class with the specified converter type.
@@ -271,12 +275,13 @@ namespace ThriftSharp
             if ( !_knownConverters.ContainsKey( converterType ) )
             {
                 var typeInfo = converterType.GetTypeInfo();
-                if ( !typeInfo.Extends( typeof( IThriftValueConverter ) ) )
+                var iface = typeInfo.GetGenericInterface( typeof( IThriftValueConverter<,> ) );
+                if ( iface == null )
                 {
                     throw new ArgumentException( "The type must implement IThriftValueConverter." );
                 }
 
-                _knownConverters.Add( converterType, (IThriftValueConverter) ReflectionExtensions.Create( typeInfo ) );
+                _knownConverters.Add( converterType, ReflectionExtensions.Create( typeInfo ) );
             }
 
             Converter = _knownConverters[converterType];

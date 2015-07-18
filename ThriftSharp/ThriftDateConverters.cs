@@ -13,7 +13,7 @@ namespace ThriftSharp
     /// Consider using <see cref="ThriftUnixDateOffsetConverter" /> instead; 
     /// the <see cref="DateTimeOffset" /> class replaces the old <see cref="DateTime" /> class for most use cases.
     /// </remarks>
-    public sealed class ThriftUnixDateConverter : ThriftValueConverter<int, DateTime>
+    public sealed class ThriftUnixDateConverter : IThriftValueConverter<int, DateTime>
     {
         private static readonly ThriftUnixDate64Converter Converter = new ThriftUnixDate64Converter();
 
@@ -22,7 +22,7 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The timestamp.</param>
         /// <returns>The resulting DateTime.</returns>
-        protected internal override DateTime Convert( int value )
+        public DateTime Convert( int value )
         {
             return Converter.Convert( value );
         }
@@ -32,7 +32,7 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The DateTime.</param>
         /// <returns>The resulting timestamp.</returns>
-        protected internal override int ConvertBack( DateTime value )
+        public int ConvertBack( DateTime value )
         {
             return (int) Converter.ConvertBack( value );
         }
@@ -46,7 +46,7 @@ namespace ThriftSharp
     /// Consider using <see cref="ThriftUnixLongDateOffsetConverter" /> instead; 
     /// the <see cref="DateTimeOffset" /> class replaces the old <see cref="DateTime" /> class for most use cases.
     /// </remarks>
-    public sealed class ThriftUnixDate64Converter : ThriftValueConverter<long, DateTime>
+    public sealed class ThriftUnixDate64Converter : IThriftValueConverter<long, DateTime>
     {
         private static readonly DateTime UnixTimeStart = new DateTime( 1970, 1, 1, 0, 0, 0, DateTimeKind.Utc );
 
@@ -55,7 +55,7 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The timestamp.</param>
         /// <returns>The resulting DateTime.</returns>
-        protected internal override DateTime Convert( long value )
+        public DateTime Convert( long value )
         {
             return UnixTimeStart.AddSeconds( value ).ToLocalTime();
         }
@@ -65,7 +65,7 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The DateTime.</param>
         /// <returns>The resulting timestamp.</returns>
-        protected internal override long ConvertBack( DateTime value )
+        public long ConvertBack( DateTime value )
         {
             return (long) Math.Round( ( value.ToUniversalTime() - UnixTimeStart ).TotalSeconds );
         }
@@ -79,7 +79,7 @@ namespace ThriftSharp
     /// Consider using <see cref="ThriftJavaDateOffsetConverter" /> instead; 
     /// the <see cref="DateTimeOffset" /> class replaces the old <see cref="DateTime" /> class for most use cases.
     /// </remarks>
-    public sealed class ThriftJavaDateConverter : ThriftValueConverter<long, DateTime>
+    public sealed class ThriftJavaDateConverter : IThriftValueConverter<long, DateTime>
     {
         private static readonly DateTime JavaTimeStart = new DateTime( 1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc );
 
@@ -88,7 +88,7 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The timestamp.</param>
         /// <returns>The resulting DateTime.</returns>
-        protected internal override DateTime Convert( long value )
+        public DateTime Convert( long value )
         {
             return JavaTimeStart.AddMilliseconds( value ).ToLocalTime();
         }
@@ -98,7 +98,7 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The DateTime.</param>
         /// <returns>The resulting timestamp.</returns>
-        protected internal override long ConvertBack( DateTime value )
+        public long ConvertBack( DateTime value )
         {
             return (long) Math.Round( ( value.ToUniversalTime() - JavaTimeStart ).TotalMilliseconds );
         }
@@ -109,7 +109,7 @@ namespace ThriftSharp
     /// Converts 32-bit integer timestamps to <see cref="DateTimeOffset" /> using the Unix format, 
     /// i.e. the number of seconds since Jan. 1, 1970 00:00:00 UTC.
     /// </summary>
-    public sealed class ThriftUnixDateOffsetConverter : ThriftValueConverter<int, DateTimeOffset>
+    public sealed class ThriftUnixDateOffsetConverter : IThriftValueConverter<int, DateTimeOffset>
     {
         private static readonly ThriftUnixLongDateOffsetConverter Converter = new ThriftUnixLongDateOffsetConverter();
 
@@ -118,7 +118,7 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The timestamp.</param>
         /// <returns>The resulting DateTime.</returns>
-        protected internal override DateTimeOffset Convert( int value )
+        public DateTimeOffset Convert( int value )
         {
             return Converter.Convert( value );
         }
@@ -128,7 +128,7 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The DateTime.</param>
         /// <returns>The resulting timestamp.</returns>
-        protected internal override int ConvertBack( DateTimeOffset value )
+        public int ConvertBack( DateTimeOffset value )
         {
             return (int) Converter.ConvertBack( value );
         }
@@ -138,7 +138,7 @@ namespace ThriftSharp
     /// Converts 64-bit integer timestamps to <see cref="DateTimeOffset" /> using the Unix format, 
     /// i.e. the number of seconds since Jan. 1, 1970 00:00:00 UTC.
     /// </summary>
-    public sealed class ThriftUnixLongDateOffsetConverter : ThriftValueConverter<long, DateTimeOffset>
+    public sealed class ThriftUnixLongDateOffsetConverter : IThriftValueConverter<long, DateTimeOffset>
     {
         private static readonly DateTimeOffset UnixTimeStart = new DateTimeOffset( 1970, 1, 1, 0, 0, 0, TimeSpan.Zero );
 
@@ -147,7 +147,7 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The timestamp.</param>
         /// <returns>The resulting DateTime.</returns>
-        protected internal override DateTimeOffset Convert( long value )
+        public DateTimeOffset Convert( long value )
         {
             return UnixTimeStart.AddSeconds( value ).ToLocalTime();
         }
@@ -157,7 +157,7 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The DateTime.</param>
         /// <returns>The resulting timestamp.</returns>
-        protected internal override long ConvertBack( DateTimeOffset value )
+        public long ConvertBack( DateTimeOffset value )
         {
             return (long) Math.Round( ( value.ToUniversalTime() - UnixTimeStart ).TotalSeconds );
         }
@@ -167,7 +167,7 @@ namespace ThriftSharp
     /// Converts 64-bit integer timestamps to <see cref="DateTimeOffset" /> using the Java format, 
     /// i.e. the number of milliseconds since Jan. 1, 1970 00:00:00.000 UTC.
     /// </summary>
-    public sealed class ThriftJavaDateOffsetConverter : ThriftValueConverter<long, DateTimeOffset>
+    public sealed class ThriftJavaDateOffsetConverter : IThriftValueConverter<long, DateTimeOffset>
     {
         private static readonly DateTimeOffset JavaTimeStart = new DateTimeOffset( 1970, 1, 1, 0, 0, 0, 0, TimeSpan.Zero );
 
@@ -176,7 +176,7 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The timestamp.</param>
         /// <returns>The resulting DateTime.</returns>
-        protected internal override DateTimeOffset Convert( long value )
+        public DateTimeOffset Convert( long value )
         {
             return JavaTimeStart.AddMilliseconds( value ).ToLocalTime();
         }
@@ -186,7 +186,7 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="value">The DateTime.</param>
         /// <returns>The resulting timestamp.</returns>
-        protected internal override long ConvertBack( DateTimeOffset value )
+        public long ConvertBack( DateTimeOffset value )
         {
             return (long) Math.Round( ( value.ToUniversalTime() - JavaTimeStart ).TotalMilliseconds );
         }

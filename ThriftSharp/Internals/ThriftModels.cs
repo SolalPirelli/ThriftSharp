@@ -1,8 +1,10 @@
 ﻿// Copyright (c) 2014-15 Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details).
 
+using System;
 using System.Collections.Generic;
 using System.Reflection;
+using ThriftSharp.Utilities;
 
 namespace ThriftSharp.Internals
 {
@@ -22,11 +24,13 @@ namespace ThriftSharp.Internals
         public readonly string Name;
 
         /// <summary>
+        /// Gets the field's type.
+        /// </summary>
+        public readonly ThriftType Type;
+
+        /// <summary>
         /// Gets a value indicating whether the field is required.
         /// </summary>
-        /// <remarks>
-        /// If the field is required, an exception should be thrown if it is not present during deserialization.
-        /// </remarks>
         public readonly bool IsRequired;
 
         /// <summary>
@@ -37,42 +41,56 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the field's underlying type.
         /// </summary>
-        public readonly TypeInfo TypeInfo;
-
-        /// <summary>
-        /// Gets the field's type as used on the wire.
-        /// </summary>
-        public readonly TypeInfo WireTypeInfo;
+        public readonly TypeInfo UnderlyingTypeInfo;
 
         /// <summary>
         /// Gets the converter associated with the field, if any.
         /// </summary>
-        public readonly IThriftValueConverter Converter;
+        public readonly object Converter;
 
         /// <summary>
-        /// Gets the property associated with the field.
+        /// Gets the property associated with the field, if any.
         /// </summary>
         public readonly PropertyInfo BackingProperty;
 
+        /// <summary>
+        /// Gets the field's type as used on the wire.
+        /// </summary>
+        public readonly Type WireType;
 
-        private ThriftField( short id, string name, bool isRequired, object defaultValue, TypeInfo typeInfo, IThriftValueConverter converter, PropertyInfo backingProperty )
+
+        private ThriftField( short id, string name, bool isRequired, object defaultValue, TypeInfo typeInfo, object converter, PropertyInfo backingProperty )
         {
+            if ( converter == null )
+            {
+                WireType = typeInfo.AsType();
+            }
+            else
+            {
+                WireType = converter.GetType().GetTypeInfo().GetGenericInterface( typeof( IThriftValueConverter<,> ) ).GenericTypeArguments[0];
+                var nullableType = Nullable.GetUnderlyingType( typeInfo.AsType() );
+                if ( nullableType != null )
+                {
+                    WireType = typeof( Nullable<> ).MakeGenericType( new[] { WireType } );
+                }
+            }
+
             Id = id;
             Name = name;
+            Type = ThriftType.Get( WireType );
             IsRequired = isRequired;
             DefaultValue = defaultValue;
-            TypeInfo = typeInfo;
-            WireTypeInfo = converter == null ? typeInfo : converter.FromType.GetTypeInfo();
+            UnderlyingTypeInfo = typeInfo;
             Converter = converter;
             BackingProperty = backingProperty;
         }
 
-        public static ThriftField Field( short id, string name, bool isRequired, object defaultValue, IThriftValueConverter converter, PropertyInfo backingProperty )
+        public static ThriftField Field( short id, string name, bool isRequired, object defaultValue, object converter, PropertyInfo backingProperty )
         {
             return new ThriftField( id, name, isRequired, defaultValue, backingProperty.PropertyType.GetTypeInfo(), converter, backingProperty );
         }
 
-        public static ThriftField Parameter( short id, string name, TypeInfo typeInfo, IThriftValueConverter converter )
+        public static ThriftField Parameter( short id, string name, TypeInfo typeInfo, object converter )
         {
             return new ThriftField( id, name, true, null, typeInfo, converter, null );
         }
@@ -82,7 +100,7 @@ namespace ThriftSharp.Internals
             return new ThriftField( id, name, false, null, typeInfo, null, null );
         }
 
-        public static ThriftField ReturnValue( TypeInfo typeInfo, IThriftValueConverter converter )
+        public static ThriftField ReturnValue( TypeInfo typeInfo, object converter )
         {
             return new ThriftField( 0, null, false, null, typeInfo, converter, null );
         }

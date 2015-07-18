@@ -405,33 +405,45 @@ namespace ThriftSharp.Internals
                 var setter = tup.Item2;
                 if ( tup.Item1.Converter != null )
                 {
-                    setter = expr => tup.Item2(
-                        Expression.Convert(
+                    if ( tup.Item1.Type.NullableType == null )
+                    {
+                        setter = expr => tup.Item2(
                             Expression.Call(
                                 Expression.Constant( tup.Item1.Converter ),
                                 "Convert",
                                 EmptyTypes,
-                                Expression.Convert(
-                                    expr,
-                                    typeof( object )
-                                )
-                            ),
-                            tup.Item1.TypeInfo.AsType()
-                        )
-                    );
+                                expr
+                            )
+                        );
+                    }
+                    else
+                    {
+                        setter = expr => tup.Item2(
+                            Expression.Convert(
+                                Expression.Call(
+                                    Expression.Constant( tup.Item1.Converter ),
+                                    "Convert",
+                                    EmptyTypes,
+                                    Expression.Convert(
+                                        expr,
+                                        tup.Item1.Type.NullableType.TypeInfo.AsType()
+                                    )
+                                ),
+                                tup.Item1.UnderlyingTypeInfo.AsType()
+                            )
+                        );
+                    }
                 }
-
-                var ttype = ThriftType.Get( tup.Item1.WireTypeInfo.AsType() );
 
                 fieldCases.Add(
                     Expression.SwitchCase(
                         Expression.Block(
                             CreateTypeIdAssert(
-                                ttype.Id,
+                                tup.Item1.Type.Id,
                                 Expression.Field( fieldHeaderVar, "TypeId" )
                             ),
                             setter(
-                                ForType( protocolParam, ttype )
+                                ForType( protocolParam, tup.Item1.Type )
                             ),
                             Expression.Call(
                                 setFieldsVar,
@@ -545,7 +557,7 @@ namespace ThriftSharp.Internals
                             tup.Item2(
                                 Expression.Convert(
                                     Expression.Constant( tup.Item1.DefaultValue ),
-                                    tup.Item1.TypeInfo.AsType()
+                                    tup.Item1.UnderlyingTypeInfo.AsType()
                                 )
                             )
                         )

@@ -12,8 +12,8 @@ type ``Unix date (32-bit)``() =
         let conv = ThriftUnixDateConverter()
         let mutable date = DateTime(yyyy, mm, dd, hh, MM, ss, DateTimeKind.Utc)
         date <- date.ToLocalTime()
-        conv.Convert(stamp) :?> DateTime <=> date
-        conv.ConvertBack(date) :?> int <=> stamp
+        conv.Convert(stamp) <=> date
+        conv.ConvertBack(date) <=> stamp
 
     [<Test>]
     member x.``Epoch (1.1.1970 00:00:00)``() =
@@ -29,8 +29,8 @@ type ``Unix date (64-bit)``() =
         let conv = ThriftUnixDate64Converter()
         let mutable date = DateTime(yyyy, mm, dd, hh, MM, ss, DateTimeKind.Utc)
         date <- date.ToLocalTime()
-        conv.Convert(stamp) :?> DateTime <=> date
-        conv.ConvertBack(date) :?> int64 <=> stamp
+        conv.Convert(stamp) <=> date
+        conv.ConvertBack(date) <=> stamp
 
     [<Test>]
     member x.``Epoch (01.01.1970 00:00:00)``() =
@@ -50,8 +50,8 @@ type ``Java date (64-bit)``() =
         let conv = ThriftJavaDateConverter()
         let mutable date = DateTime(yyyy, mm, dd, hh, MM, ss, ms, DateTimeKind.Utc)
         date <- date.ToLocalTime()
-        conv.Convert(stamp) :?> DateTime <=> date
-        conv.ConvertBack(date) :?> int64 <=> stamp
+        conv.Convert(stamp) <=> date
+        conv.ConvertBack(date) <=> stamp
 
     [<Test>]
     member x.``Epoch (01.01.1970 00:00:00.000)``() =
@@ -72,8 +72,8 @@ type ``Unix date offset (32-bit)``() =
         let conv = ThriftUnixDateOffsetConverter()
         let mutable date = DateTimeOffset(yyyy, mm, dd, hh, MM, ss, TimeSpan.Zero)
         date <- date.ToLocalTime()
-        conv.Convert(stamp) :?> DateTimeOffset <=> date
-        conv.ConvertBack(date) :?> int <=> stamp
+        conv.Convert(stamp) <=> date
+        conv.ConvertBack(date) <=> stamp
 
     [<Test>]
     member x.``Epoch (1.1.1970 00:00:00)``() =
@@ -89,8 +89,8 @@ type ``Unix date offset (64-bit)``() =
         let conv = ThriftUnixLongDateOffsetConverter()
         let mutable date = DateTimeOffset(yyyy, mm, dd, hh, MM, ss, TimeSpan.Zero)
         date <- date.ToLocalTime()
-        conv.Convert(stamp) :?> DateTimeOffset <=> date
-        conv.ConvertBack(date) :?> int64 <=> stamp
+        conv.Convert(stamp) <=> date
+        conv.ConvertBack(date) <=> stamp
 
     [<Test>]
     member x.``Epoch (01.01.1970 00:00:00)``() =
@@ -110,8 +110,8 @@ type ``Java date offset (64-bit)``() =
         let conv = ThriftJavaDateOffsetConverter()
         let mutable date = DateTimeOffset(yyyy, mm, dd, hh, MM, ss, ms, TimeSpan.Zero)
         date <- date.ToLocalTime()
-        conv.Convert(stamp) :?> DateTimeOffset <=> date
-        conv.ConvertBack(date) :?> int64 <=> stamp
+        conv.Convert(stamp) <=> date
+        conv.ConvertBack(date) <=> stamp
 
     [<Test>]
     member x.``Epoch (01.01.1970 00:00:00.000)``() =

@@ -227,27 +227,37 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static Expression ForField( ParameterExpression protocolParam, ThriftField field, Expression getter )
         {
-            var fieldType = ThriftType.Get( field.WireTypeInfo.AsType() );
-
             if ( field.Converter != null )
             {
-                getter = Expression.Convert(
-                    Expression.Call(
+                if ( field.Type.NullableType == null )
+                {
+                    getter = Expression.Call(
                         Expression.Constant( field.Converter ),
                         "ConvertBack",
                         EmptyTypes,
-                        Expression.Convert(
-                            getter,
-                            typeof( object )
-                        )
-                    ),
-                    field.WireTypeInfo.AsType()
-                );
+                        getter
+                    );
+                }
+                else
+                {
+                    getter = Expression.Convert(
+                        Expression.Call(
+                            Expression.Constant( field.Converter ),
+                            "ConvertBack",
+                            EmptyTypes,
+                            Expression.Convert(
+                                getter,
+                                Nullable.GetUnderlyingType( field.UnderlyingTypeInfo.AsType() )
+                            )
+                        ),
+                        field.WireType
+                    );
+                }
             }
 
             var read = ForType(
                 protocolParam,
-                fieldType,
+                field.Type,
                 getter
             );
 
@@ -260,7 +270,7 @@ namespace ThriftSharp.Internals
                         Cache.FieldHeaderConstructor,
                         Expression.Constant( field.Id ),
                         Expression.Constant( field.Name ),
-                        Expression.Constant( ThriftType.Get( field.WireTypeInfo.AsType() ).Id )
+                        Expression.Constant( field.Type.Id )
                     )
                 ),
                 read,
@@ -268,7 +278,7 @@ namespace ThriftSharp.Internals
             );
 
 
-            if ( field.IsRequired && ( fieldType.NullableType != null || fieldType.TypeInfo.IsClass ) )
+            if ( field.IsRequired && ( field.Type.NullableType != null || field.Type.TypeInfo.IsClass ) )
             {
                 var isDefaultExpr = Expression.Equal( Expression.Constant( null ), getter );
 
@@ -284,13 +294,13 @@ namespace ThriftSharp.Internals
 
                 return Expression.IfThenElse( isDefaultExpr, exceptionExpr, writingExpr );
             }
-            if ( field.DefaultValue != null || fieldType.NullableType != null || fieldType.TypeInfo.IsClass )
+            if ( field.DefaultValue != null || field.Type.NullableType != null || field.UnderlyingTypeInfo.IsClass )
             {
                 Expression defaultValueExpr;
                 // if it has a default value, use it
                 if ( field.DefaultValue != null )
                 {
-                    if ( fieldType.TypeInfo.IsClass )
+                    if ( field.UnderlyingTypeInfo.IsClass )
                     {
                         // if it's a class, it's OK
                         defaultValueExpr = Expression.Constant( field.DefaultValue );
@@ -300,9 +310,9 @@ namespace ThriftSharp.Internals
                         // otherwise we need to make the default value a Nullable.
                         defaultValueExpr =
                             Expression.New(
-                               fieldType.TypeInfo  // is a nullable of the right type
-                                        .DeclaredConstructors
-                                        .First(), // Nullable<T> only has one ctor
+                               field.UnderlyingTypeInfo  // is a nullable of the right type
+                                    .DeclaredConstructors
+                                    .First(), // Nullable<T> only has one ctor
                                Expression.Constant( field.DefaultValue )
                        );
                     }
