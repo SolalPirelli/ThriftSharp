@@ -364,7 +364,7 @@ namespace ThriftSharp.Internals
                 var setter = field.Setter;
                 if ( field.Converter != null )
                 {
-                    if ( field.WireType.NullableType == null )
+                    if ( Nullable.GetUnderlyingType( field.UnderlyingType ) == null )
                     {
                         setter = expr => field.Setter(
                             Expression.Call(
@@ -385,7 +385,7 @@ namespace ThriftSharp.Internals
                                     Types.None,
                                     Expression.Convert(
                                         expr,
-                                        field.WireType.NullableType.TypeInfo.AsType()
+                                        field.WireType.TypeInfo.AsType()
                                     )
                                 ),
                                 field.UnderlyingType

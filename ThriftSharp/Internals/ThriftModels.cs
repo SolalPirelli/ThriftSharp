@@ -22,6 +22,11 @@ namespace ThriftSharp.Internals
         public readonly string Name;
 
         /// <summary>
+        /// Gets the field's type.
+        /// </summary>
+        public readonly ThriftType WireType;
+
+        /// <summary>
         /// Gets a value indicating whether the field is required.
         /// </summary>
         public readonly bool IsRequired;
@@ -46,6 +51,7 @@ namespace ThriftSharp.Internals
         {
             Id = id;
             Name = name;
+            WireType = ThriftType.Get( backingProperty.PropertyType, converter );
             IsRequired = isRequired;
             DefaultValue = defaultValue;
             Converter = converter;
@@ -101,9 +107,9 @@ namespace ThriftSharp.Internals
         public readonly string Name;
 
         /// <summary>
-        /// Gets the clause's exception TypeInfo.
+        /// Gets the field's type.
         /// </summary>
-        public readonly TypeInfo TypeInfo;
+        public readonly ThriftType Type;
 
 
         /// <summary>
@@ -113,7 +119,7 @@ namespace ThriftSharp.Internals
         {
             Id = id;
             Name = name;
-            TypeInfo = typeInfo;
+            Type = ThriftType.Get( typeInfo.AsType(), null );
         }
     }
 
@@ -133,9 +139,14 @@ namespace ThriftSharp.Internals
         public readonly string Name;
 
         /// <summary>
+        /// Gets the field's type.
+        /// </summary>
+        public readonly ThriftType WireType;
+
+        /// <summary>
         /// Gets the parameter's underlying TypeInfo.
         /// </summary>
-        public readonly TypeInfo TypeInfo;
+        public readonly TypeInfo UnderlyingTypeInfo;
 
         /// <summary>
         /// Gets the parameter's converter, if any.
@@ -150,7 +161,8 @@ namespace ThriftSharp.Internals
         {
             Id = id;
             Name = name;
-            TypeInfo = typeInfo;
+            WireType = ThriftType.Get( typeInfo.AsType(), converter );
+            UnderlyingTypeInfo = typeInfo;
             Converter = converter;
         }
     }
@@ -161,9 +173,14 @@ namespace ThriftSharp.Internals
     internal sealed class ThriftReturnValue
     {
         /// <summary>
+        /// Gets the field's type.
+        /// </summary>
+        public readonly ThriftType WireType;
+
+        /// <summary>
         /// Gets the parameter's underlying TypeInfo.
         /// </summary>
-        public readonly TypeInfo TypeInfo;
+        public readonly TypeInfo UnderlyingTypeInfo;
 
         /// <summary>
         /// Gets the parameter's converter, if any.
@@ -176,7 +193,8 @@ namespace ThriftSharp.Internals
         /// </summary>
         public ThriftReturnValue( TypeInfo typeInfo, object converter )
         {
-            TypeInfo = typeInfo;
+            WireType = ThriftType.Get( typeInfo.AsType(), converter );
+            UnderlyingTypeInfo = typeInfo;
             Converter = converter;
         }
     }

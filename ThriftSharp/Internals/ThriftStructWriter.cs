@@ -288,7 +288,7 @@ namespace ThriftSharp.Internals
             Expression getter = field.Getter;
             if ( field.Converter != null )
             {
-                if ( field.WireType.NullableType == null )
+                if ( Nullable.GetUnderlyingType( field.UnderlyingType ) == null )
                 {
                     getter = Expression.Call(
                         Expression.Constant( field.Converter ),

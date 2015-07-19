@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Linq.Expressions;
-using System.Reflection;
-using ThriftSharp.Utilities;
 
 namespace ThriftSharp.Internals
 {
@@ -16,6 +14,8 @@ namespace ThriftSharp.Internals
 
         public readonly ThriftType WireType;
 
+        public readonly Type UnderlyingType;
+
         public readonly bool IsRequired;
 
         public readonly object DefaultValue;
@@ -26,44 +26,29 @@ namespace ThriftSharp.Internals
 
         public readonly Func<Expression, Expression> Setter;
 
-        public readonly Type UnderlyingType;
-
-        private ThriftWireField( short id, string name, Type type,
+        private ThriftWireField( short id, string name,
+                                 ThriftType wireType, Type underlyingType,
                                  bool isRequired, object defaultValue,
                                  object converter,
                                  Expression getter, Func<Expression, Expression> setter )
         {
-            Type wireType;
-            if ( converter == null )
-            {
-                wireType = type;
-            }
-            else
-            {
-                wireType = converter.GetType().GetTypeInfo().GetGenericInterface( typeof( IThriftValueConverter<,> ) ).GenericTypeArguments[0];
-                var nullableType = Nullable.GetUnderlyingType( type );
-                if ( nullableType != null )
-                {
-                    wireType = typeof( Nullable<> ).MakeGenericType( new[] { wireType } );
-                }
-            }
-
             Id = id;
             Name = name;
-            WireType = ThriftType.Get( wireType );
+            WireType = wireType;
+            UnderlyingType = underlyingType;
             IsRequired = isRequired;
             DefaultValue = defaultValue;
             Converter = converter;
             Getter = getter;
             Setter = setter;
-            UnderlyingType = type;
         }
 
 
         public static ThriftWireField Field( ThriftField field, Expression structVar )
         {
             var propExpr = Expression.Property( structVar, field.BackingProperty );
-            return new ThriftWireField( field.Id, field.Name, field.BackingProperty.PropertyType,
+            return new ThriftWireField( field.Id, field.Name,
+                                        field.WireType, field.BackingProperty.PropertyType,
                                         field.IsRequired, field.DefaultValue,
                                         field.Converter,
                                         propExpr, e => Expression.Assign( propExpr, e ) );
@@ -73,9 +58,10 @@ namespace ThriftSharp.Internals
         {
             var getterExpr = Expression.Convert(
                 Expression.ArrayAccess( parametersVar, Expression.Constant( index ) ),
-                param.TypeInfo.AsType()
+                param.UnderlyingTypeInfo.AsType()
             );
-            return new ThriftWireField( param.Id, param.Name, param.TypeInfo.AsType(),
+            return new ThriftWireField( param.Id, param.Name,
+                                        param.WireType, param.UnderlyingTypeInfo.AsType(),
                                         false, null,
                                         param.Converter,
                                         getterExpr, null );
@@ -83,7 +69,8 @@ namespace ThriftSharp.Internals
 
         public static ThriftWireField ThrowsClause( ThriftThrowsClause clause )
         {
-            return new ThriftWireField( clause.Id, clause.Name, clause.TypeInfo.AsType(),
+            return new ThriftWireField( clause.Id, clause.Name,
+                                        clause.Type, clause.Type.TypeInfo.AsType(),
                                         false, null,
                                         null,
                                         null, Expression.Throw );
@@ -95,7 +82,8 @@ namespace ThriftSharp.Internals
                 Expression.Assign( returnValueVar, e ),
                 Expression.Assign( hasReturnValueVar, Expression.Constant( true ) )
             );
-            return new ThriftWireField( 0, null, value.TypeInfo.AsType(),
+            return new ThriftWireField( 0, null,
+                                        value.WireType, value.UnderlyingTypeInfo.AsType(),
                                         false, null,
                                         value.Converter,
                                         returnValueVar, setter );

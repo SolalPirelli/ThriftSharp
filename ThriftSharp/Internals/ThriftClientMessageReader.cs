@@ -29,10 +29,10 @@ namespace ThriftSharp.Internals
             ParameterExpression hasReturnVariable = null;
             ParameterExpression returnVariable = null;
 
-            if ( method.ReturnValue.TypeInfo != TypeInfos.Void )
+            if ( method.ReturnValue.UnderlyingTypeInfo != TypeInfos.Void )
             {
                 hasReturnVariable = Expression.Variable( typeof( bool ) );
-                returnVariable = Expression.Variable( method.ReturnValue.TypeInfo.AsType() );
+                returnVariable = Expression.Variable( method.ReturnValue.UnderlyingTypeInfo.AsType() );
             }
 
             var wireFields = new List<ThriftWireField>();

@@ -106,10 +106,10 @@ namespace ThriftSharp.Internals
                                     .Select( a => new ThriftThrowsClause( a.Id, a.Name, a.ExceptionTypeInfo ) )
                                     .ToArray();
 
-            var wrongClause = clauses.FirstOrDefault( c => !c.TypeInfo.Extends( typeof( Exception ) ) );
+            var wrongClause = clauses.FirstOrDefault( c => !c.Type.TypeInfo.Extends( typeof( Exception ) ) );
             if ( wrongClause != null )
             {
-                throw ThriftParsingException.NotAnException( wrongClause.TypeInfo, methodInfo );
+                throw ThriftParsingException.NotAnException( wrongClause.Type.TypeInfo, methodInfo );
             }
 
             return clauses;

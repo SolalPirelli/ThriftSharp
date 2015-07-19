@@ -96,7 +96,7 @@ namespace ThriftSharp.Internals
             var underlyingNullableType = Nullable.GetUnderlyingType( type );
             if ( underlyingNullableType != null )
             {
-                NullableType = ThriftType.Get( underlyingNullableType );
+                NullableType = ThriftType.Get( underlyingNullableType, null );
                 Id = NullableType.Id;
                 return;
             }
@@ -170,10 +170,21 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Gets the Thrift type associated with the specified type.
+        /// Gets the Thrift type associated with the specified type and converter.
         /// </summary>
-        public static ThriftType Get( Type type )
+        public static ThriftType Get( Type type, object converter )
         {
+            if ( converter != null )
+            {
+                type = converter.GetType().GetTypeInfo().GetGenericInterface( typeof( IThriftValueConverter<,> ) ).GenericTypeArguments[0];
+                var nullableType = Nullable.GetUnderlyingType( type );
+                if ( nullableType != null )
+                {
+                    type = typeof( Nullable<> ).MakeGenericType( new[] { type } );
+                }
+            }
+
+
             if ( !_knownTypes.ContainsKey( type ) )
             {
                 var thriftType = new ThriftType( type );
@@ -185,19 +196,19 @@ namespace ThriftSharp.Internals
                 switch ( thriftType.Id )
                 {
                     case ThriftTypeId.Map:
-                        thriftType.KeyType = ThriftType.Get( thriftType.MapTypeInfo.GenericTypeArguments[0] );
-                        thriftType.ValueType = ThriftType.Get( thriftType.MapTypeInfo.GenericTypeArguments[1] );
+                        thriftType.KeyType = ThriftType.Get( thriftType.MapTypeInfo.GenericTypeArguments[0], null );
+                        thriftType.ValueType = ThriftType.Get( thriftType.MapTypeInfo.GenericTypeArguments[1], null );
                         break;
 
                     case ThriftTypeId.List:
                     case ThriftTypeId.Set:
                         if ( thriftType.TypeInfo.IsArray )
                         {
-                            thriftType.ElementType = ThriftType.Get( thriftType.TypeInfo.GetElementType() );
+                            thriftType.ElementType = ThriftType.Get( thriftType.TypeInfo.GetElementType(), null );
                         }
                         else
                         {
-                            thriftType.ElementType = ThriftType.Get( thriftType.CollectionTypeInfo.GenericTypeArguments[0] );
+                            thriftType.ElementType = ThriftType.Get( thriftType.CollectionTypeInfo.GenericTypeArguments[0], null );
                         }
                         break;
 
