@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ThriftSharp.Utilities;
 
@@ -13,7 +14,6 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal sealed class ThriftType
     {
-        // Maps .NET types to Thrift type IDs for the Thrift primitive types
         private static readonly Dictionary<Type, ThriftTypeId> PrimitiveIds = new Dictionary<Type, ThriftTypeId>
         {
             { typeof( bool ), ThriftTypeId.Boolean },
@@ -24,6 +24,14 @@ namespace ThriftSharp.Internals
             { typeof( long ), ThriftTypeId.Int64 },
             { typeof( string ), ThriftTypeId.Binary },
             { typeof( sbyte[] ), ThriftTypeId.Binary }
+        };
+
+        private static readonly Dictionary<Type, Type> CollectionImplementations = new Dictionary<Type, Type>
+        {
+            { typeof( ISet<> ), typeof( HashSet<> ) },
+            { typeof( ICollection<> ), typeof( List<> ) },
+            { typeof( IList<> ), typeof( List<> ) },
+            { typeof( IDictionary<,> ), typeof( Dictionary<,> ) }
         };
 
         // Known .NET types to Thrift types mappings
@@ -37,17 +45,17 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the type's ID.
         /// </summary>
-        public readonly ThriftTypeId Id;
+        public ThriftTypeId Id { get; private set; }
 
         /// <summary>
         /// Gets the TypeInfo of the underlying type.
         /// </summary>
-        public readonly TypeInfo TypeInfo;
+        public TypeInfo TypeInfo { get; private set; }
 
         /// <summary>
         /// Gets the underlying type, if the type is a nullable type.
         /// </summary>
-        public readonly ThriftType NullableType;
+        public ThriftType NullableType { get; private set; }
 
         /// <summary>
         /// Gets the type of the collection elements, if the type is a collection.
@@ -120,12 +128,14 @@ namespace ThriftSharp.Internals
             var mapInterface = TypeInfo.GetGenericInterface( typeof( IDictionary<,> ) );
             if ( mapInterface != null )
             {
-                if ( !KnownCollections.CanBeMapped( TypeInfo ) )
+                var instantiableVersion = GetInstantiableVersion( TypeInfo );
+                if ( instantiableVersion == null )
                 {
                     throw ThriftParsingException.UnsupportedMap( TypeInfo );
                 }
 
                 Id = ThriftTypeId.Map;
+                TypeInfo = instantiableVersion;
                 _collectionTypeInfo = mapInterface.GetTypeInfo();
                 return;
             }
@@ -133,12 +143,14 @@ namespace ThriftSharp.Internals
             var setInterface = TypeInfo.GetGenericInterface( typeof( ISet<> ) );
             if ( setInterface != null )
             {
-                if ( !KnownCollections.CanBeMapped( TypeInfo ) )
+                var instantiableVersion = GetInstantiableVersion( TypeInfo );
+                if ( instantiableVersion == null )
                 {
                     throw ThriftParsingException.UnsupportedSet( TypeInfo );
                 }
 
                 Id = ThriftTypeId.Set;
+                TypeInfo = instantiableVersion;
                 _collectionTypeInfo = setInterface.GetTypeInfo();
                 return;
             }
@@ -146,12 +158,14 @@ namespace ThriftSharp.Internals
             var collectionInterface = TypeInfo.GetGenericInterface( typeof( ICollection<> ) );
             if ( collectionInterface != null )
             {
-                if ( !KnownCollections.CanBeMapped( TypeInfo ) )
+                var instantiableVersion = GetInstantiableVersion( TypeInfo );
+                if ( instantiableVersion == null )
                 {
                     throw ThriftParsingException.UnsupportedList( TypeInfo );
                 }
 
                 Id = ThriftTypeId.List;
+                TypeInfo = instantiableVersion;
                 _collectionTypeInfo = collectionInterface.GetTypeInfo();
                 return;
             }
@@ -160,7 +174,7 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Gets the Thrift type associated with the specified type and converter.
+        /// Gets the Thrift wire type associated with the specified type and converter.
         /// </summary>
         public static ThriftType Get( Type type, object converter )
         {
@@ -209,6 +223,25 @@ namespace ThriftSharp.Internals
             }
 
             return _knownTypes[type];
+        }
+
+        /// <summary>
+        /// Maps the specified TypeInfo to a TypeInfo that can be instantiated with a parameterless constructor, or returns null if that is not possible.
+        /// </summary>
+        private static TypeInfo GetInstantiableVersion( TypeInfo typeInfo )
+        {
+            if ( typeInfo.IsArray || ( !typeInfo.IsAbstract && !typeInfo.IsInterface && typeInfo.DeclaredConstructors.Any( c => c.GetParameters().Length == 0 ) ) )
+            {
+                return typeInfo;
+            }
+            else if ( typeInfo.IsGenericType && CollectionImplementations.ContainsKey( typeInfo.GetGenericTypeDefinition() ) )
+            {
+                return CollectionImplementations[typeInfo.GetGenericTypeDefinition()].MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo();
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

@@ -49,7 +49,6 @@
     <Compile Include="ThriftCommunication.cs" />
     <Compile Include="ThriftDateConverters.cs" />
     <Compile Include="ThriftValueConverter.cs" />
-    <Compile Include="Utilities\KnownCollections.cs" />
     <Compile Include="Utilities\IFluent.cs" />
     <Compile Include="Internals\ThriftHeaders.cs" />
     <Compile Include="Internals\ThriftMessageType.cs" />

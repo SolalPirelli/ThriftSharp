@@ -43,7 +43,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static Expression CreateReaderForMap( ParameterExpression protocolParam, ThriftType thriftType )
         {
-            var mapType = KnownCollections.GetInstantiableVersion( thriftType.TypeInfo ).AsType();
+            var mapType = thriftType.TypeInfo.AsType();
             var mapVar = Expression.Variable( mapType );
             var headerVar = Expression.Variable( typeof( ThriftMapHeader ) );
             var countVar = Expression.Variable( typeof( int ) );
@@ -89,7 +89,7 @@ namespace ThriftSharp.Internals
                         Expression.Block(
                             Expression.Call(
                                 mapVar,
-                                "Add", // TODO make knowncollections prettier
+                                "Add",
                                 Types.None,
                                 CreateReaderForType( protocolParam, thriftType.KeyType ),
                                 CreateReaderForType( protocolParam, thriftType.ValueType )
@@ -180,7 +180,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static Expression CreateReaderForListOrSet( ParameterExpression protocolParam, ThriftType thriftType )
         {
-            var collectionType = KnownCollections.GetInstantiableVersion( thriftType.TypeInfo ).AsType();
+            var collectionType = thriftType.TypeInfo.AsType();
             var collectionVar = Expression.Variable( collectionType );
             var headerVar = Expression.Variable( typeof( ThriftCollectionHeader ) );
             var countVar = Expression.Variable( typeof( int ) );
@@ -224,7 +224,7 @@ namespace ThriftSharp.Internals
                         Expression.Block(
                             Expression.Call(
                                 collectionVar,
-                                "Add", // TODO make knowncollections prettier
+                                "Add",
                                 Types.None,
                                 CreateReaderForType( protocolParam, thriftType.ElementType )
                             ),
