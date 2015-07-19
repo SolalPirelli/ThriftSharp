@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -38,8 +37,6 @@ namespace ThriftSharp.Utilities
     internal static class Methods
     {
         public static readonly MethodInfo
-            IEnumerator_MoveNext = typeof( IEnumerator ).GetTypeInfo().GetDeclaredMethod( "MoveNext" ),
-
             IDisposable_Dispose = typeof( IDisposable ).GetTypeInfo().GetDeclaredMethod( "Dispose" ),
 
             Enum_IsDefined = typeof( Enum ).GetTypeInfo().GetDeclaredMethod( "IsDefined" ),

@@ -24,11 +24,9 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static Expression CreateWriterForMap( ParameterExpression protocolParam, ThriftType thriftType, Expression value )
         {
-            var enumerableTypeInfo = thriftType.MapTypeInfo
-                                                  .GetGenericInterface( typeof( IEnumerable<> ) )
-                                                  .GetTypeInfo();
-            var getEnumeratorMethod = enumerableTypeInfo.GetDeclaredMethod( "GetEnumerator" );
-
+            // This code does not use IEnumerable.GetEnumerator, in order to use the "better" enumerator on collections
+            // that implement their own, e.g. List<T> has a struct-returning GetEnumerator(), and a ref-returning IEnumerable<T>.GetEnumerator() 
+            var getEnumeratorMethod = thriftType.TypeInfo.AsType().GetRuntimeMethod( "GetEnumerator", Types.None );
 
             var endOfLoop = Expression.Label();
             var enumeratorVar = Expression.Variable( getEnumeratorMethod.ReturnType );
@@ -55,7 +53,7 @@ namespace ThriftSharp.Internals
                 Expression.Loop(
                     Expression.IfThenElse(
                         Expression.IsTrue(
-                            Expression.Call( enumeratorVar, Methods.IEnumerator_MoveNext )
+                            Expression.Call( enumeratorVar, "MoveNext", Types.None )
                         ),
                         Expression.Block(
                             CreateWriterForType(
@@ -83,14 +81,12 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Creates an expression writing the specified collection type.
+        /// Creates an expression writing the specified list or set type.
         /// </summary>
-        private static Expression CreateWriterForCollection( ParameterExpression protocolParam, ThriftType thriftType, Expression value )
+        private static Expression CreateWriterForListOrSet( ParameterExpression protocolParam, ThriftType thriftType, Expression value )
         {
-            var enumerableTypeInfo = thriftType.CollectionTypeInfo
-                                               .GetGenericInterface( typeof( IEnumerable<> ) )
-                                               .GetTypeInfo();
-            var getEnumeratorMethod = enumerableTypeInfo.GetDeclaredMethod( "GetEnumerator" );
+            // same remark as in CreateWriterForMap
+            var getEnumeratorMethod = thriftType.TypeInfo.AsType().GetRuntimeMethod( "GetEnumerator", Types.None );
 
             var enumeratorVar = Expression.Variable( getEnumeratorMethod.ReturnType );
 
@@ -104,7 +100,7 @@ namespace ThriftSharp.Internals
                     thriftType.Id == ThriftTypeId.List ? Methods.IThriftProtocol_WriteListHeader : Methods.IThriftProtocol_WriteSetHeader,
                     Expression.New(
                         Constructors.ThriftCollectionHeader,
-                          Expression.Property( value, thriftType.CollectionTypeInfo.IsArray ? "Length" : "Count" ),
+                          Expression.Property( value, "Count" ),
                           Expression.Constant( thriftType.ElementType.Id )
                     )
                 ),
@@ -117,7 +113,7 @@ namespace ThriftSharp.Internals
                 Expression.Loop(
                     Expression.IfThenElse(
                         Expression.IsTrue(
-                            Expression.Call( enumeratorVar, Methods.IEnumerator_MoveNext )
+                            Expression.Call( enumeratorVar, "MoveNext", Types.None )
                         ),
                         CreateWriterForType(
                             protocolParam, thriftType.ElementType,
@@ -131,6 +127,58 @@ namespace ThriftSharp.Internals
                 Expression.Call(
                     protocolParam,
                     thriftType.Id == ThriftTypeId.List ? Methods.IThriftProtocol_WriteListEnd : Methods.IThriftProtocol_WriteSetEnd
+                )
+           );
+        }
+
+        /// <summary>
+        /// Creates an expression writing the specified array type.
+        /// </summary>
+        private static Expression CreateWriterForArray( ParameterExpression protocolParam, ThriftType thriftType, Expression value )
+        {
+            var counterVar = Expression.Variable( typeof( int ) );
+
+            var endOfLoop = Expression.Label();
+
+            return Expression.Block(
+                new[] { counterVar },
+
+                Expression.Call(
+                    protocolParam,
+                    Methods.IThriftProtocol_WriteListHeader,
+                    Expression.New(
+                        Constructors.ThriftCollectionHeader,
+                          Expression.Property( value, "Length" ),
+                          Expression.Constant( thriftType.ElementType.Id )
+                    )
+                ),
+
+                Expression.Assign(
+                    counterVar,
+                    Expression.Constant( 0 )
+                ),
+
+                Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.LessThan(
+                            counterVar,
+                            Expression.Property( value, "Length" )
+                        ),
+                        Expression.Block(
+                            CreateWriterForType(
+                                protocolParam, thriftType.ElementType,
+                                Expression.ArrayAccess( value, counterVar )
+                            ),
+                            Expression.PostIncrementAssign( counterVar )
+                        ),
+                        Expression.Break( endOfLoop )
+                    ),
+                    endOfLoop
+                ),
+
+                Expression.Call(
+                    protocolParam,
+                    Methods.IThriftProtocol_WriteListEnd
                 )
            );
         }
@@ -189,7 +237,11 @@ namespace ThriftSharp.Internals
 
                 case ThriftTypeId.Set:
                 case ThriftTypeId.List:
-                    return CreateWriterForCollection( protocolParam, thriftType, value );
+                    if ( thriftType.CollectionTypeInfo.IsArray )
+                    {
+                        return CreateWriterForArray( protocolParam, thriftType, value );
+                    }
+                    return CreateWriterForListOrSet( protocolParam, thriftType, value );
 
                 default:
                     throw new InvalidOperationException( "Cannot create a writer for the type " + thriftType.Id );
