@@ -52,6 +52,14 @@ namespace ThriftSharp
                                                typeInfo.FullName );
         }
 
+        internal static ThriftParsingException RequiredNullableField( PropertyInfo propertyInfo )
+        {
+            return new ThriftParsingException( "The Thrift field '{0}' is required, but its type is nullable."
+                                             + Environment.NewLine
+                                             + "This is not supported. Please use non-nullable types for required value fields.",
+                                               propertyInfo.Name );
+        }
+
         internal static ThriftParsingException OptionalValueField( PropertyInfo propertyInfo )
         {
             return new ThriftParsingException( "The Thrift field '{0}' is optional, but its type is a value type."

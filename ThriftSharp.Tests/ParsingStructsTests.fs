@@ -184,6 +184,8 @@ type ``Special structs``() =
 
 [<TestClass>]
 type ``Wrong primitive fields``() =
+    [<Test>] member __.``Required nullable field``() = fails typeof<System.Nullable<int32>> true
+
     [<Test>] member __.``Unsigned byte field``() =  fails typeof<byte> true
     [<Test>] member __.``Unsigned int16 field``() = fails typeof<uint16> true
     [<Test>] member __.``Unsigned int32 field``() = fails typeof<uint32> true

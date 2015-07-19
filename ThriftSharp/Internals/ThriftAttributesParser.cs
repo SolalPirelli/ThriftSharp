@@ -31,9 +31,13 @@ namespace ThriftSharp.Internals
             }
 
             var propertyTypeInfo = propertyInfo.PropertyType.GetTypeInfo();
-            if ( propertyTypeInfo.IsValueType && !attr.IsRequired && Nullable.GetUnderlyingType( propertyInfo.PropertyType ) == null )
+            if ( !attr.IsRequired && propertyTypeInfo.IsValueType && Nullable.GetUnderlyingType( propertyInfo.PropertyType ) == null )
             {
                 throw ThriftParsingException.OptionalValueField( propertyInfo );
+            }
+            if ( attr.IsRequired && Nullable.GetUnderlyingType( propertyInfo.PropertyType ) != null )
+            {
+                throw ThriftParsingException.RequiredNullableField( propertyInfo );
             }
 
             var defaultValueAttr = propertyInfo.GetCustomAttribute<ThriftDefaultValueAttribute>();
