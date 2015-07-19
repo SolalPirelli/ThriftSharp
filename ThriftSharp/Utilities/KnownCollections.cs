@@ -13,7 +13,7 @@ namespace ThriftSharp.Utilities
     /// </summary>
     internal static class KnownCollections
     {
-        private static readonly Dictionary<Type, Type> Implementations = new Dictionary<Type, Type>
+        private static readonly Dictionary<Type, Type> _implementations = new Dictionary<Type, Type>
         {
             { typeof( ISet<> ), typeof( HashSet<> ) },
             { typeof( ICollection<> ), typeof( List<> ) },
@@ -28,7 +28,7 @@ namespace ThriftSharp.Utilities
         public static bool CanBeMapped( TypeInfo typeInfo )
         {
             return typeInfo.IsArray
-                || ( typeInfo.IsGenericType && Implementations.ContainsKey( typeInfo.GetGenericTypeDefinition() ) )
+                || ( typeInfo.IsGenericType && _implementations.ContainsKey( typeInfo.GetGenericTypeDefinition() ) )
                 || ( !typeInfo.IsAbstract && !typeInfo.IsInterface && typeInfo.DeclaredConstructors.Any( c => c.GetParameters().Length == 0 ) );
         }
 
@@ -42,7 +42,7 @@ namespace ThriftSharp.Utilities
         {
             if ( typeInfo.IsInterface )
             {
-                return Implementations[typeInfo.GetGenericTypeDefinition()].MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo();
+                return _implementations[typeInfo.GetGenericTypeDefinition()].MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo();
             }
             return typeInfo;
         }

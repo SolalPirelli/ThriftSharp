@@ -43,9 +43,19 @@ namespace ThriftSharp.Internals
             // The attributes parser guarantees that there are 0 or 1 tokens per method
             var token = args.OfType<CancellationToken>().FirstOrDefault();
             var protocol = communication.CreateProtocol( token );
+            var method = service.Methods[methodName];
             var methodArgs = args.Where( a => !( a is CancellationToken ) ).ToArray();
 
-            return await SendMessageAsync<T>( protocol, service.Methods[methodName], methodArgs ).ConfigureAwait( false );
+            // An exception would be thrown when writing anyway, but this provides a much better message.
+            for ( int n = 0; n < methodArgs.Length; n++ )
+            {
+                if ( methodArgs[n] == null )
+                {
+                    throw ThriftSerializationException.NullParameter( method.Parameters[n].Name );
+                }
+            }
+
+            return await SendMessageAsync<T>( protocol, method, methodArgs ).ConfigureAwait( false );
         }
     }
 }

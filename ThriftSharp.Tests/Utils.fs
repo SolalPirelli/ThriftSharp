@@ -57,8 +57,8 @@ let rec private eq (act: obj) (exp: obj) = // can safely assume act and exp are 
         act = exp
     // HACK
     elif act.GetType().Assembly.FullName.Contains("ThriftSharp") then
-        act.GetType().GetProperties()
-     |> Seq.filter (fun p -> p.DeclaringType = act.GetType())
+        act.GetType().GetRuntimeProperties()
+     |> Seq.filter (fun p -> p.Name = "Message" || p.DeclaringType = act.GetType())
      |> Seq.forall (fun p -> eq (p.GetValue(act)) (p.GetValue(exp)))
     else
         Object.Equals(exp, act)
@@ -82,7 +82,7 @@ let throws<'T when 'T :> exn> func =
         Assert.Fail("Expected an exception, but none was thrown.")
     !exn
 
-let throwsAsync<'T when 'T :> exn> func = 
+let throwsAsync<'T when 'T :> exn> (func: Async<obj>) = 
     Async.FromContinuations(fun (cont, econt, _) ->
         Async.StartWithContinuations(
             func,

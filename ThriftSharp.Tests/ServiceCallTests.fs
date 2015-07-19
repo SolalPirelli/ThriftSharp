@@ -78,12 +78,12 @@ type Tests() =
     }
 
     member x.TestException(func: (IService -> Async<_>), writtenData: ThriftProtocolValue list, 
-                           toRead: ThriftProtocolValue list, expected: 'e) = run <| async {
+                           toRead: ThriftProtocolValue list, expected: 'e -> unit) = run <| async {
         let prot = MemoryProtocol(toRead)
         let svc = x.GetService(prot)
         let! exn = throwsAsync<'e> (async { let! res = func(svc) in return box res })
         prot.WrittenValues <=> writtenData
-        exn <=> expected
+        expected exn
     }
 
     [<Test>]
@@ -129,7 +129,7 @@ type Tests() =
              StructEnd
              MessageEnd]
             ---
-            ThriftProtocolException(ThriftProtocolExceptionType.InternalError, Message = "Error")
+            fun e -> e <=> ThriftProtocolException(ThriftProtocolExceptionType.InternalError, Message = "Error")
         )
 
     [<Test>]
@@ -339,7 +339,7 @@ type Tests() =
              StructEnd
              MessageEnd]
             ---
-            MyException(Text = "Error")
+            fun e -> e <=> MyException(Text = "Error")
         )
 
     [<Test>]
@@ -356,6 +356,18 @@ type Tests() =
             []
             ---
             ()
+        )
+
+    [<Test>]
+    member x.``Null parameter``() =
+        x.TestException (
+            fun s -> x.GetService(MemoryProtocol()).Complex(null, 0.0, [| |]) |> Async.AwaitTask
+            -
+            []
+            --
+            []
+            ---
+            fun e -> e <=> ThriftSerializationException.NullParameter( "arg1" )
         )
 
 

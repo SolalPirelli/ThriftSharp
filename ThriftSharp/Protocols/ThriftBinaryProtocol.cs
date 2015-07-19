@@ -209,17 +209,14 @@ namespace ThriftSharp.Protocols
         public long ReadInt64()
         {
             _transport.ReadBytes( _buffer8 );
-            unchecked
-            {
-                return ( (long) _buffer8[0] << 56 ) |
-                       ( (long) _buffer8[1] << 48 ) |
-                       ( (long) _buffer8[2] << 40 ) |
-                       ( (long) _buffer8[3] << 32 ) |
-                       ( (long) _buffer8[4] << 24 ) |
-                       ( (long) _buffer8[5] << 16 ) |
-                       ( (long) _buffer8[6] << 8 ) |
-                       ( (long) _buffer8[7] );
-            }
+            return ( (long) _buffer8[0] << 56 ) |
+                   ( (long) _buffer8[1] << 48 ) |
+                   ( (long) _buffer8[2] << 40 ) |
+                   ( (long) _buffer8[3] << 32 ) |
+                   ( (long) _buffer8[4] << 24 ) |
+                   ( (long) _buffer8[5] << 16 ) |
+                   ( (long) _buffer8[6] << 8 ) |
+                   ( (long) _buffer8[7] );
         }
 
         /// <summary>

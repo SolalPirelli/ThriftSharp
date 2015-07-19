@@ -252,6 +252,16 @@ namespace ThriftSharp
         }
 
         /// <summary>
+        /// Creates a ThriftSerializationException indicating a parameter was null during a method call.
+        /// </summary>
+        /// <param name="parameterName"></param>
+        /// <returns></returns>
+        internal static ThriftSerializationException NullParameter( string parameterName )
+        {
+            return new ThriftSerializationException( "Parameter '{0}' was null.", parameterName );
+        }
+
+        /// <summary>
         /// Creates a ThriftSerializationException indicating a required field was not present during deserialization.
         /// </summary>
         internal static ThriftSerializationException MissingRequiredField( string fieldName )
