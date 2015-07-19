@@ -15,13 +15,13 @@ namespace ThriftSharp.Benchmarking
     /* Benchmarks results on an i7-4710HQ in Release mode without debugging:
      * (100 warmup iterations, 100,000 iterations)
      * 
-     * ThriftSharp v2.4.0.0
+     * ThriftSharp v2.4.0
      * Read, simple   00:00:00.0000005
      * Read, complex  00:00:00.0000014
      * Write, simple  00:00:00.0000005
      * Write, complex 00:00:00.0000014
      * 
-     * Thrift v0.9.1.3
+     * Thrift v0.9.2
      * Read, simple   00:00:00.0000024
      * Read, complex  00:00:00.0000032
      * Write, simple  00:00:00.0000004
@@ -50,12 +50,12 @@ namespace ThriftSharp.Benchmarking
                 { "Write, complex", () => MeasureThriftWriteTime( (GeneratedPerson) ComplexPerson ) }
             };
 
-            Console.WriteLine( "ThriftSharp v{0}", typeof( ThriftCommunication ).Assembly.GetName().Version );
+            Console.WriteLine( "ThriftSharp v{0}", typeof( ThriftCommunication ).Assembly.GetName().Version.ToString( 3 ) );
             Measure( thriftSharpActions );
 
             Console.WriteLine();
 
-            Console.WriteLine( "Thrift v{0}", typeof( TTransport ).Assembly.GetName().Version );
+            Console.WriteLine( "Thrift v{0}", typeof( TTransport ).Assembly.GetName().Version.ToString( 3 ) );
             Measure( thriftActions );
 
             Console.Read();
