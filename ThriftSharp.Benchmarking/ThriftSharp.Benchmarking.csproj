@@ -46,11 +46,43 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GeneratedHobby.cs" />
-    <Compile Include="GeneratedPerson.cs" />
-    <Compile Include="Hobby.cs" />
-    <Compile Include="Person.cs" />
+    <Compile Include="Benchmarker.cs" />
+    <Compile Include="BenchmarkResult.cs" />
     <Compile Include="LoopTransport.cs" />
+    <Compile Include="Models\AllTypesContainer.cs" />
+    <Compile Include="Models\BinaryContainer.cs" />
+    <Compile Include="Models\EmptyStruct.cs" />
+    <Compile Include="Models\ListContainer.cs" />
+    <Compile Include="Models\Person.cs" />
+    <Compile Include="Models\PersonAvailability.cs" />
+    <Compile Include="Models\SetContainer.cs" />
+    <Compile Include="Models\MapContainer.cs" />
+    <Compile Include="Models\StructContainer.cs" />
+    <Compile Include="Models\StringContainer.cs" />
+    <Compile Include="Models\Int64Container.cs" />
+    <Compile Include="Models\Int32Container.cs" />
+    <Compile Include="Models\Int16Container.cs" />
+    <Compile Include="Models\DoubleContainer.cs" />
+    <Compile Include="Models\ByteContainer.cs" />
+    <Compile Include="Models\BoolContainer.cs" />
+    <Compile Include="Models\Thrift\AllTypesContainer.cs" />
+    <Compile Include="Models\Thrift\BinaryContainer.cs" />
+    <Compile Include="Models\Thrift\BoolContainer.cs" />
+    <Compile Include="Models\Thrift\ByteContainer.cs" />
+    <Compile Include="Models\Thrift\DoubleContainer.cs" />
+    <Compile Include="Models\Thrift\EmptyStruct.cs" />
+    <Compile Include="Models\Thrift\Int16Container.cs" />
+    <Compile Include="Models\Thrift\Int32Container.cs" />
+    <Compile Include="Models\Thrift\Int64Container.cs" />
+    <Compile Include="Models\Thrift\ListContainer.cs" />
+    <Compile Include="Models\Thrift\MapContainer.cs" />
+    <Compile Include="Models\Thrift\Person.cs" />
+    <Compile Include="Models\Thrift\PersonAvailability.cs" />
+    <Compile Include="Models\Thrift\SetContainer.cs" />
+    <Compile Include="Models\Thrift\StringContainer.cs" />
+    <Compile Include="Models\Thrift\StructContainer.cs" />
+    <Compile Include="Models\Thrift\TimePeriod.cs" />
+    <Compile Include="Models\TimePeriod.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -62,6 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="schema.thrift" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
