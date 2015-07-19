@@ -26,11 +26,11 @@ namespace ThriftSharp.Internals
             { typeof( sbyte[] ), ThriftTypeId.Binary }
         };
 
+        // Implementations must have the same generic arity as their interfaces
         private static readonly Dictionary<Type, Type> CollectionImplementations = new Dictionary<Type, Type>
         {
             { typeof( ISet<> ), typeof( HashSet<> ) },
             { typeof( ICollection<> ), typeof( List<> ) },
-            { typeof( IList<> ), typeof( List<> ) },
             { typeof( IDictionary<,> ), typeof( Dictionary<,> ) }
         };
 
@@ -136,7 +136,7 @@ namespace ThriftSharp.Internals
 
                 Id = ThriftTypeId.Map;
                 TypeInfo = instantiableVersion;
-                _collectionTypeInfo = mapInterface.GetTypeInfo();
+                _collectionTypeInfo = mapInterface;
                 return;
             }
 
@@ -151,7 +151,7 @@ namespace ThriftSharp.Internals
 
                 Id = ThriftTypeId.Set;
                 TypeInfo = instantiableVersion;
-                _collectionTypeInfo = setInterface.GetTypeInfo();
+                _collectionTypeInfo = setInterface;
                 return;
             }
 
@@ -166,7 +166,7 @@ namespace ThriftSharp.Internals
 
                 Id = ThriftTypeId.List;
                 TypeInfo = instantiableVersion;
-                _collectionTypeInfo = collectionInterface.GetTypeInfo();
+                _collectionTypeInfo = collectionInterface;
                 return;
             }
 
@@ -230,18 +230,41 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static TypeInfo GetInstantiableVersion( TypeInfo typeInfo )
         {
-            if ( typeInfo.IsArray || ( !typeInfo.IsAbstract && !typeInfo.IsInterface && typeInfo.DeclaredConstructors.Any( c => c.GetParameters().Length == 0 ) ) )
+            if ( typeInfo.IsArray )
             {
                 return typeInfo;
             }
-            else if ( typeInfo.IsGenericType && CollectionImplementations.ContainsKey( typeInfo.GetGenericTypeDefinition() ) )
+
+            if ( typeInfo.IsInterface )
             {
-                return CollectionImplementations[typeInfo.GetGenericTypeDefinition()].MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo();
+                if ( typeInfo.GenericTypeArguments.Length > 0 )
+                {
+                    var unbound = typeInfo.GetGenericTypeDefinition();
+                    if ( CollectionImplementations.ContainsKey( unbound ) )
+                    {
+                        return CollectionImplementations[unbound].MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo();
+                    }
+                }
+
+                foreach ( var iface in typeInfo.ImplementedInterfaces.Where( i => i.GenericTypeArguments.Length > 0 ) )
+                {
+                    var unboundIface = iface.GetGenericTypeDefinition();
+                    if ( CollectionImplementations.ContainsKey( unboundIface ) )
+                    {
+                        return CollectionImplementations[unboundIface].GetTypeInfo();
+                    }
+                }
             }
-            else
+
+            if ( !typeInfo.IsAbstract && typeInfo.DeclaredConstructors.Any( c => c.GetParameters().Length == 0 ) )
             {
-                return null;
+                if ( typeInfo.ImplementedInterfaces.Where( i => i.GenericTypeArguments.Length > 0 ).Select( i => i.GetGenericTypeDefinition() ).Any( CollectionImplementations.ContainsKey ) )
+                {
+                    return typeInfo;
+                }
             }
+
+            return null;
         }
     }
 }

@@ -16,13 +16,14 @@ namespace ThriftSharp.Utilities
         /// <summary>
         /// Gets the specified generic interface definition on the TypeInfo, or null if it doesn't implement it.
         /// </summary>
-        public static Type GetGenericInterface( this TypeInfo typeInfo, Type interfaceType )
+        public static TypeInfo GetGenericInterface( this TypeInfo typeInfo, Type interfaceType )
         {
             if ( typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == interfaceType )
             {
-                return typeInfo.AsType();
+                return typeInfo;
             }
-            return typeInfo.ImplementedInterfaces.FirstOrDefault( i => i.GenericTypeArguments.Length > 0 && i.GetGenericTypeDefinition() == interfaceType );
+            var type = typeInfo.ImplementedInterfaces.FirstOrDefault( i => i.GenericTypeArguments.Length > 0 && i.GetGenericTypeDefinition() == interfaceType );
+            return type == null ? null : type.GetTypeInfo();
         }
 
         /// <summary>
