@@ -316,9 +316,9 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Creates a compiled reader for the specified struct.
+        /// Creates a reader for the specified struct.
         /// </summary>
-        private static Func<IThriftProtocol, object> CreateCompiledReaderForStruct( ThriftStruct thriftStruct )
+        private static Expression<Func<IThriftProtocol, object>> CreateReaderForStruct( ThriftStruct thriftStruct )
         {
             var protocolParam = Expression.Parameter( typeof( IThriftProtocol ) );
 
@@ -357,7 +357,7 @@ namespace ThriftSharp.Internals
                 structVar
             );
 
-            return Expression.Lambda<Func<IThriftProtocol, object>>( body, protocolParam ).Compile();
+            return Expression.Lambda<Func<IThriftProtocol, object>>( body, protocolParam );
         }
 
 
@@ -628,7 +628,7 @@ namespace ThriftSharp.Internals
         {
             if ( !_knownReaders.ContainsKey( thriftStruct ) )
             {
-                _knownReaders.Add( thriftStruct, CreateCompiledReaderForStruct( thriftStruct ) );
+                _knownReaders.Add( thriftStruct, CreateReaderForStruct( thriftStruct ).Compile() );
             }
 
             return _knownReaders[thriftStruct]( protocol );

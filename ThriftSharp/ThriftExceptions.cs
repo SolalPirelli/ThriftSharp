@@ -123,7 +123,7 @@ namespace ThriftSharp
         }
 
         /// <summary>
-        /// Creates an exception indicating a parameter lacked the appropriate attribute.
+        /// Creates an exception indicating a parameter lacks the appropriate attribute.
         /// </summary>
         internal static ThriftParsingException ParameterWithoutAttribute( ParameterInfo info )
         {
@@ -153,7 +153,7 @@ namespace ThriftSharp
         }
 
         /// <summary>
-        /// Creates an exception indicating a service type lacked the appropriate attribute.
+        /// Creates an exception indicating a service type lacks the appropriate attribute.
         /// </summary>
         internal static ThriftParsingException ServiceWithoutAttribute( TypeInfo typeInfo )
         {
@@ -164,7 +164,7 @@ namespace ThriftSharp
         }
 
         /// <summary>
-        /// Creates an exception indicating a service lacked methods.
+        /// Creates an exception indicating a service lacks methods.
         /// </summary>
         internal static ThriftParsingException NoMethods( TypeInfo typeInfo )
         {
@@ -175,7 +175,7 @@ namespace ThriftSharp
         }
 
         /// <summary>
-        /// Creates an exception indicating a method lacked the appropriate attribute.
+        /// Creates an exception indicating a method lacks the appropriate attribute.
         /// </summary>
         internal static ThriftParsingException MethodWithoutAttribute( MethodInfo methodInfo )
         {
@@ -184,6 +184,17 @@ namespace ThriftSharp
                                              + "All methods in a Thrift service definition must be part of the Thrift interface."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftMethodAttribute attribute.",
+                                               methodInfo.Name );
+        }
+
+        /// <summary>
+        /// Creates an exception indicating a method has more than one CancellationToken parameter.
+        /// </summary>
+        internal static ThriftParsingException MoreThanOneCancellationToken( MethodInfo methodInfo )
+        {
+            return new ThriftParsingException( "The method '{0}' has more than one CancellationToken parameter."
+                                             + Environment.NewLine
+                                             + "A Thrift method can only have at most one such parameter.",
                                                methodInfo.Name );
         }
 

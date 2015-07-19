@@ -84,11 +84,6 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static ThriftField ParseMethodParameter( ParameterInfo parameterInfo )
         {
-            if ( parameterInfo.ParameterType == typeof( CancellationToken ) )
-            {
-                return null;
-            }
-
             var attr = parameterInfo.GetCustomAttribute<ThriftParameterAttribute>();
             if ( attr == null )
             {
@@ -147,10 +142,14 @@ namespace ThriftSharp.Internals
                 throw ThriftParsingException.OneWayMethodWithResult( methodInfo );
             }
 
-            var parameters = methodInfo.GetParameters()
-                                 .Select( ParseMethodParameter )
-                                 .Where( p => p != null )
-                                 .ToArray();
+            var methodParameters = methodInfo.GetParameters();
+            var parameters = methodParameters.Where( p => p.ParameterType != typeof( CancellationToken ) )
+                                             .Select( ParseMethodParameter )
+                                             .ToArray();
+            if ( methodParameters.Length - parameters.Length > 1 )
+            {
+                throw ThriftParsingException.MoreThanOneCancellationToken( methodInfo );
+            }
 
             var converterAttr = methodInfo.ReturnParameter.GetCustomAttribute<ThriftConverterAttribute>();
             var converter = converterAttr == null ? null : converterAttr.Converter;

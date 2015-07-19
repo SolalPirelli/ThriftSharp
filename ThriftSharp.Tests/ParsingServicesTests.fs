@@ -6,6 +6,7 @@ module ThriftSharp.Tests.``Parsing services``
 open System
 open System.Linq
 open System.Reflection
+open System.Threading
 open System.Threading.Tasks
 open Microsoft.FSharp.Quotations
 open ThriftSharp
@@ -51,6 +52,11 @@ type ServiceWithUnmarkedMethodParameter =
 type ServiceWithConvertedReturnValue =
     [<ThriftMethod("test")>]
     abstract Test: unit -> [<ThriftConverter(typeof<ThriftUnixDateConverter>)>] Task<int>
+
+[<ThriftService("TooManyTokens")>]
+type ServiceWithTooManyTokens =
+    [<ThriftMethod("test")>]
+    abstract Test: CancellationToken * CancellationToken -> Task<int>
 
 
 let parse<'T> =
@@ -112,6 +118,9 @@ type __() =
     
     // Errors should be thrown when parsing services with methods with unmarked parameters
     [<Test>] member __.``Error on unmarked method parameter``() = failsOn<ServiceWithUnmarkedMethodParameter>
+    
+    // Errors should be thrown when parsing methods with more than one cancellation token
+    [<Test>] member __.``Error on >1 cancellation tokens``() = failsOn<ServiceWithTooManyTokens>
 
     // Services with two-way methods should be parsed correctly
     [<Test>] member __.``Method with no return value and no parameters``() = ok [] typeof<Task> false []

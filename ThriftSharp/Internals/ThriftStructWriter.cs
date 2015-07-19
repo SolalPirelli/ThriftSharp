@@ -196,9 +196,9 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Creates a compiled writer for the specified struct.
+        /// Creates a writer for the specified struct.
         /// </summary>
-        private static Action<object, IThriftProtocol> CreateCompiledWriterForStruct( ThriftStruct thriftStruct )
+        private static Expression<Action<object, IThriftProtocol>> CreateWriterForStruct( ThriftStruct thriftStruct )
         {
             var valueParam = Expression.Parameter( typeof( object ) );
             var protocolParam = Expression.Parameter( typeof( IThriftProtocol ) );
@@ -231,7 +231,7 @@ namespace ThriftSharp.Internals
             return Expression.Lambda<Action<object, IThriftProtocol>>(
                 Expression.Block( methodContents ),
                 valueParam, protocolParam
-            ).Compile();
+            );
         }
 
 
@@ -354,7 +354,7 @@ namespace ThriftSharp.Internals
         {
             if ( !_knownWriters.ContainsKey( thriftStruct ) )
             {
-                _knownWriters.Add( thriftStruct, CreateCompiledWriterForStruct( thriftStruct ) );
+                _knownWriters.Add( thriftStruct, CreateWriterForStruct( thriftStruct ).Compile() );
             }
 
             _knownWriters[thriftStruct]( value, protocol );

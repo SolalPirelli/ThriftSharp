@@ -10,7 +10,6 @@ namespace ThriftSharp.Internals
 {
     /// <summary>
     /// Single entry point to Thrift#'s internals.
-    /// Translates Thrift interface definitions into protocol calls.
     /// </summary>
     internal static class Thrift
     {
@@ -32,7 +31,7 @@ namespace ThriftSharp.Internals
 
 
         /// <summary>
-        /// Calls a ThriftMethod specified by its name with the specified arguments using the specified means of communication.
+        /// Calls a thrift method specified by its underlying name with the specified arguments using the specified means of communication.
         /// </summary>
         /// <param name="communication">The means of communication with the server.</param>
         /// <param name="service">The Thrift service containing the method.</param>
@@ -41,9 +40,9 @@ namespace ThriftSharp.Internals
         /// <returns>The method result.</returns>
         public static async Task<T> CallMethodAsync<T>( ThriftCommunication communication, ThriftService service, string methodName, params object[] args )
         {
+            // The attributes parser guarantees that there are 0 or 1 tokens per method
             var token = args.OfType<CancellationToken>().FirstOrDefault();
             var protocol = communication.CreateProtocol( token );
-
             var methodArgs = args.Where( a => !( a is CancellationToken ) ).ToArray();
 
             return (T) await SendMessageAsync( protocol, service.Methods[methodName], methodArgs ).ConfigureAwait( false );

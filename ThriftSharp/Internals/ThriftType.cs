@@ -93,7 +93,7 @@ namespace ThriftSharp.Internals
                 return;
             }
 
-            Type underlyingNullableType = Nullable.GetUnderlyingType( type );
+            var underlyingNullableType = Nullable.GetUnderlyingType( type );
             if ( underlyingNullableType != null )
             {
                 NullableType = ThriftType.Get( underlyingNullableType );
@@ -180,9 +180,8 @@ namespace ThriftSharp.Internals
 
                 _knownTypes.Add( type, thriftType );
 
-                // This has to be done this way because otherwise self-referencing types 
-                // (e.g. type A with a field of type A) will loop since they're calling 
-                // ThriftType.Get before they were themselves added to _knownTypes
+                // This has to be done this way because otherwise self-referencing types will loop 
+                // since they'd call ThriftType.Get before they were themselves added to _knownTypes
                 switch ( thriftType.Id )
                 {
                     case ThriftTypeId.Map:
