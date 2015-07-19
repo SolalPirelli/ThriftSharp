@@ -81,10 +81,10 @@ let ok argTypes retType isOneWay thrownExns =
     let meth = thriftService.Methods.First()
     meth.Key <=> iface.GetMethods().[0].Name
     meth.Value.Name <=> methodName
-    meth.Value.Parameters |> List.ofSeq |> List.map (fun p -> p.UnderlyingTypeInfo.AsType()) <=> argTypes
-    meth.Value.ReturnValue.UnderlyingTypeInfo.AsType() <=> ReflectionExtensions.UnwrapTask( retType )
+    meth.Value.Parameters |> List.ofSeq |> List.map (fun p -> p.TypeInfo.AsType()) <=> argTypes
+    meth.Value.ReturnValue.TypeInfo.AsType() <=> ReflectionExtensions.UnwrapTask( retType )
     meth.Value.IsOneWay <=> isOneWay
-    meth.Value.Exceptions |> List.ofSeq |> List.map (fun e -> e.UnderlyingTypeInfo.AsType()) <=> thrownExns
+    meth.Value.Exceptions |> List.ofSeq |> List.map (fun e -> e.TypeInfo.AsType()) <=> thrownExns
 
 let fails argTypes retType isOneWay thrownExns =
     let throwsClauses = thrownExns 

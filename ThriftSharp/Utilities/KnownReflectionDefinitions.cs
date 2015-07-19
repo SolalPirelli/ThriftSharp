@@ -1,5 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) 2014-15 Solal Pirelli
+// This code is licensed under the MIT License (see Licence.txt for details).
+
+using System;
 using System.Linq;
 using System.Reflection;
 using ThriftSharp.Internals;
@@ -12,7 +14,6 @@ namespace ThriftSharp.Utilities
         public static readonly TypeInfo
             Void = typeof( void ).GetTypeInfo(),
             String = typeof( string ).GetTypeInfo(),
-            HashSetOfShort = typeof( HashSet<short> ).GetTypeInfo(),
             IThriftProtocol = typeof( IThriftProtocol ).GetTypeInfo(),
             ThriftStructReader = typeof( ThriftStructReader ).GetTypeInfo(),
             ThriftStructHeader = typeof( ThriftStructHeader ).GetTypeInfo(),
@@ -41,9 +42,6 @@ namespace ThriftSharp.Utilities
             IDisposable_Dispose = typeof( IDisposable ).GetTypeInfo().GetDeclaredMethod( "Dispose" ),
 
             Enum_IsDefined = typeof( Enum ).GetTypeInfo().GetDeclaredMethod( "IsDefined" ),
-
-            HashSetOfShort_Add = TypeInfos.HashSetOfShort.GetDeclaredMethod( "Add" ),
-            HashSetOfShort_Contains = TypeInfos.HashSetOfShort.GetDeclaredMethod( "Contains" ),
 
             ThriftStructReader_Skip = TypeInfos.ThriftStructReader.GetDeclaredMethod( "Skip" ),
 

@@ -267,8 +267,7 @@ namespace ThriftSharp.Internals
 
             foreach ( var field in thriftStruct.Fields )
             {
-                var getFieldExpr = Expression.Property( valueParam, field.BackingProperty );
-                methodContents.Add( CreateWriterForField( protocolParam, field, getFieldExpr ) );
+                methodContents.Add( CreateWriterForField( protocolParam, ThriftWireField.Field( field, valueParam ) ) );
             }
 
             methodContents.Add( Expression.Call( protocolParam, Methods.IThriftProtocol_WriteFieldStop ) );
@@ -284,11 +283,12 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Creates a writer expression for the specified field with the specified getter, using the specified protocol expression.
         /// </summary>
-        public static Expression CreateWriterForField( ParameterExpression protocolParam, ThriftField field, Expression getter )
+        public static Expression CreateWriterForField( ParameterExpression protocolParam, ThriftWireField field )
         {
+            Expression getter = field.Getter;
             if ( field.Converter != null )
             {
-                if ( field.Type.NullableType == null )
+                if ( field.WireType.NullableType == null )
                 {
                     getter = Expression.Call(
                         Expression.Constant( field.Converter ),
@@ -306,10 +306,10 @@ namespace ThriftSharp.Internals
                             Types.None,
                             Expression.Convert(
                                 getter,
-                                Nullable.GetUnderlyingType( field.UnderlyingTypeInfo.AsType() )
+                                Nullable.GetUnderlyingType( field.UnderlyingType )
                             )
                         ),
-                        field.WireType
+                        field.WireType.TypeInfo.AsType()
                     );
                 }
             }
@@ -322,19 +322,19 @@ namespace ThriftSharp.Internals
                         Constructors.ThriftFieldHeader,
                         Expression.Constant( field.Id ),
                         Expression.Constant( field.Name ),
-                        Expression.Constant( field.Type.Id )
+                        Expression.Constant( field.WireType.Id )
                     )
                 ),
                 CreateWriterForType(
                     protocolParam,
-                    field.Type,
+                    field.WireType,
                     getter
                 ),
                 Expression.Call( protocolParam, Methods.IThriftProtocol_WriteFieldEnd )
             );
 
 
-            if ( field.IsRequired && ( field.Type.NullableType != null || field.Type.TypeInfo.IsClass ) )
+            if ( field.IsRequired && field.WireType.TypeInfo.IsClass )
             {
                 return Expression.IfThenElse(
                     Expression.Equal(
@@ -350,13 +350,13 @@ namespace ThriftSharp.Internals
                     writingExpr
                 );
             }
-            if ( field.DefaultValue != null || field.Type.NullableType != null || field.UnderlyingTypeInfo.IsClass )
+            if ( field.DefaultValue != null || field.WireType.NullableType != null || field.WireType.TypeInfo.IsClass )
             {
                 Expression defaultValueExpr;
                 // if it has a default value, use it
                 if ( field.DefaultValue != null )
                 {
-                    if ( field.UnderlyingTypeInfo.IsClass )
+                    if ( field.WireType.TypeInfo.IsClass )
                     {
                         // if it's a class, it's OK
                         defaultValueExpr = Expression.Constant( field.DefaultValue );
@@ -365,7 +365,7 @@ namespace ThriftSharp.Internals
                     {
                         // otherwise we need to make the default value a Nullable.
                         defaultValueExpr = Expression.New(
-                           field.UnderlyingTypeInfo.DeclaredConstructors.Single(),
+                           field.WireType.TypeInfo.DeclaredConstructors.Single(),
                            Expression.Constant( field.DefaultValue )
                        );
                     }

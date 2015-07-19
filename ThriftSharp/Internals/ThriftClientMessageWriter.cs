@@ -49,12 +49,8 @@ namespace ThriftSharp.Internals
 
             for ( int n = 0; n < method.Parameters.Count; n++ )
             {
-                var getParamExpr = Expression.Convert(
-                    Expression.ArrayAccess( argsParam, Expression.Constant( n ) ),
-                    method.Parameters[n].WireType
-                );
-
-                methodContents.Add( ThriftStructWriter.CreateWriterForField( protocolParam, method.Parameters[n], getParamExpr ) );
+                var wireField = ThriftWireField.Parameter( method.Parameters[n], argsParam, n );
+                methodContents.Add( ThriftStructWriter.CreateWriterForField( protocolParam, wireField ) );
             }
 
             methodContents.Add( Expression.Call( protocolParam, Methods.IThriftProtocol_WriteFieldStop ) );

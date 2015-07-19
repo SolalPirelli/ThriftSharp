@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using ThriftSharp.Protocols;
 using ThriftSharp.Utilities;
 
@@ -323,63 +325,50 @@ namespace ThriftSharp.Internals
             var structType = thriftStruct.TypeInfo.AsType();
             var structVar = Expression.Variable( structType );
 
-            var fieldsAndSetters = new Dictionary<ThriftField, Func<Expression, Expression>>();
-            foreach ( var field in thriftStruct.Fields )
-            {
-                fieldsAndSetters.Add(
-                    field,
-                    expr => Expression.Assign(
-                        Expression.Property(
-                            structVar,
-                            field.BackingProperty
-                        ),
-                        expr
-                    )
-                );
-            }
+            var wireFields = thriftStruct.Fields.Select( f => ThriftWireField.Field( f, structVar ) ).ToList();
 
-            var endOfLoop = Expression.Label();
+            return Expression.Lambda(
+                Expression.Block(
+                    structType,
+                    new[] { structVar },
 
-            var body = Expression.Block(
-                structType,
-                new[] { structVar },
+                    Expression.Assign(
+                        structVar,
+                        Expression.New( structType )
+                    ),
 
-                Expression.Assign(
-                    structVar,
-                    Expression.New( structType )
+                    CreateReaderForFields( protocolParam, wireFields ),
+
+                    // return value
+                    structVar
                 ),
-
-                CreateReaderForFields( protocolParam, fieldsAndSetters ),
-
-                // return value
-                structVar
+                protocolParam
             );
-
-            return Expression.Lambda( body, protocolParam );
         }
 
 
         /// <summary>
         /// Creates an expression reading the specified fields, given with their setter expressions.
         /// </summary>
-        public static Expression CreateReaderForFields( ParameterExpression protocolParam, Dictionary<ThriftField, Func<Expression, Expression>> fieldsAndSetters )
+        public static Expression CreateReaderForFields( ParameterExpression protocolParam, List<ThriftWireField> wireFields )
         {
             var fieldHeaderVar = Expression.Variable( typeof( ThriftFieldHeader ) );
-            var setFieldsVar = Expression.Variable( typeof( HashSet<short> ) );
+            var isSetVars = wireFields.Where( f => f.UnderlyingType.GetTypeInfo().IsValueType && ( f.IsRequired || f.DefaultValue != null ) )
+                                      .ToDictionary( f => f, _ => Expression.Variable( typeof( bool ) ) );
 
             var endOfLoop = Expression.Label();
 
             var fieldCases = new List<SwitchCase>();
-            foreach ( var pair in fieldsAndSetters )
+            foreach ( var field in wireFields )
             {
-                var setter = pair.Value;
-                if ( pair.Key.Converter != null )
+                var setter = field.Setter;
+                if ( field.Converter != null )
                 {
-                    if ( pair.Key.Type.NullableType == null )
+                    if ( field.WireType.NullableType == null )
                     {
-                        setter = expr => pair.Value(
+                        setter = expr => field.Setter(
                             Expression.Call(
-                                Expression.Constant( pair.Key.Converter ),
+                                Expression.Constant( field.Converter ),
                                 "Convert", // The converter type is unknown here (even the interface since it's generic)
                                 Types.None,
                                 expr
@@ -388,42 +377,51 @@ namespace ThriftSharp.Internals
                     }
                     else
                     {
-                        setter = expr => pair.Value(
+                        setter = expr => field.Setter(
                             Expression.Convert(
                                 Expression.Call(
-                                    Expression.Constant( pair.Key.Converter ),
+                                    Expression.Constant( field.Converter ),
                                     "Convert", // idem
                                     Types.None,
                                     Expression.Convert(
                                         expr,
-                                        pair.Key.Type.NullableType.TypeInfo.AsType()
+                                        field.WireType.NullableType.TypeInfo.AsType()
                                     )
                                 ),
-                                pair.Key.UnderlyingTypeInfo.AsType()
+                                field.UnderlyingType
                             )
                         );
                     }
                 }
 
+                var caseStatements = new List<Expression>
+                {
+                    CreateTypeIdAssert(
+                        field.WireType.Id,
+                        Expression.Field( fieldHeaderVar, Fields.ThriftFieldHeader_TypeId )
+                    ),
+                    setter(
+                        CreateReaderForType( protocolParam, field.WireType )
+                    )
+                };
+
+                if ( isSetVars.ContainsKey( field ) )
+                {
+                    caseStatements.Add(
+                        Expression.Assign(
+                            isSetVars[field],
+                            Expression.Constant( true )
+                        )
+                    );
+                }
+
+                // Need to return void here because the default case value does it (skipping fields)
+                caseStatements.Add( Expression.Empty() );
+
                 fieldCases.Add(
                     Expression.SwitchCase(
-                        Expression.Block(
-                            CreateTypeIdAssert(
-                                pair.Key.Type.Id,
-                                Expression.Field( fieldHeaderVar, Fields.ThriftFieldHeader_TypeId )
-                            ),
-                            setter(
-                                CreateReaderForType( protocolParam, pair.Key.Type )
-                            ),
-                            Expression.Call(
-                                setFieldsVar,
-                                Methods.HashSetOfShort_Add,
-                                Expression.Constant( pair.Key.Id )
-                            ),
-                    // Need to "return" void here because the default case value does it (skipping fields)
-                            Expression.Empty()
-                        ),
-                        Expression.Constant( pair.Key.Id )
+                        Expression.Block( caseStatements ),
+                        Expression.Constant( field.Id )
                     )
                 );
             }
@@ -451,12 +449,6 @@ namespace ThriftSharp.Internals
 
             var statements = new List<Expression>
             {
-                Expression.Assign(
-                    setFieldsVar,
-                    Expression.New( setFieldsVar.Type )
-                ),
-                
-                // ignore the return value, it's useless
                 Expression.Call( protocolParam, Methods.IThriftProtocol_ReadStructHeader ),
 
                 Expression.Loop(
@@ -481,53 +473,53 @@ namespace ThriftSharp.Internals
                 Expression.Call( protocolParam, Methods.IThriftProtocol_ReadStructEnd ),
             };
 
-            // now check for required fields & default values
-            foreach ( var pair in fieldsAndSetters )
+            // now check for default values
+            foreach ( var field in wireFields )
             {
-                if ( pair.Key.IsRequired )
+                // The 'check' declaration needs to be inside this test, since the return value of a method:
+                // - isn't in isSetVars
+                // - isn't required (to provide the proper ThriftProtocolException instead of a generic "unset field")
+                // - might be a value type
+                // thus it could pick the "== null" branch and crash
+                if ( field.DefaultValue != null || field.IsRequired )
                 {
-                    statements.Add(
-                        Expression.IfThen(
-                            Expression.IsFalse(
-                                Expression.Call(
-                                    setFieldsVar,
-                                    Methods.HashSetOfShort_Contains,
-                                    Expression.Constant( pair.Key.Id )
-                                )
-                            ),
-                            Expression.Throw(
-                                Expression.Call(
-                                    Methods.ThriftSerializationException_MissingRequiredField,
-                                    Expression.Constant( pair.Key.Name )
+                    var check = isSetVars.ContainsKey( field )
+                      ? (Expression) Expression.IsFalse( isSetVars[field] )
+                      : Expression.Equal( field.Getter, Expression.Constant( null ) );
+
+                    if ( field.DefaultValue != null )
+                    {
+                        statements.Add(
+                            Expression.IfThen(
+                                check,
+                                field.Setter(
+                                    Expression.Convert(
+                                        Expression.Constant( field.DefaultValue ),
+                                        field.WireType.TypeInfo.AsType()
+                                    )
                                 )
                             )
-                        )
-                    );
-                }
-                else if ( pair.Key.DefaultValue != null )
-                {
-                    statements.Add(
-                        Expression.IfThen(
-                            Expression.IsFalse(
-                                Expression.Call(
-                                    setFieldsVar,
-                                    Methods.HashSetOfShort_Contains,
-                                    Expression.Constant( pair.Key.Id )
-                                )
-                            ),
-                            pair.Value(
-                                Expression.Convert(
-                                    Expression.Constant( pair.Key.DefaultValue ),
-                                    pair.Key.UnderlyingTypeInfo.AsType()
+                        );
+                    }
+                    else
+                    {
+                        statements.Add(
+                            Expression.IfThen(
+                                check,
+                                Expression.Throw(
+                                    Expression.Call(
+                                        Methods.ThriftSerializationException_MissingRequiredField,
+                                        Expression.Constant( field.Name )
+                                    )
                                 )
                             )
-                        )
-                    );
+                        );
+                    }
                 }
             }
 
             return Expression.Block(
-                new[] { fieldHeaderVar, setFieldsVar },
+                isSetVars.Values.Concat( new[] { fieldHeaderVar } ),
                 statements
             );
         }

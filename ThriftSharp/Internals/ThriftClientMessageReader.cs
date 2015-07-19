@@ -29,36 +29,20 @@ namespace ThriftSharp.Internals
             ParameterExpression hasReturnVariable = null;
             ParameterExpression returnVariable = null;
 
-            if ( method.ReturnValue.UnderlyingTypeInfo != TypeInfos.Void )
+            if ( method.ReturnValue.TypeInfo != TypeInfos.Void )
             {
                 hasReturnVariable = Expression.Variable( typeof( bool ) );
-                returnVariable = Expression.Variable( method.ReturnValue.UnderlyingTypeInfo.AsType() );
+                returnVariable = Expression.Variable( method.ReturnValue.TypeInfo.AsType() );
             }
 
-            var fieldsAndSetters = new Dictionary<ThriftField, Func<Expression, Expression>>();
-
+            var wireFields = new List<ThriftWireField>();
             if ( returnVariable != null )
             {
-                // Field 0 is the return value
-                fieldsAndSetters.Add(
-                    method.ReturnValue,
-                    expr => Expression.Block(
-                        Expression.Assign(
-                            returnVariable,
-                            expr
-                        ),
-                        Expression.Assign(
-                            hasReturnVariable,
-                            Expression.Constant( true )
-                        )
-                    )
-                );
+                wireFields.Add( ThriftWireField.ReturnValue( method.ReturnValue, returnVariable, hasReturnVariable ) );
             }
-
-            // All other fields are declared exceptions
             foreach ( var exception in method.Exceptions )
             {
-                fieldsAndSetters.Add( exception, Expression.Throw );
+                wireFields.Add( ThriftWireField.ThrowsClause( exception ) );
             }
 
             var statements = new List<Expression>
@@ -92,7 +76,7 @@ namespace ThriftSharp.Internals
 
                 Expression.IfThen(
                     Expression.Equal(
-                        Expression.Field(  headerVariable,Fields.ThriftMessageHeader_MessageType  ),
+                        Expression.Field( headerVariable, Fields.ThriftMessageHeader_MessageType ),
                         Expression.Constant( ThriftMessageType.Exception )
                     ),
                     Expression.Throw(
@@ -105,7 +89,7 @@ namespace ThriftSharp.Internals
                     )
                 ),
 
-                ThriftStructReader.CreateReaderForFields( protocolParam, fieldsAndSetters ),
+                ThriftStructReader.CreateReaderForFields( protocolParam, wireFields ),
 
                 Expression.Call( protocolParam, Methods.IThriftProtocol_ReadMessageEnd ),
 
@@ -114,17 +98,19 @@ namespace ThriftSharp.Internals
 
             if ( returnVariable != null )
             {
-                statements.Add( Expression.IfThen(
-                    Expression.Equal(
-                        hasReturnVariable,
-                        Expression.Constant( false )
-                    ),
-                    Expression.Throw(
-                        Expression.New(
-                            Constructors.ThriftProtocolException,
-                            Expression.Constant( ThriftProtocolExceptionType.MissingResult )
+                statements.Add(
+                    Expression.IfThen(
+                        Expression.Equal(
+                            hasReturnVariable,
+                            Expression.Constant( false )
+                        ),
+                        Expression.Throw(
+                            Expression.New(
+                                Constructors.ThriftProtocolException,
+                                Expression.Constant( ThriftProtocolExceptionType.MissingResult )
+                            )
                         )
-                    ) )
+                    )
                 );
             }
 

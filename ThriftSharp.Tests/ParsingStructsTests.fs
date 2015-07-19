@@ -126,7 +126,7 @@ let ok typ isReq =
     thriftStruct.Header.Name <=> name
 
     thriftStruct.Fields.Count <=> 1
-    thriftStruct.Fields.[0].UnderlyingTypeInfo.AsType() <=> typ
+    thriftStruct.Fields.[0].BackingProperty.PropertyType <=> typ
     thriftStruct.Fields.[0].IsRequired <=> isReq 
 
 let fails typ isReq =
@@ -222,7 +222,7 @@ type __() =
     [<Test>] 
     member __.``Self-referencing struct``() = 
         parse<StructWithSelfReference>.Fields |> Seq.sortBy (fun f -> f.Id) 
-                                              |> Seq.map (fun f -> f.UnderlyingTypeInfo.AsType())
+                                              |> Seq.map (fun f -> f.BackingProperty.PropertyType)
                                               |> List.ofSeq
         <=>
         [ typeof<StructWithSelfReference>

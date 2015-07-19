@@ -55,7 +55,7 @@ let rec private eq (act: obj) (exp: obj) = // can safely assume act and exp are 
         eqEnum act exp
     elif FSharpType.IsUnion(act.GetType()) || act.GetType().IsEnum then
         act = exp
-    // HACK
+    // HACK HACK HACK
     elif act.GetType().Assembly.FullName.Contains("ThriftSharp") then
         act.GetType().GetRuntimeProperties()
      |> Seq.filter (fun p -> p.Name = "Message" || p.DeclaringType = act.GetType())

@@ -46,7 +46,6 @@ namespace ThriftSharp.Internals
             var method = service.Methods[methodName];
             var methodArgs = args.Where( a => !( a is CancellationToken ) ).ToArray();
 
-            // An exception would be thrown when writing anyway, but this provides a much better message.
             for ( int n = 0; n < methodArgs.Length; n++ )
             {
                 if ( methodArgs[n] == null )
