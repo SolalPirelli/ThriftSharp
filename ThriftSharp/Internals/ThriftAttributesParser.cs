@@ -15,6 +15,7 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftAttributesParser
     {
+        // Cache of known structs, required to support self-referencing types
         private static readonly Dictionary<TypeInfo, ThriftStruct> _knownStructs = new Dictionary<TypeInfo, ThriftStruct>();
 
 
@@ -102,8 +103,8 @@ namespace ThriftSharp.Internals
         private static ThriftField[] ParseThrowsClauses( MethodInfo methodInfo )
         {
             var clauses = methodInfo.GetCustomAttributes<ThriftThrowsAttribute>()
-                              .Select( a => ThriftField.ThrowsClause( a.Id, a.Name, a.ExceptionTypeInfo ) )
-                              .ToArray();
+                                    .Select( a => ThriftField.ThrowsClause( a.Id, a.Name, a.ExceptionTypeInfo ) )
+                                    .ToArray();
 
             var wrongClause = clauses.FirstOrDefault( c => !c.UnderlyingTypeInfo.Extends( typeof( Exception ) ) );
             if ( wrongClause != null )
@@ -132,7 +133,7 @@ namespace ThriftSharp.Internals
                 throw ThriftParsingException.OneWayMethodWithExceptions( methodInfo );
             }
 
-            var unwrapped = ReflectionExtensions.UnwrapTaskType( methodInfo.ReturnType );
+            var unwrapped = methodInfo.ReturnType.UnwrapTask();
             if ( unwrapped == null )
             {
                 throw ThriftParsingException.SynchronousMethod( methodInfo );
@@ -153,7 +154,6 @@ namespace ThriftSharp.Internals
 
             var converterAttr = methodInfo.ReturnParameter.GetCustomAttribute<ThriftConverterAttribute>();
             var converter = converterAttr == null ? null : converterAttr.Converter;
-
 
             return new ThriftMethod( attr.Name, attr.IsOneWay, ThriftField.ReturnValue( unwrapped.GetTypeInfo(), converter ), throwsClauses, parameters );
         }

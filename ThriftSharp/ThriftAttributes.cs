@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ThriftSharp.Utilities;
 
@@ -281,7 +282,13 @@ namespace ThriftSharp
                     throw new ArgumentException( "The type must implement IThriftValueConverter." );
                 }
 
-                _knownConverters.Add( converterType, ReflectionExtensions.Create( typeInfo ) );
+                var ctor = typeInfo.DeclaredConstructors.FirstOrDefault( c => c.GetParameters().Length == 0 );
+                if ( ctor == null )
+                {
+                    throw new ArgumentException( "The type must have a parameterless constructor." );
+                }
+
+                _knownConverters.Add( converterType, ctor.Invoke( null ) );
             }
 
             ConverterType = converterType;

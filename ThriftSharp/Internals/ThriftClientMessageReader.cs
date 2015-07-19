@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
 using ThriftSharp.Protocols;
 using ThriftSharp.Utilities;
 
@@ -15,9 +14,7 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftClientMessageReader
     {
-        private static readonly ThriftStruct ThriftProtocolExceptionStruct =
-                  ThriftAttributesParser.ParseStruct( typeof( ThriftProtocolException ).GetTypeInfo() );
-
+        private static readonly ThriftStruct ThriftProtocolExceptionStruct = ThriftAttributesParser.ParseStruct( TypeInfos.ThriftProtocolException );
         private static readonly Dictionary<ThriftMethod, object> _knownReaders = new Dictionary<ThriftMethod, object>();
 
 

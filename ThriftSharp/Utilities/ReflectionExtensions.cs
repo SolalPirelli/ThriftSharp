@@ -14,7 +14,7 @@ namespace ThriftSharp.Utilities
     internal static class ReflectionExtensions
     {
         /// <summary>
-        /// Gets the specified generic interface definition on the TypeInfo, if it implements it.
+        /// Gets the specified generic interface definition on the TypeInfo, or null if it doesn't implement it.
         /// </summary>
         public static Type GetGenericInterface( this TypeInfo typeInfo, Type interfaceType )
         {
@@ -22,7 +22,7 @@ namespace ThriftSharp.Utilities
             {
                 return typeInfo.AsType();
             }
-            return typeInfo.ImplementedInterfaces.FirstOrDefault( i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == interfaceType );
+            return typeInfo.ImplementedInterfaces.FirstOrDefault( i => i.GenericTypeArguments.Length > 0 && i.GetGenericTypeDefinition() == interfaceType );
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace ThriftSharp.Utilities
         /// Unwraps a Task if the Type is one, or returns null.
         /// Returns typeof(void) if the Task is not a generic one.
         /// </summary>
-        public static Type UnwrapTaskType( Type type )
+        public static Type UnwrapTask( this Type type )
         {
             var typeInfo = type.GetTypeInfo();
             if ( typeInfo.Extends( typeof( Task ) ) )
@@ -49,16 +49,6 @@ namespace ThriftSharp.Utilities
                 return typeof( void );
             }
             return null;
-        }
-
-        /// <summary>
-        /// Creates a new instance of the specified TypeInfo, using a public parameterless constructor.
-        /// </summary>
-        public static object Create( TypeInfo typeInfo )
-        {
-            return typeInfo.DeclaredConstructors
-                           .First( c => c.GetParameters().Length == 0 )
-                           .Invoke( null );
         }
     }
 }

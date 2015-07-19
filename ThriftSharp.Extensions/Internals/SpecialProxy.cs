@@ -25,7 +25,7 @@ namespace ThriftSharp.Internals
         /// <param name="args">Undocumented.</param>
         /// <returns>Undocumented.</returns>
         [EditorBrowsable( EditorBrowsableState.Never )]
-        [Obsolete( "Do not use this method." )]
+        [Obsolete( "Do not use this method.", true )]
         public static Task<T> CallMethodAsync<T>( ThriftCommunication communication, object thriftService, string methodName, object[] args )
         {
             return Thrift.CallMethodAsync<T>( communication, (ThriftService) thriftService, methodName, args );

@@ -11,7 +11,7 @@ using ThriftSharp.Utilities;
 namespace ThriftSharp
 {
     /// <summary>
-    /// Helper base class to define a Thrift service implementation over a protocol.
+    /// Helper base class to define a Thrift service implementation.
     /// </summary>
     /// <typeparam name="TService">The type of the service.</typeparam>
     public abstract class ThriftServiceImplementation<TService>

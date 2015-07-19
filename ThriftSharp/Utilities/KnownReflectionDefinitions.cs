@@ -19,6 +19,7 @@ namespace ThriftSharp.Utilities
             ThriftFieldHeader = typeof( ThriftFieldHeader ).GetTypeInfo(),
             ThriftMapHeader = typeof( ThriftMapHeader ).GetTypeInfo(),
             ThriftCollectionHeader = typeof( ThriftCollectionHeader ).GetTypeInfo(),
+            ThriftProtocolException = typeof( ThriftProtocolException ).GetTypeInfo(),
             ThriftSerializationException = typeof( ThriftSerializationException ).GetTypeInfo();
     }
 

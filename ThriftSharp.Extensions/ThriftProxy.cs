@@ -16,14 +16,11 @@ namespace ThriftSharp
     public static class ThriftProxy
     {
         // Attributes for all generated public methods
-        private const MethodAttributes GeneratedMethodAttributes =
-            MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig;
+        private const MethodAttributes GeneratedMethodAttributes = MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig;
 
-        // We need to call Thrift.CallMethodAsync<T>, which is internal...
-        // so we have to use a public proxy method, which takes an 'object' instead of a 'ThriftService'
-        // since the latter is also internal.
-        private static MethodInfo CallMethodAsyncMethod =
-            typeof( SpecialProxy ).GetTypeInfo().GetDeclaredMethod( "CallMethodAsync" );
+        // We need to call Thrift.CallMethodAsync<T>, which is internal, from a generated assembly,
+        // thus we have to use a public proxy method, which takes an 'object' instead of a 'ThriftService' since the latter is also internal.
+        private static MethodInfo CallMethodAsyncMethod = typeof( SpecialProxy ).GetTypeInfo().GetDeclaredMethod( "CallMethodAsync" );
 
         /// <summary>
         /// Creates a proxy for the specified interface type using the specified protocol.
@@ -93,7 +90,7 @@ namespace ThriftSharp
                 }
 
                 // Get the return type for the CallMethodAsync method, i.e. the unwrapped return type...
-                var unwrappedReturnType = ReflectionExtensions.UnwrapTaskType( m.ReturnType );
+                var unwrappedReturnType = m.ReturnType.UnwrapTask();
                 if ( unwrappedReturnType == typeof( void ) )
                 {
                     // ... or object if there is none
@@ -127,7 +124,7 @@ namespace ThriftSharp
             // Get the instance type
             var instanceTypeInfo = typeBuilder.CreateTypeInfo();
             // Create the instance
-            var instance = (T) ReflectionExtensions.Create( instanceTypeInfo );
+            var instance = (T) Activator.CreateInstance( instanceTypeInfo.AsType() );
 
             // Set the "service" field
             instanceTypeInfo.GetDeclaredField( serviceField.Name ).SetValue( instance, service );
