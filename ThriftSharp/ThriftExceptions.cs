@@ -20,9 +20,6 @@ namespace ThriftSharp
             : base( string.Format( message, args ) ) { }
 
 
-        /// <summary>
-        /// Creates an exception indicating an enum type lacked the appropriate attribute.
-        /// </summary>
         internal static ThriftParsingException EnumWithoutAttribute( TypeInfo typeInfo )
         {
             return new ThriftParsingException( "The enum type '{0}' is not part of a Thrift interface definition."
@@ -31,9 +28,6 @@ namespace ThriftSharp
                                                typeInfo.FullName );
         }
 
-        /// <summary>
-        /// Creates an exception indicating an enum type was of the wrong underlying type.
-        /// </summary>
         internal static ThriftParsingException NonInt32Enum( TypeInfo typeInfo )
         {
             return new ThriftParsingException( "The enum type '{0}' has an underlying type different from Int32."
@@ -42,9 +36,6 @@ namespace ThriftSharp
                                                typeInfo.FullName );
         }
 
-        /// <summary>
-        /// Creates an exception indicating that a type for a Thrift struct was expected to be concrete but wasn't.
-        /// </summary>
         internal static ThriftParsingException NotAConcreteType( TypeInfo typeInfo )
         {
             return new ThriftParsingException( "The type '{0}' is not a concrete type."
@@ -53,9 +44,6 @@ namespace ThriftSharp
                                                typeInfo.FullName );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a class or struct type lacked the appropriate attribute.
-        /// </summary>
         internal static ThriftParsingException StructWithoutAttribute( TypeInfo typeInfo )
         {
             return new ThriftParsingException( "The class or struct type '{0}' is not part of a Thrift interface definition."
@@ -64,9 +52,6 @@ namespace ThriftSharp
                                                typeInfo.FullName );
         }
 
-        /// <summary>
-        /// Creates an exception indicating an optional field has a value type field type.
-        /// </summary>
         internal static ThriftParsingException OptionalValueField( PropertyInfo propertyInfo )
         {
             return new ThriftParsingException( "The Thrift field '{0}' is optional, but its type is a value type."
@@ -75,9 +60,6 @@ namespace ThriftSharp
                                                propertyInfo.Name );
         }
 
-        /// <summary>
-        /// Creates an exception indicating an unknown value type was encountered.
-        /// </summary>
         internal static ThriftParsingException UnknownValueType( TypeInfo typeInfo )
         {
             return new ThriftParsingException( "The type '{0}' is an user-defined value type."
@@ -88,43 +70,40 @@ namespace ThriftSharp
                                                typeInfo.FullName );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a map type is not supported.
-        /// </summary>
         internal static ThriftParsingException UnsupportedMap( TypeInfo typeInfo )
         {
             return new ThriftParsingException( "The map type '{0}' is not supported."
                                              + Environment.NewLine
-                                             + "Supported types are IDictionary<TKey, TValue> and any concrete implementation with a parameterless constructor.",
+                                             + "Supported map types are IDictionary<TKey, TValue> "
+                                             + "and any concrete implementation with a parameterless constructor.",
                                                typeInfo.FullName );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a set type is not supported.
-        /// </summary>
         internal static ThriftParsingException UnsupportedSet( TypeInfo typeInfo )
         {
             return new ThriftParsingException( "The set type '{0}' is not supported."
                                              + Environment.NewLine
-                                             + "Supported types are ISet<T> and any concrete implementation with a parameterless constructor.",
+                                             + "Supported set types are ISet<T> and any concrete implementation with a parameterless constructor.",
                                                typeInfo.FullName );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a list type is not supported.
-        /// </summary>
         internal static ThriftParsingException UnsupportedList( TypeInfo typeInfo )
         {
             return new ThriftParsingException( "The list type '{0}' is not supported."
                                              + Environment.NewLine
-                                             + "Supported types are arrays, ICollection<T>, IList<T> "
-                                             + "and any concrete implementation of these interfaces with a parameterless constructor.",
+                                             + "Supported list types are arrays, IList<T> "
+                                             + "and any concrete implementation of that interface with a parameterless constructor.",
                                                typeInfo.FullName );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a parameter lacks the appropriate attribute.
-        /// </summary>
+        internal static ThriftParsingException CollectionWithOrthogonalInterfaces( TypeInfo typeInfo )
+        {
+            return new ThriftParsingException( "The collection type '{0}' implements more than one of IDictionary<TKey, TValue>, ISet<T> and IList<T>."
+                                             + Environment.NewLine
+                                             + "This is not supported. Please only use collections implementing exactly one of these interfaces, or an array.",
+                                               typeInfo.FullName );
+        }
+
         internal static ThriftParsingException ParameterWithoutAttribute( ParameterInfo info )
         {
             return new ThriftParsingException( "Parameter '{0}' of method '{1}' of type '{2}' does not have a Thrift interface definition."
@@ -133,9 +112,6 @@ namespace ThriftSharp
                                                info.Name, info.Member.Name, info.Member.DeclaringType );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a type was expected to be an exception but wasn't.
-        /// </summary>
         internal static ThriftParsingException NotAnException( TypeInfo typeInfo, MethodInfo methodInfo )
         {
             return new ThriftParsingException( "Type '{0}' was used in a ThriftThrowsClauseAttribute for method '{1}' but does not inherit from Exception."
@@ -144,17 +120,11 @@ namespace ThriftSharp
                                                typeInfo.FullName, methodInfo.Name );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a type was expected to be an interface but wasn't.
-        /// </summary>
         internal static ThriftParsingException NotAService( TypeInfo typeInfo )
         {
             return new ThriftParsingException( "The type '{0}' is not an interface.", typeInfo.FullName );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a service type lacks the appropriate attribute.
-        /// </summary>
         internal static ThriftParsingException ServiceWithoutAttribute( TypeInfo typeInfo )
         {
             return new ThriftParsingException( "The interface '{0}' does not have a Thrift interface definition."
@@ -163,9 +133,6 @@ namespace ThriftSharp
                                                typeInfo.FullName );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a service lacks methods.
-        /// </summary>
         internal static ThriftParsingException NoMethods( TypeInfo typeInfo )
         {
             return new ThriftParsingException( "The interface '{0}' does not have any methods, and is therefore useless."
@@ -174,9 +141,6 @@ namespace ThriftSharp
                                                typeInfo.FullName );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a method lacks the appropriate attribute.
-        /// </summary>
         internal static ThriftParsingException MethodWithoutAttribute( MethodInfo methodInfo )
         {
             return new ThriftParsingException( "The method '{0}' is not part of the Thrift interface."
@@ -187,9 +151,6 @@ namespace ThriftSharp
                                                methodInfo.Name );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a method has more than one CancellationToken parameter.
-        /// </summary>
         internal static ThriftParsingException MoreThanOneCancellationToken( MethodInfo methodInfo )
         {
             return new ThriftParsingException( "The method '{0}' has more than one CancellationToken parameter."
@@ -198,9 +159,6 @@ namespace ThriftSharp
                                                methodInfo.Name );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a method was not async but should have been.
-        /// </summary>
         internal static ThriftParsingException SynchronousMethod( MethodInfo methodInfo )
         {
             return new ThriftParsingException( "The method '{0}' but does not return a Task or Task<T>."
@@ -209,9 +167,6 @@ namespace ThriftSharp
                                                methodInfo.Name );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a one-way method had a result.
-        /// </summary>
         internal static ThriftParsingException OneWayMethodWithResult( MethodInfo methodInfo )
         {
             return new ThriftParsingException( "The method '{0}' is a one-way method, but returns a value."
@@ -220,9 +175,6 @@ namespace ThriftSharp
                                                methodInfo.Name );
         }
 
-        /// <summary>
-        /// Creates an exception indicating a one-way method had declared exceptions.
-        /// </summary>
         internal static ThriftParsingException OneWayMethodWithExceptions( MethodInfo methodInfo )
         {
             return new ThriftParsingException( "The method '{0}' is a one-way method, but has declared thrown exceptions."
@@ -243,35 +195,21 @@ namespace ThriftSharp
         /// </summary>
         private ThriftSerializationException( string message, params object[] args ) : base( string.Format( message, args ) ) { }
 
-        /// <summary>
-        /// Creates a ThriftSerializationException indicating a required field was null during serialization.
-        /// </summary>
         internal static ThriftSerializationException RequiredFieldIsNull( string fieldName )
         {
             return new ThriftSerializationException( "Field '{0}' is a required field and cannot be null when writing it.", fieldName );
         }
 
-        /// <summary>
-        /// Creates a ThriftSerializationException indicating a parameter was null during a method call.
-        /// </summary>
-        /// <param name="parameterName"></param>
-        /// <returns></returns>
         internal static ThriftSerializationException NullParameter( string parameterName )
         {
             return new ThriftSerializationException( "Parameter '{0}' was null.", parameterName );
         }
 
-        /// <summary>
-        /// Creates a ThriftSerializationException indicating a required field was not present during deserialization.
-        /// </summary>
         internal static ThriftSerializationException MissingRequiredField( string fieldName )
         {
             return new ThriftSerializationException( "Field '{0}' is a required field, but was not present.", fieldName );
         }
 
-        /// <summary>
-        /// Creates a ThriftSerializationException indicating a read type ID did not match the expected type ID.
-        /// </summary>
         internal static ThriftSerializationException TypeIdMismatch( ThriftTypeId expectedId, ThriftTypeId actualId )
         {
             return new ThriftSerializationException( "Deserialization error: Expected type {0}, but type {1} was read.", expectedId, actualId );
