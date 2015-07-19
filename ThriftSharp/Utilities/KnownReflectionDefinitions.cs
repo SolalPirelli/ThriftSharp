@@ -47,10 +47,7 @@ namespace ThriftSharp.Utilities
             HashSetOfShort_Add = TypeInfos.HashSetOfShort.GetDeclaredMethod( "Add" ),
             HashSetOfShort_Contains = TypeInfos.HashSetOfShort.GetDeclaredMethod( "Contains" ),
 
-            ThriftStructReader_Read = TypeInfos.ThriftStructReader.GetDeclaredMethod( "Read" ),
             ThriftStructReader_Skip = TypeInfos.ThriftStructReader.GetDeclaredMethod( "Skip" ),
-
-            ThriftStructWriter_Write = typeof( ThriftStructWriter ).GetTypeInfo().GetDeclaredMethod( "Write" ),
 
             ThriftSerializationException_TypeIdMismatch = TypeInfos.ThriftSerializationException.GetDeclaredMethod( "TypeIdMismatch" ),
             ThriftSerializationException_MissingRequiredField = TypeInfos.ThriftSerializationException.GetDeclaredMethod( "MissingRequiredField" ),

@@ -16,8 +16,7 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftStructWriter
     {
-        private static readonly Dictionary<ThriftStruct, Action<object, IThriftProtocol>> _knownWriters
-            = new Dictionary<ThriftStruct, Action<object, IThriftProtocol>>();
+        private static readonly Dictionary<ThriftStruct, object> _knownWriters = new Dictionary<ThriftStruct, object>();
 
 
         /// <summary>
@@ -179,7 +178,9 @@ namespace ThriftSharp.Internals
 
                 case ThriftTypeId.Struct:
                     return Expression.Call(
-                        Methods.ThriftStructWriter_Write,
+                        typeof( ThriftStructWriter ),
+                        "Write",
+                        new[] { value.Type },
                         Expression.Constant( thriftType.Struct ), value, protocolParam
                     );
 
@@ -198,9 +199,9 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Creates a writer for the specified struct.
         /// </summary>
-        private static Expression<Action<object, IThriftProtocol>> CreateWriterForStruct( ThriftStruct thriftStruct )
+        private static LambdaExpression CreateWriterForStruct( ThriftStruct thriftStruct )
         {
-            var valueParam = Expression.Parameter( typeof( object ) );
+            var valueParam = Expression.Parameter( thriftStruct.TypeInfo.AsType() );
             var protocolParam = Expression.Parameter( typeof( IThriftProtocol ) );
 
             var methodContents = new List<Expression>
@@ -214,21 +215,14 @@ namespace ThriftSharp.Internals
 
             foreach ( var field in thriftStruct.Fields )
             {
-                var getFieldExpr = Expression.Property(
-                    Expression.Convert(
-                        valueParam,
-                        thriftStruct.TypeInfo.AsType()
-                    ),
-                    field.BackingProperty
-                );
-
+                var getFieldExpr = Expression.Property( valueParam, field.BackingProperty );
                 methodContents.Add( CreateWriterForField( protocolParam, field, getFieldExpr ) );
             }
 
             methodContents.Add( Expression.Call( protocolParam, Methods.IThriftProtocol_WriteFieldStop ) );
             methodContents.Add( Expression.Call( protocolParam, Methods.IThriftProtocol_WriteStructEnd ) );
 
-            return Expression.Lambda<Action<object, IThriftProtocol>>(
+            return Expression.Lambda(
                 Expression.Block( methodContents ),
                 valueParam, protocolParam
             );
@@ -350,14 +344,14 @@ namespace ThriftSharp.Internals
         /// <remarks>
         /// This method is only called from compiled expressions.
         /// </remarks>
-        public static void Write( ThriftStruct thriftStruct, object value, IThriftProtocol protocol )
+        public static void Write<T>( ThriftStruct thriftStruct, T value, IThriftProtocol protocol )
         {
             if ( !_knownWriters.ContainsKey( thriftStruct ) )
             {
                 _knownWriters.Add( thriftStruct, CreateWriterForStruct( thriftStruct ).Compile() );
             }
 
-            _knownWriters[thriftStruct]( value, protocol );
+            ( (Action<T, IThriftProtocol>) _knownWriters[thriftStruct] )( value, protocol );
         }
     }
 }

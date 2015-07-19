@@ -103,11 +103,15 @@ let run x = x |> Async.Ignore |> Async.RunSynchronously
 
 let read<'T> prot =
     let thriftStruct = ThriftAttributesParser.ParseStruct(typeof<'T>.GetTypeInfo())
-    ThriftStructReader.Read(thriftStruct, prot) :?> 'T
+    ThriftStructReader.Read<'T>(thriftStruct, prot)
 
 let write prot obj =
     let thriftStruct = ThriftAttributesParser.ParseStruct(obj.GetType().GetTypeInfo())
-    ThriftStructWriter.Write(thriftStruct, obj, prot)
+    let meth = typeof<ThriftStructWriter>.GetMethod("Write").MakeGenericMethod([| obj.GetType() |])
+    try
+        meth.Invoke(null, [| thriftStruct; obj; prot |]) |> ignore
+    with
+    | :? TargetInvocationException as e -> raise e.InnerException
 
 let readMsgAsync<'T> prot name =
     let svc = ThriftAttributesParser.ParseService(typeof<'T>.GetTypeInfo())

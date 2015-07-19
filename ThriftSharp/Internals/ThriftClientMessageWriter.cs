@@ -18,9 +18,9 @@ namespace ThriftSharp.Internals
             new Dictionary<ThriftMethod, Action<object[], IThriftProtocol>>();
 
         /// <summary>
-        /// Creates a compiled writer for the specified method.
+        /// Creates a writer for the specified method.
         /// </summary>
-        private static Action<object[], IThriftProtocol> CreateCompiledWriterForMethod( ThriftMethod method )
+        private static Expression<Action<object[], IThriftProtocol>> CreateWriterForMethod( ThriftMethod method )
         {
             var argsParam = Expression.Parameter( typeof( object[] ) );
             var protocolParam = Expression.Parameter( typeof( IThriftProtocol ) );
@@ -64,7 +64,7 @@ namespace ThriftSharp.Internals
             return Expression.Lambda<Action<object[], IThriftProtocol>>(
                 Expression.Block( methodContents ),
                 argsParam, protocolParam
-            ).Compile();
+            );
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace ThriftSharp.Internals
         {
             if ( !_knownWriters.ContainsKey( method ) )
             {
-                _knownWriters.Add( method, CreateCompiledWriterForMethod( method ) );
+                _knownWriters.Add( method, CreateWriterForMethod( method ).Compile() );
             }
 
             _knownWriters[method]( args, protocol );

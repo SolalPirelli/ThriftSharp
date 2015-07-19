@@ -16,17 +16,17 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Sends a Thrift message representing the specified method call with the specified arguments on the specified protocol, and gets the result.
         /// </summary>
-        private static async Task<object> SendMessageAsync( IThriftProtocol protocol, ThriftMethod method, params object[] args )
+        private static async Task<T> SendMessageAsync<T>( IThriftProtocol protocol, ThriftMethod method, params object[] args )
         {
             ThriftClientMessageWriter.Write( method, args, protocol );
             await protocol.FlushAndReadAsync();
 
             if ( method.IsOneWay )
             {
-                return null;
+                return default( T );
             }
 
-            return ThriftClientMessageReader.Read( method, protocol );
+            return ThriftClientMessageReader.Read<T>( method, protocol );
         }
 
 
@@ -45,7 +45,7 @@ namespace ThriftSharp.Internals
             var protocol = communication.CreateProtocol( token );
             var methodArgs = args.Where( a => !( a is CancellationToken ) ).ToArray();
 
-            return (T) await SendMessageAsync( protocol, service.Methods[methodName], methodArgs ).ConfigureAwait( false );
+            return await SendMessageAsync<T>( protocol, service.Methods[methodName], methodArgs ).ConfigureAwait( false );
         }
     }
 }

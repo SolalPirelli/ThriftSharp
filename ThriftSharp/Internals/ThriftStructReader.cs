@@ -14,8 +14,7 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftStructReader
     {
-        private static readonly Dictionary<ThriftStruct, Func<IThriftProtocol, object>> _knownReaders
-            = new Dictionary<ThriftStruct, Func<IThriftProtocol, object>>();
+        private static readonly Dictionary<ThriftStruct, object> _knownReaders = new Dictionary<ThriftStruct, object>();
 
 
         /// <summary>
@@ -291,12 +290,11 @@ namespace ThriftSharp.Internals
                     return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadBinary );
 
                 case ThriftTypeId.Struct:
-                    return Expression.Convert(
-                        Expression.Call(
-                            Methods.ThriftStructReader_Read,
-                            Expression.Constant( thriftType.Struct ), protocolParam
-                        ),
-                        thriftType.TypeInfo.AsType()
+                    return Expression.Call(
+                        typeof( ThriftStructReader ),
+                        "Read",
+                        new[] { thriftType.TypeInfo.AsType() },
+                        Expression.Constant( thriftType.Struct ), protocolParam
                     );
 
                 case ThriftTypeId.Map:
@@ -318,7 +316,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Creates a reader for the specified struct.
         /// </summary>
-        private static Expression<Func<IThriftProtocol, object>> CreateReaderForStruct( ThriftStruct thriftStruct )
+        private static LambdaExpression CreateReaderForStruct( ThriftStruct thriftStruct )
         {
             var protocolParam = Expression.Parameter( typeof( IThriftProtocol ) );
 
@@ -357,7 +355,7 @@ namespace ThriftSharp.Internals
                 structVar
             );
 
-            return Expression.Lambda<Func<IThriftProtocol, object>>( body, protocolParam );
+            return Expression.Lambda( body, protocolParam );
         }
 
 
@@ -624,14 +622,14 @@ namespace ThriftSharp.Internals
         /// <remarks>
         /// This method is only called from generated expressions.
         /// </remarks>
-        public static object Read( ThriftStruct thriftStruct, IThriftProtocol protocol )
+        public static T Read<T>( ThriftStruct thriftStruct, IThriftProtocol protocol )
         {
             if ( !_knownReaders.ContainsKey( thriftStruct ) )
             {
                 _knownReaders.Add( thriftStruct, CreateReaderForStruct( thriftStruct ).Compile() );
             }
 
-            return _knownReaders[thriftStruct]( protocol );
+            return ( (Func<IThriftProtocol, T>) _knownReaders[thriftStruct] )( protocol );
         }
     }
 }

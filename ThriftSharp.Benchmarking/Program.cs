@@ -16,16 +16,16 @@ namespace ThriftSharp.Benchmarking
      * (100 warmup iterations, 100,000 iterations)
      * 
      * ThriftSharp v2.4.0.0
-     * Read, simple   00:00:00.0000006
-     * Read, complex  00:00:00.0000015
-     * Write, simple  00:00:00.0000006
-     * Write, complex 00:00:00.0000015
+     * Read, simple   00:00:00.0000005
+     * Read, complex  00:00:00.0000014
+     * Write, simple  00:00:00.0000005
+     * Write, complex 00:00:00.0000014
      * 
      * Thrift v0.9.1.3
-     * Read, simple   00:00:00.0000025
-     * Read, complex  00:00:00.0000034
+     * Read, simple   00:00:00.0000024
+     * Read, complex  00:00:00.0000032
      * Write, simple  00:00:00.0000004
-     * Write, complex 00:00:00.0000011
+     * Write, complex 00:00:00.0000010
      */
     public sealed class Program
     {
@@ -97,7 +97,7 @@ namespace ThriftSharp.Benchmarking
                     watch.Start();
                 }
 
-                ThriftStructReader.Read( personStruct, protocol );
+                ThriftStructReader.Read<Person>( personStruct, protocol );
 
                 watch.Stop();
             }

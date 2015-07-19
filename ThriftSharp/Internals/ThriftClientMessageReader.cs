@@ -18,14 +18,13 @@ namespace ThriftSharp.Internals
         private static readonly ThriftStruct ThriftProtocolExceptionStruct =
                   ThriftAttributesParser.ParseStruct( typeof( ThriftProtocolException ).GetTypeInfo() );
 
-        private static readonly Dictionary<ThriftMethod, Func<IThriftProtocol, object>> _knownReaders =
-            new Dictionary<ThriftMethod, Func<IThriftProtocol, object>>();
+        private static readonly Dictionary<ThriftMethod, object> _knownReaders = new Dictionary<ThriftMethod, object>();
 
 
         /// <summary>
-        /// Creates a compiled reader for the specified method.
+        /// Creates a reader for the specified method.
         /// </summary>
-        private static Func<IThriftProtocol, object> CreateCompiledReaderForMethod( ThriftMethod method )
+        private static LambdaExpression CreateReaderForMethod( ThriftMethod method )
         {
             var protocolParam = Expression.Parameter( typeof( IThriftProtocol ) );
 
@@ -101,7 +100,9 @@ namespace ThriftSharp.Internals
                     ),
                     Expression.Throw(
                         Expression.Call(
-                            Methods.ThriftStructReader_Read,
+                            typeof( ThriftStructReader ),
+                            "Read",
+                            new[] { typeof( ThriftProtocolException ) },
                             Expression.Constant( ThriftProtocolExceptionStruct ), protocolParam
                         )
                     )
@@ -136,30 +137,30 @@ namespace ThriftSharp.Internals
             }
             else
             {
-                statements.Add( Expression.Convert( returnVariable, typeof( object ) ) );
+                statements.Add( returnVariable );
             }
 
-            return Expression.Lambda<Func<IThriftProtocol, object>>(
+            return Expression.Lambda(
                 Expression.Block(
-                    typeof( object ),
+                    returnVariable == null ? typeof( object ) : returnVariable.Type,
                     returnVariable == null ? new[] { headerVariable } : new[] { headerVariable, hasReturnVariable, returnVariable },
                     statements
                 ),
                 new[] { protocolParam }
-            ).Compile();
+            );
         }
 
         /// <summary>
         /// Reads a ThriftMessage returned by the specified ThriftMethod on the specified ThriftProtocol.
         /// </summary>
-        public static object Read( ThriftMethod method, IThriftProtocol protocol )
+        public static T Read<T>( ThriftMethod method, IThriftProtocol protocol )
         {
             if ( !_knownReaders.ContainsKey( method ) )
             {
-                _knownReaders.Add( method, CreateCompiledReaderForMethod( method ) );
+                _knownReaders.Add( method, CreateReaderForMethod( method ).Compile() );
             }
 
-            return _knownReaders[method]( protocol );
+            return ( (Func<IThriftProtocol, T>) _knownReaders[method] )( protocol );
         }
     }
 }
