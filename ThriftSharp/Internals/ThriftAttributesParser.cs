@@ -18,7 +18,6 @@ namespace ThriftSharp.Internals
         // Cache of known structs, required to support self-referencing types
         private static readonly Dictionary<TypeInfo, ThriftStruct> _knownStructs = new Dictionary<TypeInfo, ThriftStruct>();
 
-
         /// <summary>
         /// Parses a Thrift field from the specified PropertyInfo.
         /// If the PropertyInfo is not declared as a Thrift field, returns null.
@@ -100,10 +99,10 @@ namespace ThriftSharp.Internals
                                     .Select( a => new ThriftThrowsClause( a.Id, a.Name, a.ExceptionTypeInfo, a.Converter ) )
                                     .ToArray();
 
-            var wrongClause = clauses.FirstOrDefault( c => !c.UnderlyingType.GetTypeInfo().Extends( typeof( Exception ) ) );
+            var wrongClause = clauses.FirstOrDefault( c => !c.UnderlyingTypeInfo.Extends( typeof( Exception ) ) );
             if ( wrongClause != null )
             {
-                throw ThriftParsingException.NotAnException( wrongClause.UnderlyingType.GetTypeInfo(), methodInfo );
+                throw ThriftParsingException.NotAnException( wrongClause.UnderlyingTypeInfo, methodInfo );
             }
 
             return clauses;

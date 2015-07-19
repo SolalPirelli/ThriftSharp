@@ -237,7 +237,7 @@ namespace ThriftSharp.Internals
 
                 case ThriftTypeId.Set:
                 case ThriftTypeId.List:
-                    if ( thriftType.CollectionTypeInfo.IsArray )
+                    if ( thriftType.TypeInfo.IsArray )
                     {
                         return CreateWriterForArray( protocolParam, thriftType, value );
                     }

@@ -29,6 +29,10 @@ namespace ThriftSharp.Internals
         // Known .NET types to Thrift types mappings
         private static readonly Dictionary<Type, ThriftType> _knownTypes = new Dictionary<Type, ThriftType>();
 
+        /// <summary>
+        /// Type of the interface for collections (including maps).
+        /// </summary>
+        private readonly TypeInfo _collectionTypeInfo;
 
         /// <summary>
         /// Gets the type's ID.
@@ -40,28 +44,15 @@ namespace ThriftSharp.Internals
         /// </summary>
         public readonly TypeInfo TypeInfo;
 
-
         /// <summary>
         /// Gets the underlying type, if the type is a nullable type.
         /// </summary>
         public readonly ThriftType NullableType;
 
-
-        /// <summary>
-        /// Gets the TypeInfo of the type as a collection, if it is a collection.
-        /// </summary>
-        public readonly TypeInfo CollectionTypeInfo;
-
         /// <summary>
         /// Gets the type of the collection elements, if the type is a collection.
         /// </summary>
         public ThriftType ElementType { get; private set; }
-
-
-        /// <summary>
-        /// Gets the TypeInfo of the type as a map, if it is a map.
-        /// </summary>
-        public readonly TypeInfo MapTypeInfo;
 
         /// <summary>
         /// Gets the type of the map keys, if the type is a map.
@@ -72,7 +63,6 @@ namespace ThriftSharp.Internals
         /// Gets the type of the map values, if the type is a map.
         /// </summary>
         public ThriftType ValueType { get; private set; }
-
 
         /// <summary>
         /// Gets the Thrift type of the struct, if it is a struct.
@@ -136,7 +126,7 @@ namespace ThriftSharp.Internals
                 }
 
                 Id = ThriftTypeId.Map;
-                MapTypeInfo = mapInterface.GetTypeInfo();
+                _collectionTypeInfo = mapInterface.GetTypeInfo();
                 return;
             }
 
@@ -149,7 +139,7 @@ namespace ThriftSharp.Internals
                 }
 
                 Id = ThriftTypeId.Set;
-                CollectionTypeInfo = setInterface.GetTypeInfo();
+                _collectionTypeInfo = setInterface.GetTypeInfo();
                 return;
             }
 
@@ -162,7 +152,7 @@ namespace ThriftSharp.Internals
                 }
 
                 Id = ThriftTypeId.List;
-                CollectionTypeInfo = TypeInfo.IsArray ? TypeInfo : collectionInterface.GetTypeInfo();
+                _collectionTypeInfo = collectionInterface.GetTypeInfo();
                 return;
             }
 
@@ -196,8 +186,8 @@ namespace ThriftSharp.Internals
                 switch ( thriftType.Id )
                 {
                     case ThriftTypeId.Map:
-                        thriftType.KeyType = ThriftType.Get( thriftType.MapTypeInfo.GenericTypeArguments[0], null );
-                        thriftType.ValueType = ThriftType.Get( thriftType.MapTypeInfo.GenericTypeArguments[1], null );
+                        thriftType.KeyType = ThriftType.Get( thriftType._collectionTypeInfo.GenericTypeArguments[0], null );
+                        thriftType.ValueType = ThriftType.Get( thriftType._collectionTypeInfo.GenericTypeArguments[1], null );
                         break;
 
                     case ThriftTypeId.List:
@@ -208,7 +198,7 @@ namespace ThriftSharp.Internals
                         }
                         else
                         {
-                            thriftType.ElementType = ThriftType.Get( thriftType.CollectionTypeInfo.GenericTypeArguments[0], null );
+                            thriftType.ElementType = ThriftType.Get( thriftType._collectionTypeInfo.GenericTypeArguments[0], null );
                         }
                         break;
 

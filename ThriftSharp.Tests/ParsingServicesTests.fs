@@ -84,7 +84,7 @@ let ok argTypes retType isOneWay thrownExns =
     meth.Value.Parameters |> List.ofSeq |> List.map (fun p -> p.UnderlyingTypeInfo.AsType()) <=> argTypes
     meth.Value.ReturnValue.UnderlyingTypeInfo.AsType() <=> ReflectionExtensions.UnwrapTask( retType )
     meth.Value.IsOneWay <=> isOneWay
-    meth.Value.Exceptions |> List.ofSeq |> List.map (fun e -> e.UnderlyingType) <=> thrownExns
+    meth.Value.Exceptions |> List.ofSeq |> List.map (fun e -> e.UnderlyingTypeInfo.AsType()) <=> thrownExns
 
 let fails argTypes retType isOneWay thrownExns =
     let throwsClauses = thrownExns 

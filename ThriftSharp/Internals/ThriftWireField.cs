@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace ThriftSharp.Internals
 {
@@ -27,7 +28,7 @@ namespace ThriftSharp.Internals
         public readonly Func<Expression, Expression> Setter;
 
         private ThriftWireField( short id, string name,
-                                 ThriftType wireType, Type underlyingType,
+                                 ThriftType wireType, TypeInfo underlyingTypeInfo,
                                  bool isRequired, object defaultValue,
                                  object converter,
                                  Expression getter, Func<Expression, Expression> setter )
@@ -35,7 +36,7 @@ namespace ThriftSharp.Internals
             Id = id;
             Name = name;
             WireType = wireType;
-            UnderlyingType = underlyingType;
+            UnderlyingType = underlyingTypeInfo.AsType();
             IsRequired = isRequired;
             DefaultValue = defaultValue;
             Converter = converter;
@@ -48,7 +49,7 @@ namespace ThriftSharp.Internals
         {
             var propExpr = Expression.Property( structVar, field.BackingProperty );
             return new ThriftWireField( field.Id, field.Name,
-                                        field.WireType, field.BackingProperty.PropertyType,
+                                        field.WireType, field.BackingProperty.PropertyType.GetTypeInfo(),
                                         field.IsRequired, field.DefaultValue,
                                         field.Converter,
                                         propExpr, e => Expression.Assign( propExpr, e ) );
@@ -61,7 +62,7 @@ namespace ThriftSharp.Internals
                 param.UnderlyingTypeInfo.AsType()
             );
             return new ThriftWireField( param.Id, param.Name,
-                                        param.WireType, param.UnderlyingTypeInfo.AsType(),
+                                        param.WireType, param.UnderlyingTypeInfo,
                                         false, null,
                                         param.Converter,
                                         getterExpr, null );
@@ -70,7 +71,7 @@ namespace ThriftSharp.Internals
         public static ThriftWireField ThrowsClause( ThriftThrowsClause clause )
         {
             return new ThriftWireField( clause.Id, clause.Name,
-                                        clause.WireType, clause.UnderlyingType,
+                                        clause.WireType, clause.UnderlyingTypeInfo,
                                         false, null,
                                         clause.Converter,
                                         null, Expression.Throw );
@@ -83,7 +84,7 @@ namespace ThriftSharp.Internals
                 Expression.Assign( hasReturnValueVar, Expression.Constant( true ) )
             );
             return new ThriftWireField( 0, null,
-                                        value.WireType, value.UnderlyingTypeInfo.AsType(),
+                                        value.WireType, value.UnderlyingTypeInfo,
                                         false, null,
                                         value.Converter,
                                         returnValueVar, setter );

@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2014-15 Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details).
 
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -122,7 +121,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the field's type.
         /// </summary>
-        public readonly Type UnderlyingType;
+        public readonly TypeInfo UnderlyingTypeInfo;
 
 
         /// <summary>
@@ -133,7 +132,7 @@ namespace ThriftSharp.Internals
         {
             Id = id;
             Name = name;
-            UnderlyingType = typeInfo.AsType();
+            UnderlyingTypeInfo = typeInfo;
         }
     }
 

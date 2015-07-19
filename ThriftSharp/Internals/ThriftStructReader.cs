@@ -112,7 +112,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static Expression CreateReaderForArray( ParameterExpression protocolParam, ThriftType thriftType )
         {
-            var arrayType = thriftType.CollectionTypeInfo.AsType();
+            var arrayType = thriftType.TypeInfo.AsType();
             var itemType = thriftType.ElementType.TypeInfo.AsType();
             var arrayVar = Expression.Variable( arrayType );
             var headerVar = Expression.Variable( typeof( ThriftCollectionHeader ) );
@@ -304,7 +304,7 @@ namespace ThriftSharp.Internals
 
                 case ThriftTypeId.Set:
                 case ThriftTypeId.List:
-                    if ( thriftType.CollectionTypeInfo.IsArray )
+                    if ( thriftType.TypeInfo.IsArray )
                     {
                         return CreateReaderForArray( protocolParam, thriftType );
                     }
