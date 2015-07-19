@@ -10,6 +10,54 @@ using ThriftSharp.Utilities;
 namespace ThriftSharp
 {
     /// <summary>
+    /// Specifies a converter to be used when serializing the value.
+    /// </summary>
+    public abstract class ThriftConvertibleAttribute : Attribute
+    {
+        private static readonly Dictionary<Type, object> _knownConverters = new Dictionary<Type, object>();
+
+        private Type _converter;
+
+        /// <summary>
+        /// Gets the converter's type.
+        /// </summary>
+        public Type Converter
+        {
+            get { return _converter; }
+            set
+            {
+                Validation.IsNotNull( value, () => value );
+
+                if ( !_knownConverters.ContainsKey( value ) )
+                {
+                    var typeInfo = value.GetTypeInfo();
+                    var iface = typeInfo.GetGenericInterface( typeof( IThriftValueConverter<,> ) );
+                    if ( iface == null )
+                    {
+                        throw new ArgumentException( "The type must implement IThriftValueConverter." );
+                    }
+
+                    var ctor = typeInfo.DeclaredConstructors.FirstOrDefault( c => c.GetParameters().Length == 0 );
+                    if ( ctor == null )
+                    {
+                        throw new ArgumentException( "The type must have a parameterless constructor." );
+                    }
+
+                    _knownConverters.Add( value, ctor.Invoke( null ) );
+                }
+
+                _converter = value;
+                ConverterInstance = _knownConverters[value];
+            }
+        }
+
+        /// <summary>
+        /// Gets the converter.
+        /// </summary>
+        internal object ConverterInstance { get; private set; }
+    }
+
+    /// <summary>
     /// Required attribute for Thrift enums.
     /// </summary>
     /// <remarks>
@@ -31,7 +79,7 @@ namespace ThriftSharp
     /// Properties without this attribute will be ignored.
     /// </remarks>
     [AttributeUsage( AttributeTargets.Property )]
-    public sealed class ThriftFieldAttribute : Attribute
+    public sealed class ThriftFieldAttribute : ThriftConvertibleAttribute
     {
         /// <summary>
         /// Gets the Thrift field's ID.
@@ -118,7 +166,7 @@ namespace ThriftSharp
     /// Required attribute for Thrift method parameters.
     /// </summary>
     [AttributeUsage( AttributeTargets.Parameter )]
-    public sealed class ThriftParameterAttribute : Attribute
+    public sealed class ThriftParameterAttribute : ThriftConvertibleAttribute
     {
         /// <summary>
         /// Gets the parameter's ID.
@@ -149,7 +197,7 @@ namespace ThriftSharp
     /// Optional attribute for Thrift methods specifying a "throws" clause.
     /// </summary>
     [AttributeUsage( AttributeTargets.Method )]
-    public sealed class ThriftThrowsAttribute : Attribute
+    public sealed class ThriftThrowsAttribute : ThriftConvertibleAttribute
     {
         /// <summary>
         /// Gets the clause's ID.
@@ -191,7 +239,7 @@ namespace ThriftSharp
     /// Methods without this attribute will be ignored.
     /// </remarks>
     [AttributeUsage( AttributeTargets.Method )]
-    public sealed class ThriftMethodAttribute : Attribute
+    public sealed class ThriftMethodAttribute : ThriftConvertibleAttribute
     {
         /// <summary>
         /// Gets the method's name.
@@ -242,57 +290,6 @@ namespace ThriftSharp
             Validation.IsNeitherNullNorWhitespace( name, () => name );
 
             Name = name;
-        }
-    }
-
-
-    /// <summary>
-    /// Optional attribute for Thrift fields, method return values and method parameters.
-    /// Specifies a converter to be used when serializing the value.
-    /// </summary>
-    [AttributeUsage( AttributeTargets.Property | AttributeTargets.Parameter | AttributeTargets.ReturnValue )]
-    public sealed class ThriftConverterAttribute : Attribute
-    {
-        private static readonly Dictionary<Type, object> _knownConverters = new Dictionary<Type, object>();
-
-        /// <summary>
-        /// Gets the converter's type.
-        /// </summary>
-        public Type ConverterType { get; private set; }
-
-        /// <summary>
-        /// Gets the converter.
-        /// </summary>
-        internal object Converter { get; private set; }
-
-        /// <summary>
-        /// Initializes a new instance of the ThriftConverterAttribute class with the specified converter type.
-        /// </summary>
-        /// <param name="converterType">The converter type.</param>
-        public ThriftConverterAttribute( Type converterType )
-        {
-            Validation.IsNotNull( converterType, () => converterType );
-
-            if ( !_knownConverters.ContainsKey( converterType ) )
-            {
-                var typeInfo = converterType.GetTypeInfo();
-                var iface = typeInfo.GetGenericInterface( typeof( IThriftValueConverter<,> ) );
-                if ( iface == null )
-                {
-                    throw new ArgumentException( "The type must implement IThriftValueConverter." );
-                }
-
-                var ctor = typeInfo.DeclaredConstructors.FirstOrDefault( c => c.GetParameters().Length == 0 );
-                if ( ctor == null )
-                {
-                    throw new ArgumentException( "The type must have a parameterless constructor." );
-                }
-
-                _knownConverters.Add( converterType, ctor.Invoke( null ) );
-            }
-
-            ConverterType = converterType;
-            Converter = _knownConverters[converterType];
         }
     }
 }

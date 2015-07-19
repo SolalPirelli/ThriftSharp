@@ -40,10 +40,7 @@ namespace ThriftSharp.Internals
             var defaultValueAttr = propertyInfo.GetCustomAttribute<ThriftDefaultValueAttribute>();
             var defaultValue = defaultValueAttr == null ? null : defaultValueAttr.Value;
 
-            var converterAttr = propertyInfo.GetCustomAttribute<ThriftConverterAttribute>();
-            var converter = converterAttr == null ? null : converterAttr.Converter;
-
-            return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue, converter, propertyInfo );
+            return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue, attr.ConverterInstance, propertyInfo );
         }
 
         /// <summary>
@@ -91,10 +88,7 @@ namespace ThriftSharp.Internals
                 throw ThriftParsingException.ParameterWithoutAttribute( parameterInfo );
             }
 
-            var converterAttr = parameterInfo.GetCustomAttribute<ThriftConverterAttribute>();
-            var converter = converterAttr == null ? null : converterAttr.Converter;
-
-            return new ThriftParameter( attr.Id, attr.Name, parameterInfo.ParameterType.GetTypeInfo(), converter );
+            return new ThriftParameter( attr.Id, attr.Name, parameterInfo.ParameterType.GetTypeInfo(), attr.ConverterInstance );
         }
 
         /// <summary>
@@ -103,13 +97,13 @@ namespace ThriftSharp.Internals
         private static ThriftThrowsClause[] ParseThrowsClauses( MethodInfo methodInfo )
         {
             var clauses = methodInfo.GetCustomAttributes<ThriftThrowsAttribute>()
-                                    .Select( a => new ThriftThrowsClause( a.Id, a.Name, a.ExceptionTypeInfo ) )
+                                    .Select( a => new ThriftThrowsClause( a.Id, a.Name, a.ExceptionTypeInfo, a.Converter ) )
                                     .ToArray();
 
-            var wrongClause = clauses.FirstOrDefault( c => !c.Type.TypeInfo.Extends( typeof( Exception ) ) );
+            var wrongClause = clauses.FirstOrDefault( c => !c.UnderlyingType.GetTypeInfo().Extends( typeof( Exception ) ) );
             if ( wrongClause != null )
             {
-                throw ThriftParsingException.NotAnException( wrongClause.Type.TypeInfo, methodInfo );
+                throw ThriftParsingException.NotAnException( wrongClause.UnderlyingType.GetTypeInfo(), methodInfo );
             }
 
             return clauses;
@@ -152,10 +146,7 @@ namespace ThriftSharp.Internals
                 throw ThriftParsingException.MoreThanOneCancellationToken( methodInfo );
             }
 
-            var converterAttr = methodInfo.ReturnParameter.GetCustomAttribute<ThriftConverterAttribute>();
-            var converter = converterAttr == null ? null : converterAttr.Converter;
-
-            return new ThriftMethod( attr.Name, attr.IsOneWay, new ThriftReturnValue( unwrapped.GetTypeInfo(), converter ), throwsClauses, parameters );
+            return new ThriftMethod( attr.Name, attr.IsOneWay, new ThriftReturnValue( unwrapped.GetTypeInfo(), attr.ConverterInstance ), throwsClauses, parameters );
         }
 
         /// <summary>

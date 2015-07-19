@@ -30,14 +30,12 @@ type StructWithStructField() =
 
 [<ThriftStruct("ConvertedField")>]
 type StructWithConvertedField() =
-    [<ThriftField(1s, true, "Field")>]
-    [<ThriftConverter(typeof<ThriftUnixDateConverter>)>]
+    [<ThriftField(1s, true, "Field", Converter = typeof<ThriftUnixDateConverter>)>]
     member val Field = System.DateTime.Now with get, set
 
 [<ThriftStruct("NullableConvertedField")>]
 type StructWithNullableConvertedField() =
-    [<ThriftField(1s, false, "Field")>]
-    [<ThriftConverter(typeof<ThriftUnixDateConverter>)>]
+    [<ThriftField(1s, false, "Field", Converter = typeof<ThriftUnixDateConverter>)>]
     member val Field = nullable System.DateTime.Now with get, set
 
 [<ThriftStruct("NullableField")>]

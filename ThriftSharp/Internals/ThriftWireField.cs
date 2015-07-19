@@ -70,9 +70,9 @@ namespace ThriftSharp.Internals
         public static ThriftWireField ThrowsClause( ThriftThrowsClause clause )
         {
             return new ThriftWireField( clause.Id, clause.Name,
-                                        clause.Type, clause.Type.TypeInfo.AsType(),
+                                        clause.WireType, clause.UnderlyingType,
                                         false, null,
-                                        null,
+                                        clause.Converter,
                                         null, Expression.Throw );
         }
 

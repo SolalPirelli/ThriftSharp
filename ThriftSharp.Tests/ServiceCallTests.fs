@@ -37,8 +37,8 @@ type IService =
                     * [<ThriftParameter(3s, "arg3")>] arg3: int[]
                     -> Task<List<string>>
 
-    [<ThriftMethod("ConvertedReturn")>]
-    abstract ConvertedReturn: unit -> [<return: ThriftConverter(typeof<ThriftUnixDateConverter>)>] Task<System.DateTime>
+    [<ThriftMethod("ConvertedReturn", Converter = typeof<ThriftUnixDateConverter>)>]
+    abstract ConvertedReturn: unit -> Task<System.DateTime>
 
     [<ThriftMethod("WithException")>]
     [<ThriftThrows(1s, "exn", typeof<MyException>)>]

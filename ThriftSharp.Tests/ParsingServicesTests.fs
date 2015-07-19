@@ -50,8 +50,8 @@ type ServiceWithUnmarkedMethodParameter =
 
 [<ThriftService("ConvertedReturnValue")>]
 type ServiceWithConvertedReturnValue =
-    [<ThriftMethod("test")>]
-    abstract Test: unit -> [<ThriftConverter(typeof<ThriftUnixDateConverter>)>] Task<int>
+    [<ThriftMethod("test", Converter = typeof<ThriftUnixDateConverter>)>]
+    abstract Test: unit -> Task<int>
 
 [<ThriftService("TooManyTokens")>]
 type ServiceWithTooManyTokens =
@@ -84,7 +84,7 @@ let ok argTypes retType isOneWay thrownExns =
     meth.Value.Parameters |> List.ofSeq |> List.map (fun p -> p.UnderlyingTypeInfo.AsType()) <=> argTypes
     meth.Value.ReturnValue.UnderlyingTypeInfo.AsType() <=> ReflectionExtensions.UnwrapTask( retType )
     meth.Value.IsOneWay <=> isOneWay
-    meth.Value.Exceptions |> List.ofSeq |> List.map (fun e -> e.Type.TypeInfo.AsType()) <=> thrownExns
+    meth.Value.Exceptions |> List.ofSeq |> List.map (fun e -> e.UnderlyingType) <=> thrownExns
 
 let fails argTypes retType isOneWay thrownExns =
     let throwsClauses = thrownExns 
