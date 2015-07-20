@@ -15,7 +15,6 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftAttributesParser
     {
-        // Cache of known structs, required to support self-referencing types
         private static readonly Dictionary<TypeInfo, ThriftStruct> _knownStructs = new Dictionary<TypeInfo, ThriftStruct>();
 
         /// <summary>
