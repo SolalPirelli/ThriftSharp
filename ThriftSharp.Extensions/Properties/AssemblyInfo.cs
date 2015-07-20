@@ -12,4 +12,4 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible( false )]
 
-[assembly: AssemblyVersion( "2.4.0" )]
+[assembly: AssemblyVersion( "3.0.0" )]
