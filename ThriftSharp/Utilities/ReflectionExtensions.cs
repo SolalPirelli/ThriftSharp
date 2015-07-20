@@ -22,8 +22,9 @@ namespace ThriftSharp.Utilities
             {
                 return typeInfo;
             }
-            var type = typeInfo.ImplementedInterfaces.FirstOrDefault( i => i.GenericTypeArguments.Length > 0 && i.GetGenericTypeDefinition() == interfaceType );
-            return type == null ? null : type.GetTypeInfo();
+            return typeInfo.ImplementedInterfaces
+                           .FirstOrDefault( i => i.GenericTypeArguments.Length > 0 && i.GetGenericTypeDefinition() == interfaceType )
+                           ?.GetTypeInfo();
         }
 
         /// <summary>

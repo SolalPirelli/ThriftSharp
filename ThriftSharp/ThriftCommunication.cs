@@ -86,7 +86,7 @@ namespace ThriftSharp
         /// <returns>A finished ThriftCommunication object.</returns>
         ThriftCommunication IThriftTransportPicker.OverHttp( string url, IReadOnlyDictionary<string, string> headers, TimeSpan? timeout )
         {
-            Validation.IsNeitherNullNorWhitespace( url, () => url );
+            Validation.IsNeitherNullNorWhitespace( url, nameof( url ) );
 
             var realHeaders = headers ?? new Dictionary<string, string>();
             var realTimeout = timeout ?? DefaultTimeout;

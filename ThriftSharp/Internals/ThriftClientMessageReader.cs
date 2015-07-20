@@ -125,7 +125,7 @@ namespace ThriftSharp.Internals
 
             return Expression.Lambda(
                 Expression.Block(
-                    returnVariable == null ? typeof( object ) : returnVariable.Type,
+                    returnVariable?.Type ?? typeof( object ),
                     returnVariable == null ? new[] { headerVariable } : new[] { headerVariable, hasReturnVariable, returnVariable },
                     statements
                 ),

@@ -26,7 +26,7 @@ namespace ThriftSharp
             get { return _converter; }
             set
             {
-                Validation.IsNotNull( value, () => value );
+                Validation.IsNotNull( value, nameof( value ) );
 
                 if ( !_knownConverters.ContainsKey( value ) )
                 {
@@ -84,7 +84,7 @@ namespace ThriftSharp
         /// <summary>
         /// Gets the Thrift field's ID.
         /// </summary>
-        public short Id { get; private set; }
+        public short Id { get; }
 
         /// <summary>
         /// Gets a value indicating whether the field is required.
@@ -92,12 +92,12 @@ namespace ThriftSharp
         /// <remarks>
         /// If the Thrift field is required, an exception will be thrown if it is not set during serialization.
         /// </remarks>
-        public bool IsRequired { get; private set; }
+        public bool IsRequired { get; }
 
         /// <summary>
         /// Gets the Thrift field's name.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
         /// <summary>
         /// Gets or sets the field's default value.
@@ -113,7 +113,7 @@ namespace ThriftSharp
         /// <param name="name">The name of the field the attribute is applied to.</param>
         public ThriftFieldAttribute( short id, bool isRequired, string name )
         {
-            Validation.IsNeitherNullNorWhitespace( name, () => name );
+            Validation.IsNeitherNullNorWhitespace( name, nameof( name ) );
 
             Id = id;
             IsRequired = isRequired;
@@ -130,7 +130,7 @@ namespace ThriftSharp
         /// <summary>
         /// Gets the Thrift struct's name.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace ThriftSharp
         /// <param name="name">The name of the struct the attribute is applied to.</param>
         public ThriftStructAttribute( string name )
         {
-            Validation.IsNeitherNullNorWhitespace( name, () => name );
+            Validation.IsNeitherNullNorWhitespace( name, nameof( name ) );
 
             Name = name;
         }
@@ -154,12 +154,12 @@ namespace ThriftSharp
         /// <summary>
         /// Gets the parameter's ID.
         /// </summary>
-        public short Id { get; private set; }
+        public short Id { get; }
 
         /// <summary>
         /// Gets the parameter's name.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
 
         /// <summary>
@@ -169,7 +169,7 @@ namespace ThriftSharp
         /// <param name="name">The name of the parameter the attribute is applied to.</param>
         public ThriftParameterAttribute( short id, string name )
         {
-            Validation.IsNeitherNullNorWhitespace( name, () => name );
+            Validation.IsNeitherNullNorWhitespace( name, nameof( name ) );
 
             Id = id;
             Name = name;
@@ -185,17 +185,17 @@ namespace ThriftSharp
         /// <summary>
         /// Gets the clause's ID.
         /// </summary>
-        public short Id { get; private set; }
+        public short Id { get; }
 
         /// <summary>
         /// Gets the clause's name.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
         /// <summary>
         /// Gets the type of the exception specified by the clause.
         /// </summary>
-        public TypeInfo ExceptionTypeInfo { get; private set; }
+        public TypeInfo ExceptionTypeInfo { get; }
 
 
         /// <summary>
@@ -206,8 +206,8 @@ namespace ThriftSharp
         /// <param name="exceptionType">The type of the exception whose clause is defined by the attribute.</param>
         public ThriftThrowsAttribute( short id, string name, Type exceptionType )
         {
-            Validation.IsNeitherNullNorWhitespace( name, () => name );
-            Validation.IsNotNull( exceptionType, () => exceptionType );
+            Validation.IsNeitherNullNorWhitespace( name, nameof( name ) );
+            Validation.IsNotNull( exceptionType, nameof( exceptionType ) );
 
             Id = id;
             Name = name;
@@ -227,7 +227,7 @@ namespace ThriftSharp
         /// <summary>
         /// Gets the method's name.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
         /// <summary>
         /// Gets a value indicating whether the method is a one-way method.
@@ -235,7 +235,7 @@ namespace ThriftSharp
         /// <remarks>
         /// One-way methods do not expect or wait for a server reply.
         /// </remarks>
-        public bool IsOneWay { get; private set; }
+        public bool IsOneWay { get; }
 
 
         /// <summary>
@@ -245,7 +245,7 @@ namespace ThriftSharp
         /// <param name="isOneWay">Whether the method the attribute is applied to is one-way.</param>
         public ThriftMethodAttribute( string name, bool isOneWay = false )
         {
-            Validation.IsNeitherNullNorWhitespace( name, () => name );
+            Validation.IsNeitherNullNorWhitespace( name, nameof( name ) );
 
             Name = name;
             IsOneWay = isOneWay;
@@ -261,7 +261,7 @@ namespace ThriftSharp
         /// <summary>
         /// Gets the service's name.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
 
         /// <summary>
@@ -270,7 +270,7 @@ namespace ThriftSharp
         /// <param name="name">The name of the service the attribute is applied to.</param>
         public ThriftServiceAttribute( string name )
         {
-            Validation.IsNeitherNullNorWhitespace( name, () => name );
+            Validation.IsNeitherNullNorWhitespace( name, nameof( name ) );
 
             Name = name;
         }

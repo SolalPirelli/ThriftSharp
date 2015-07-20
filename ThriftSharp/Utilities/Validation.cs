@@ -14,32 +14,24 @@ namespace ThriftSharp.Utilities
         /// <summary>
         /// Ensures the specified object is not null.
         /// </summary>
-        public static void IsNotNull<T>( T obj, Expression<Func<T>> paramGet )
+        public static void IsNotNull<T>( T obj, string parameterName )
             where T : class
         {
             if ( obj == null )
             {
-                throw new ArgumentException( string.Format( "Parameter {0} must not be null.", GetName( paramGet ) ) );
+                throw new ArgumentException( $"Parameter {parameterName} must not be null." );
             }
         }
 
         /// <summary>
         /// Ensures the specified string is not null, empty or only composed of whitespace.
         /// </summary>
-        public static void IsNeitherNullNorWhitespace( string s, Expression<Func<string>> paramGet )
+        public static void IsNeitherNullNorWhitespace( string s, string parameterName )
         {
             if ( string.IsNullOrWhiteSpace( s ) )
             {
-                throw new ArgumentException( string.Format( "Parameter {0} must not be null, empty or contain only whitespace. It was '{1}'.", GetName( paramGet ), s ?? "null" ) );
+                throw new ArgumentException( $"Parameter {parameterName} must not be null, empty or contain only whitespace. It was '{s ?? "null"}'." );
             }
-        }
-
-        /// <summary>
-        /// Utility method to get the name of a value returned by a Func expression, e.g. () => abc.
-        /// </summary>
-        private static string GetName<T>( Expression<Func<T>> paramGet )
-        {
-            return ( (MemberExpression) paramGet.Body ).Member.Name;
         }
     }
 }

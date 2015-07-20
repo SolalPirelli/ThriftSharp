@@ -42,8 +42,8 @@ namespace ThriftSharp
         /// </remarks>
         protected Task<T> CallAsync<T>( string methodName, params object[] args )
         {
-            Validation.IsNeitherNullNorWhitespace( methodName, () => methodName );
-            Validation.IsNotNull( args, () => args );
+            Validation.IsNeitherNullNorWhitespace( methodName, nameof( methodName ) );
+            Validation.IsNotNull( args, nameof( args ) );
 
             return Thrift.CallMethodAsync<T>( _communication, _service, methodName, args );
         }
@@ -56,7 +56,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task<T> CallAsync<T>( Expression<Func<TService, Func<Task<T>>>> expr )
         {
-            Validation.IsNotNull( expr, () => expr );
+            Validation.IsNotNull( expr, nameof( expr ) );
 
             return Thrift.CallMethodAsync<T>( _communication, _service, GetMethodName( expr ) );
         }
@@ -71,7 +71,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task<TReturn> CallAsync<T, TReturn>( Expression<Func<TService, Func<T, Task<TReturn>>>> expr, T arg )
         {
-            Validation.IsNotNull( expr, () => expr );
+            Validation.IsNotNull( expr, nameof( expr ) );
 
             return Thrift.CallMethodAsync<TReturn>( _communication, _service, GetMethodName( expr ), arg );
         }
@@ -88,7 +88,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task<TReturn> CallAsync<T1, T2, TReturn>( Expression<Func<TService, Func<T1, T2, Task<TReturn>>>> expr, T1 arg1, T2 arg2 )
         {
-            Validation.IsNotNull( expr, () => expr );
+            Validation.IsNotNull( expr, nameof( expr ) );
 
             return Thrift.CallMethodAsync<TReturn>( _communication, _service, GetMethodName( expr ), arg1, arg2 );
         }
@@ -107,7 +107,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task<TReturn> CallAsync<T1, T2, T3, TReturn>( Expression<Func<TService, Func<T1, T2, T3, Task<TReturn>>>> expr, T1 arg1, T2 arg2, T3 arg3 )
         {
-            Validation.IsNotNull( expr, () => expr );
+            Validation.IsNotNull( expr, nameof( expr ) );
 
             return Thrift.CallMethodAsync<TReturn>( _communication, _service, GetMethodName( expr ), arg1, arg2, arg3 );
         }
@@ -128,7 +128,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task<TReturn> CallAsync<T1, T2, T3, T4, TReturn>( Expression<Func<TService, Func<T1, T2, T3, T4, Task<TReturn>>>> expr, T1 arg1, T2 arg2, T3 arg3, T4 arg4 )
         {
-            Validation.IsNotNull( expr, () => expr );
+            Validation.IsNotNull( expr, nameof( expr ) );
 
             return Thrift.CallMethodAsync<TReturn>( _communication, _service, GetMethodName( expr ), arg1, arg2, arg3, arg4 );
         }
@@ -145,8 +145,8 @@ namespace ThriftSharp
         /// </remarks>
         protected Task CallAsync( string methodName, params object[] args )
         {
-            Validation.IsNeitherNullNorWhitespace( methodName, () => methodName );
-            Validation.IsNotNull( args, () => args );
+            Validation.IsNeitherNullNorWhitespace( methodName, nameof( methodName ) );
+            Validation.IsNotNull( args, nameof( args ) );
 
             return Thrift.CallMethodAsync<object>( _communication, _service, methodName, args );
         }
@@ -158,7 +158,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task CallAsync( Expression<Func<TService, Func<Task>>> expr )
         {
-            Validation.IsNotNull( expr, () => expr );
+            Validation.IsNotNull( expr, nameof( expr ) );
 
             return Thrift.CallMethodAsync<object>( _communication, _service, GetMethodName( expr ) );
         }
@@ -172,7 +172,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task CallAsync<T>( Expression<Func<TService, Func<T, Task>>> expr, T arg )
         {
-            Validation.IsNotNull( expr, () => expr );
+            Validation.IsNotNull( expr, nameof( expr ) );
 
             return Thrift.CallMethodAsync<object>( _communication, _service, GetMethodName( expr ), arg );
         }
@@ -188,7 +188,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task CallAsync<T1, T2>( Expression<Func<TService, Func<T1, T2, Task>>> expr, T1 arg1, T2 arg2 )
         {
-            Validation.IsNotNull( expr, () => expr );
+            Validation.IsNotNull( expr, nameof( expr ) );
 
             return Thrift.CallMethodAsync<object>( _communication, _service, GetMethodName( expr ), arg1, arg2 );
         }
@@ -206,7 +206,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task CallAsync<T1, T2, T3>( Expression<Func<TService, Func<T1, T2, T3, Task>>> expr, T1 arg1, T2 arg2, T3 arg3 )
         {
-            Validation.IsNotNull( expr, () => expr );
+            Validation.IsNotNull( expr, nameof( expr ) );
 
             return Thrift.CallMethodAsync<object>( _communication, _service, GetMethodName( expr ), arg1, arg2, arg3 );
         }
@@ -226,7 +226,7 @@ namespace ThriftSharp
         /// <returns>The task object representing the asynchronous call.</returns>
         protected Task CallAsync<T1, T2, T3, T4>( Expression<Func<TService, Func<T1, T2, T3, T4, Task>>> expr, T1 arg1, T2 arg2, T3 arg3, T4 arg4 )
         {
-            Validation.IsNotNull( expr, () => expr );
+            Validation.IsNotNull( expr, nameof( expr ) );
 
             return Thrift.CallMethodAsync<object>( _communication, _service, GetMethodName( expr ), arg1, arg2, arg3, arg4 );
         }

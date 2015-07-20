@@ -7,11 +7,11 @@ namespace ThriftSharp.Benchmarking
 {
     public sealed class BenchmarkResult
     {
-        public string Name { get; private set; }
-        public TimeSpan ThriftSharpReadTime { get; private set; }
-        public TimeSpan ThriftSharpWriteTime { get; private set; }
-        public TimeSpan ThriftWriteTime { get; private set; }
-        public TimeSpan ThriftReadTime { get; private set; }
+        public string Name { get; }
+        public TimeSpan ThriftSharpReadTime { get; }
+        public TimeSpan ThriftSharpWriteTime { get; }
+        public TimeSpan ThriftWriteTime { get; }
+        public TimeSpan ThriftReadTime { get; }
 
         public BenchmarkResult( string name, TimeSpan thriftSharpRead, TimeSpan thriftSharpWrite, TimeSpan thriftRead, TimeSpan thriftWrite )
         {
