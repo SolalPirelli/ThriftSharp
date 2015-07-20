@@ -39,10 +39,7 @@ namespace ThriftSharp.Internals
                 throw ThriftParsingException.RequiredNullableField( propertyInfo );
             }
 
-            var defaultValueAttr = propertyInfo.GetCustomAttribute<ThriftDefaultValueAttribute>();
-            var defaultValue = defaultValueAttr == null ? null : defaultValueAttr.Value;
-
-            return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue, attr.ConverterInstance, propertyInfo );
+            return new ThriftField( attr.Id, attr.Name, attr.IsRequired, attr.DefaultValue, attr.ConverterInstance, propertyInfo );
         }
 
         /// <summary>

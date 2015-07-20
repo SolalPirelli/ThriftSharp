@@ -99,6 +99,11 @@ namespace ThriftSharp
         /// </summary>
         public string Name { get; private set; }
 
+        /// <summary>
+        /// Gets or sets the field's default value.
+        /// </summary>
+        public object DefaultValue { get; set; }
+
 
         /// <summary>
         /// Initializes a new instance of the ThriftFieldAttribute class with the specified values.
@@ -113,28 +118,6 @@ namespace ThriftSharp
             Id = id;
             IsRequired = isRequired;
             Name = name;
-        }
-    }
-
-    /// <summary>
-    /// Optional attribute for Thrift fields specifying their default value.
-    /// </summary>
-    [AttributeUsage( AttributeTargets.Property )]
-    public sealed class ThriftDefaultValueAttribute : Attribute
-    {
-        /// <summary>
-        /// Gets the Thrift field's default value.
-        /// </summary>
-        public object Value { get; private set; }
-
-
-        /// <summary>
-        /// Initializes a new instance of the ThriftDefaultValueAttribute class with the specified value.
-        /// </summary>
-        /// <param name="value">The default value of the field the attribute is applied to.</param>
-        public ThriftDefaultValueAttribute( object value )
-        {
-            Value = value;
         }
     }
 

@@ -45,8 +45,7 @@ type StructWithNullableField() =
 
 [<ThriftStruct("NullableFieldWithDefault")>]
 type StructWithNullableFieldWithDefault() =
-    [<ThriftField(1s, false, "Field")>]
-    [<ThriftDefaultValue(42)>]
+    [<ThriftField(1s, false, "Field", DefaultValue = 42)>]
     member val Field = System.Nullable() with get, set
 
 
