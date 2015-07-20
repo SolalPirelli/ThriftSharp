@@ -21,11 +21,11 @@ namespace ThriftSharp.Utilities
         /// Makes the <see cref="Task{TResult}" /> timeout after the specified amount of time.
         /// </summary>
         /// <remarks>
-        /// This method assumes millisecondsTimeout != 0 and does not optimize for that edge case
+        /// This method assumes timeout != 0 and does not optimize for that edge case
         /// </remarks>
-        public static Task<TResult> TimeoutAfter<TResult>( this Task<TResult> task, int millisecondsTimeout )
+        public static Task<TResult> TimeoutAfter<TResult>( this Task<TResult> task, TimeSpan timeout )
         {
-            if ( task.IsCompleted || millisecondsTimeout == Timeout.Infinite )
+            if ( task.IsCompleted || timeout == Timeout.InfiniteTimeSpan )
             {
                 return task;
             }
@@ -33,7 +33,7 @@ namespace ThriftSharp.Utilities
             var resultSource = new TaskCompletionSource<TResult>();
             var timeoutSource = new CancellationTokenSource();
 
-            Task.Delay( millisecondsTimeout, timeoutSource.Token )
+            Task.Delay( timeout, timeoutSource.Token )
                 .ContinueWith( ( _, state ) => ( (TaskCompletionSource<TResult>) state ).TrySetCanceled(), resultSource );
 
             task.ContinueWith(

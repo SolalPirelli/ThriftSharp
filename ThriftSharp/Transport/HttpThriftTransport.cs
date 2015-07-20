@@ -22,9 +22,9 @@ namespace ThriftSharp.Transport
         private readonly string _url;
         private readonly CancellationToken _token;
         private readonly IReadOnlyDictionary<string, string> _headers;
-        private readonly int _timeout;
+        private readonly TimeSpan _timeout;
 
-        private readonly MemoryStream _outputStream;
+        private MemoryStream _outputStream;
         private MemoryStream _inputStream;
 
 
@@ -34,8 +34,8 @@ namespace ThriftSharp.Transport
         /// <param name="url">The URL, including the port if necessary.</param>
         /// <param name="token">The cancellation token that will cancel asynchronous tasks.</param>
         /// <param name="headers">The HTTP headers to include with every request.</param>
-        /// <param name="timeout">The timeout in milliseconds (or -1 for an infinite timeout).</param>
-        public HttpThriftTransport( string url, CancellationToken token, IReadOnlyDictionary<string, string> headers, int timeout )
+        /// <param name="timeout">The timeout.</param>
+        public HttpThriftTransport( string url, CancellationToken token, IReadOnlyDictionary<string, string> headers, TimeSpan timeout )
         {
             _url = url;
             _token = token;
@@ -89,8 +89,15 @@ namespace ThriftSharp.Transport
                 await requestStream.FlushAsync( _token );
             }
 
-            var response = await request.GetResponseAsync().TimeoutAfter( _timeout );
+            _token.ThrowIfCancellationRequested();
+
+            // Don't keep the output stream for longer than what's needed,
+            // and don't create the input stream before it's needed either.
+            _outputStream.Dispose();
+            _outputStream = null;
             _inputStream = new MemoryStream();
+
+            var response = await request.GetResponseAsync().TimeoutAfter( _timeout );
             await response.GetResponseStream().CopyToAsync( _inputStream );
         }
 

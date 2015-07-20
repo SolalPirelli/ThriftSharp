@@ -20,7 +20,7 @@ namespace ThriftSharp
         UnknownMethod = 1,
 
         /// <summary>
-        /// The message type sent by the client is invalid.
+        /// The message type is invalid.
         /// </summary>
         InvalidMessageType = 2,
 

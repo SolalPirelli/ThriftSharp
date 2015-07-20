@@ -21,10 +21,10 @@ namespace ThriftSharp
         /// Communicates over HTTP at the specified URL.
         /// </summary>
         /// <param name="url">The URL, including the port.</param>
-        /// <param name="timeout">Optional. The timeout in milliseconds. The default is 5 seconds; use -1 for an infinite timeout.</param>
-        /// <param name="headers">Optional. The headers to use with the requests. No additional headers by default.</param>    
+        /// <param name="headers">Optional. The headers to use with the requests. No additional headers by default.</param>
+        /// <param name="timeout">Optional. The timeout in milliseconds. The default is 5 seconds.</param>
         /// <returns>A finished ThriftCommunication object.</returns>
-        ThriftCommunication OverHttp( string url, int timeout = 5000, IReadOnlyDictionary<string, string> headers = null );
+        ThriftCommunication OverHttp( string url, IReadOnlyDictionary<string, string> headers = null, TimeSpan? timeout = null );
     }
 
     /// <summary>
@@ -32,6 +32,8 @@ namespace ThriftSharp
     /// </summary>
     public sealed class ThriftCommunication : IThriftTransportPicker
     {
+        private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds( 5 );
+
         private readonly Func<IThriftTransport, IThriftProtocol> _protocolCreator;
         private readonly Func<CancellationToken, IThriftTransport> _transportFactory;
 
@@ -76,17 +78,20 @@ namespace ThriftSharp
         }
 
         /// <summary>
-        /// Communicates over HTTP at the specified URL.
+        /// Communicate over HTTP at the specified URL.
         /// </summary>
         /// <param name="url">The URL, including the port.</param>
         /// <param name="timeout">Optional. The timeout in milliseconds. The default is 5 seconds; use -1 for an infinite timeout.</param>
         /// <param name="headers">Optional. The headers to use with the requests. No additional headers by default.</param>
         /// <returns>A finished ThriftCommunication object.</returns>
-        ThriftCommunication IThriftTransportPicker.OverHttp( string url, int timeout, IReadOnlyDictionary<string, string> headers )
+        ThriftCommunication IThriftTransportPicker.OverHttp( string url, IReadOnlyDictionary<string, string> headers, TimeSpan? timeout )
         {
             Validation.IsNeitherNullNorWhitespace( url, () => url );
 
-            return new ThriftCommunication( this, token => new HttpThriftTransport( url, token, headers ?? new Dictionary<string, string>(), timeout ) );
+            var realHeaders = headers ?? new Dictionary<string, string>();
+            var realTimeout = timeout ?? DefaultTimeout;
+
+            return new ThriftCommunication( this, token => new HttpThriftTransport( url, token, realHeaders, realTimeout ) );
         }
 
 
