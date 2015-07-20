@@ -72,7 +72,7 @@ let ok argTypes retType isOneWay thrownExns =
     let methodArgs = argTypes |> Array.ofList
                               |> Array.mapi (fun i typ -> typ, [ <@ ThriftParameterAttribute(int16 i, string i) @> ])
     
-    let iface = makeInterface [ <@ ThriftServiceAttribute(name) @> ] [methodArgs, retType, <@ ThriftMethodAttribute(methodName, isOneWay) @> :> Expr :: throwsClauses] 
+    let iface = makeInterface [ <@ ThriftServiceAttribute(name) @> ] [methodArgs, retType, <@ ThriftMethodAttribute(methodName, IsOneWay = isOneWay) @> :> Expr :: throwsClauses] 
     let thriftService = ThriftAttributesParser.ParseService(iface.GetTypeInfo())
 
     thriftService.Name <=> name
@@ -94,7 +94,7 @@ let fails argTypes retType isOneWay thrownExns =
     let methodArgs = argTypes |> Array.ofList
                               |> Array.mapi (fun i typ -> typ, [ <@ ThriftParameterAttribute(int16 i, string i) @> ])
     
-    let iface = makeInterface [ <@ ThriftServiceAttribute("Service") @> ] [methodArgs, retType, <@ ThriftMethodAttribute("Method", isOneWay) @> :> Expr :: throwsClauses] 
+    let iface = makeInterface [ <@ ThriftServiceAttribute("Service") @> ] [methodArgs, retType, <@ ThriftMethodAttribute("Method", IsOneWay = isOneWay) @> :> Expr :: throwsClauses] 
     throws<ThriftParsingException>(fun () -> ThriftAttributesParser.ParseService(iface.GetTypeInfo()) |> box) |> ignore
 
 let failsOn<'T> =

@@ -107,7 +107,7 @@ namespace ThriftSharp.Transport
         /// </summary>
         ~HttpThriftTransport()
         {
-            Dispose( false );
+            DisposePrivate();
         }
 
         /// <summary>
@@ -115,15 +115,14 @@ namespace ThriftSharp.Transport
         /// </summary>
         public void Dispose()
         {
-            Dispose( true );
+            DisposePrivate();
             GC.SuppressFinalize( this );
         }
 
         /// <summary>
         /// Disposes of this instance.
         /// </summary>
-        /// <param name="disposing">Whether the call comes from the Dispose method.</param>
-        private void Dispose( bool disposing )
+        private void DisposePrivate()
         {
             if ( _outputStream != null )
             {

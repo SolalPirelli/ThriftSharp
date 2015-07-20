@@ -230,25 +230,23 @@ namespace ThriftSharp
         public string Name { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the method is a one-way method.
+        /// Gets or sets a value indicating whether the method is a one-way method.
         /// </summary>
         /// <remarks>
-        /// One-way methods do not expect or wait for a server reply.
+        /// One-way methods are sent by the client but not replied to by the server.
         /// </remarks>
-        public bool IsOneWay { get; }
+        public bool IsOneWay { get; set; }
 
 
         /// <summary>
         /// Initializes a new instance of the ThriftMethodAttribute class with the specified values.
         /// </summary>
         /// <param name="name">The name of the method the attribute is applied to.</param>
-        /// <param name="isOneWay">Whether the method the attribute is applied to is one-way.</param>
-        public ThriftMethodAttribute( string name, bool isOneWay = false )
+        public ThriftMethodAttribute( string name )
         {
             Validation.IsNeitherNullNorWhitespace( name, nameof( name ) );
 
             Name = name;
-            IsOneWay = isOneWay;
         }
     }
 

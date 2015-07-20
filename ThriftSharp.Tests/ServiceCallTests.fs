@@ -44,7 +44,7 @@ type IService =
     [<ThriftThrows(1s, "exn", typeof<MyException>)>]
     abstract WithException: unit -> Task<int>
 
-    [<ThriftMethod("OneWay", true)>]
+    [<ThriftMethod("OneWay", IsOneWay = true)>]
     abstract OneWay: unit -> Task
 
 [<AbstractClass>]

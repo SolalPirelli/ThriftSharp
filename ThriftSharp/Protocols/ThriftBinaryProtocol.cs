@@ -440,16 +440,16 @@ namespace ThriftSharp.Protocols
         #region IDisposable implementation
         ~ThriftBinaryProtocol()
         {
-            Dispose( false );
+            DisposePrivate();
         }
 
         public void Dispose()
         {
-            Dispose( true );
+            DisposePrivate();
             GC.SuppressFinalize( this );
         }
 
-        private void Dispose( bool disposing )
+        private void DisposePrivate()
         {
             _transport.Dispose();
         }

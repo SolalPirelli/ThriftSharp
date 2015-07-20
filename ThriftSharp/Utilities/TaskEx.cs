@@ -36,8 +36,7 @@ namespace ThriftSharp.Utilities
             Task.Delay( timeout, timeoutSource.Token )
                 .ContinueWith( ( _, state ) => ( (TaskCompletionSource<TResult>) state ).TrySetCanceled(), resultSource );
 
-            task.ContinueWith(
-                ( antecedent, state ) =>
+            task.ContinueWith( ( antecedent, state ) =>
                 {
                     var tuple = (Tuple<CancellationTokenSource, TaskCompletionSource<TResult>>) state;
                     tuple.Item1.Cancel();
