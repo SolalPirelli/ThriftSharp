@@ -12,15 +12,10 @@ open System.Reflection.Emit
 open System.Threading
 open Microsoft.FSharp.Reflection
 open Microsoft.FSharp.Quotations.Patterns
-open Microsoft.VisualStudio.TestTools.UnitTesting
 open Linq.QuotationEvaluation
+open Xunit
 open ThriftSharp
 open ThriftSharp.Internals
-
-// Shorter name
-type Test = TestMethodAttribute
-// So other files don't have to reference the VS testing namespace
-type TestClass = TestClassAttribute
 
 let tid (n: int) = byte n |> LanguagePrimitives.EnumOfValue
 
@@ -65,7 +60,7 @@ let rec private eq (act: obj) (exp: obj) = // can safely assume act and exp are 
 
 /// Ensures both objects are equal, comparing for collection, reference or structural equality
 let (<=>) (act: 'a) (exp: 'a) =
-    if not (eq act exp) then Assert.Fail(sprintf "Expected: %A%sActual: %A" exp Environment.NewLine act)
+    Assert.Equal<'a>(exp, act) //if not (eq act exp) then Assert.True(false, sprintf "Expected: %A%sActual: %A" exp Environment.NewLine act)
 
 let throws<'T when 'T :> exn> func =
     let exn = ref Unchecked.defaultof<'T>
@@ -76,24 +71,24 @@ let throws<'T when 'T :> exn> func =
     | ex when typeof<'T>.IsAssignableFrom(ex.GetType()) -> 
         exn := ex :?> 'T
     | ex -> 
-        Assert.Fail(sprintf "Expected an exception of type %A, but got one of type %A (message: %s)" typeof<'T> (ex.GetType()) ex.Message)
+        Assert.True(false, sprintf "Expected an exception of type %A, but got one of type %A (message: %s)" typeof<'T> (ex.GetType()) ex.Message)
     
     if Object.Equals(!exn, null) then
-        Assert.Fail("Expected an exception, but none was thrown.")
+        Assert.True(false, "Expected an exception, but none was thrown.")
     !exn
 
 let throwsAsync<'T when 'T :> exn> (func: Async<obj>) = 
     Async.FromContinuations(fun (cont, econt, _) ->
         Async.StartWithContinuations(
             func,
-            (fun _ -> econt(AssertFailedException("Expected an exception, but none was thrown."))),
+            (fun _ -> econt(Exception("Expected an exception, but none was thrown."))),
             (fun e -> match (match e with :? AggregateException as e -> e.InnerException | _ -> e) with
                       | e when typeof<'T>.IsAssignableFrom(e.GetType()) -> 
                           cont (e :?> 'T)
                       | e ->
-                          econt(AssertFailedException(sprintf "Expected an %A, got an %A (message: %s)" typeof<'T> (e.GetType()) e.Message))),
+                          econt(Exception(sprintf "Expected an %A, got an %A (message: %s)" typeof<'T> (e.GetType()) e.Message))),
             (fun e -> if typeof<'T> <> typeof<OperationCanceledException> then
-                          econt(AssertFailedException(sprintf "Expected an %A, got an OperationCanceledException." typeof<'T>))
+                          econt(Exception(sprintf "Expected an %A, got an OperationCanceledException." typeof<'T>))
                       else
                           cont (box e :?> 'T))
         )

@@ -57,7 +57,7 @@ namespace ThriftSharp
         /// <returns>The resulting DateTime.</returns>
         public DateTime Convert( long value )
         {
-            return UnixTimeStart.AddSeconds( value ).ToLocalTime();
+            return UnixTimeStart.AddSeconds( value );
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace ThriftSharp
         /// <returns>The resulting DateTime.</returns>
         public DateTime Convert( long value )
         {
-            return JavaTimeStart.AddMilliseconds( value ).ToLocalTime();
+            return JavaTimeStart.AddMilliseconds( value );
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace ThriftSharp
         /// <returns>The resulting DateTime.</returns>
         public DateTimeOffset Convert( long value )
         {
-            return UnixTimeStart.AddSeconds( value ).ToLocalTime();
+            return UnixTimeStart.AddSeconds( value );
         }
 
         /// <summary>
@@ -178,7 +178,7 @@ namespace ThriftSharp
         /// <returns>The resulting DateTime.</returns>
         public DateTimeOffset Convert( long value )
         {
-            return JavaTimeStart.AddMilliseconds( value ).ToLocalTime();
+            return JavaTimeStart.AddMilliseconds( value );
         }
 
         /// <summary>

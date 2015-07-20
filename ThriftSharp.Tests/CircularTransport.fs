@@ -23,7 +23,7 @@ type CircularTransport() =
             stream.Read(out, 0, out.Length) |> ignore
 
         member x.FlushAndReadAsync() =
-            Task.FromResult(0) :> Task
+            Task.CompletedTask
 
         member x.Dispose() =
             ()

@@ -55,30 +55,30 @@ type Tests() =
     abstract TestStruct: data: ThriftProtocolValue list -> value: 'a -> unit
 
     // Primitive fields
-    [<Test>] member x.Bool() = x.Test              [Bool true]         2  true
-    [<Test>] member x.SByte() = x.Test             [SByte 1y]          3  1y
-    [<Test>] member x.Double() = x.Test            [Double 1.0]        4  1.0
-    [<Test>] member x.Int16() = x.Test             [Int16 1s]          6  1s
-    [<Test>] member x.Int32() = x.Test             [Int32 1]           8  1
-    [<Test>] member x.Int64() = x.Test             [Int64 1L]         10  1L
-    [<Test>] member x.String() = x.Test            [String "x"]       11  "x"   
-    [<Test>] member x.Binary() = x.Test            [Binary [| 1y |]]  11  [| 1y |]
-    [<Test>] member x.Nullable() = x.Test          [Int32 1]           8  (nullable 1)
-    [<Test>] member x.Enum() = x.Test              [Int32 1]           8  SimpleEnum.A
-    [<Test>] member x.``Nullable enum``() = x.Test [Int32 2]           8  (nullable SimpleEnum.B)
+    (* Test *) member x.Bool() = x.Test              [Bool true]         2  true
+    (* Test *) member x.SByte() = x.Test             [SByte 1y]          3  1y
+    (* Test *) member x.Double() = x.Test            [Double 1.0]        4  1.0
+    (* Test *) member x.Int16() = x.Test             [Int16 1s]          6  1s
+    (* Test *) member x.Int32() = x.Test             [Int32 1]           8  1
+    (* Test *) member x.Int64() = x.Test             [Int64 1L]         10  1L
+    (* Test *) member x.String() = x.Test            [String "x"]       11  "x"   
+    (* Test *) member x.Binary() = x.Test            [Binary [| 1y |]]  11  [| 1y |]
+    (* Test *) member x.Nullable() = x.Test          [Int32 1]           8  (nullable 1)
+    (* Test *) member x.Enum() = x.Test              [Int32 1]           8  SimpleEnum.A
+    (* Test *) member x.``Nullable enum``() = x.Test [Int32 2]           8  (nullable SimpleEnum.B)
 
     // Collection fields
-    [<Test>] member x.List() = x.Test             [ListHeader (1, tid 8); Int32 1; ListEnd]                  15  (List [1])
-    [<Test>] member x.``List, empty``() = x.Test  [ListHeader (0, tid 8); ListEnd]                           15  (List<int>())
-    [<Test>] member x.Set() = x.Test              [SetHeader (1, tid 8); Int32 1; SetEnd]                    14  (HashSet [1])
-    [<Test>] member x.``Set, empty``() = x.Test   [SetHeader (0, tid 8); SetEnd]                             14  (HashSet<int>())
-    [<Test>] member x.Map() = x.Test              [MapHeader (1, tid 8, tid 10); Int32 1; Int64 1L; MapEnd]  13  (dict [1, 1L])
-    [<Test>] member x.``Map, empty``() = x.Test   [MapHeader (0, tid 8, tid 10); MapEnd]                     13  (Dictionary<int, int64>())
-    [<Test>] member x.Array() = x.Test            [ListHeader (1, tid 8); Int32 1; ListEnd]                  15  [| 1 |]
-    [<Test>] member x.``Array, empty``() = x.Test [ListHeader (0, tid 8); ListEnd]                           15  Array.empty<int>
+    (* Test *) member x.List() = x.Test             [ListHeader (1, tid 8); Int32 1; ListEnd]                  15  (List [1])
+    (* Test *) member x.``List, empty``() = x.Test  [ListHeader (0, tid 8); ListEnd]                           15  (List<int>())
+    (* Test *) member x.Set() = x.Test              [SetHeader (1, tid 8); Int32 1; SetEnd]                    14  (HashSet [1])
+    (* Test *) member x.``Set, empty``() = x.Test   [SetHeader (0, tid 8); SetEnd]                             14  (HashSet<int>())
+    (* Test *) member x.Map() = x.Test              [MapHeader (1, tid 8, tid 10); Int32 1; Int64 1L; MapEnd]  13  (dict [1, 1L])
+    (* Test *) member x.``Map, empty``() = x.Test   [MapHeader (0, tid 8, tid 10); MapEnd]                     13  (Dictionary<int, int64>())
+    (* Test *) member x.Array() = x.Test            [ListHeader (1, tid 8); Int32 1; ListEnd]                  15  [| 1 |]
+    (* Test *) member x.``Array, empty``() = x.Test [ListHeader (0, tid 8); ListEnd]                           15  Array.empty<int>
 
     // Collections of structs
-    [<Test>]
+    (* Test *)
     member x.``List of struct``() =
         x.Test
             [ListHeader (1, tid 12)
@@ -92,7 +92,7 @@ type Tests() =
             15
             (List [SimpleStruct(Field = 1)])
 
-    [<Test>]
+    (* Test *)
     member x.``Set of struct``() =
         x.Test
             [SetHeader (1, tid 12)
@@ -106,7 +106,7 @@ type Tests() =
             14
             (HashSet [SimpleStruct(Field = 1)])
 
-    [<Test>]
+    (* Test *)
     member x.``Map of struct``() =
         x.Test
             [MapHeader (1, tid 12, tid 12)
@@ -126,7 +126,7 @@ type Tests() =
             13
             (dict [SimpleStruct(Field = 1), SimpleStruct(Field = 2)])
 
-    [<Test>]
+    (* Test *)
     member x.``Array of struct``() =
         x.Test
             [ListHeader (1, tid 12)
@@ -141,7 +141,7 @@ type Tests() =
             [| SimpleStruct(Field = 1) |]
          
     // Collections of enums
-    [<Test>]
+    (* Test *)
     member x.``List of enum``() =
         x.Test
             [ListHeader (1, tid 8)
@@ -150,7 +150,7 @@ type Tests() =
             15
             (List [SimpleEnum.A])
 
-    [<Test>]
+    (* Test *)
     member x.``Set of enum``() =
         x.Test
             [SetHeader (1, tid 8)
@@ -159,7 +159,7 @@ type Tests() =
             14
             (HashSet [SimpleEnum.A])
             
-    [<Test>]
+    (* Test *)
     member x.``Map of enum``() =
         x.Test
             [MapHeader (1, tid 8, tid 8)
@@ -169,7 +169,7 @@ type Tests() =
             13
             (dict [SimpleEnum.A, SimpleEnum.B])
             
-    [<Test>]
+    (* Test *)
     member x.``Array of enum``() =
         x.Test
             [ListHeader (1, tid 8)
@@ -179,7 +179,7 @@ type Tests() =
             [| SimpleEnum.A |]
 
     // Struct fields
-    [<Test>]
+    (* Test *)
     member x.``Struct``() =
         x.Test
             [StructHeader "SimpleStruct"
@@ -192,7 +192,7 @@ type Tests() =
             (SimpleStruct(Field = 1))
 
     // Converted fields
-    [<Test>]
+    (* Test *)
     member x.``Converted``() =
         x.TestStruct
             [StructHeader "ConvertedField"
@@ -203,7 +203,7 @@ type Tests() =
              StructEnd]
             (StructWithConvertedField(Field = date(18, 12, 1994)))
 
-    [<Test>]
+    (* Test *)
     member x.``Converted nullable``() =
         x.TestStruct
             [StructHeader "NullableConvertedField"
@@ -215,7 +215,7 @@ type Tests() =
             (StructWithNullableConvertedField(Field = nullable(date(18, 12, 1994))))
 
     // Unset nullable fields
-    [<Test>]
+    (* Test *)
     member x.``Nullable, not set``() =
         x.TestStruct
             [StructHeader "NullableField"
@@ -223,7 +223,7 @@ type Tests() =
              StructEnd]
             (StructWithNullableField(Field = System.Nullable()))
 
-    [<Test>]
+    (* Test *)
     member x.``Nullable with default value, not set``() =
         x.TestStruct
             [StructHeader "NullableFieldWithDefault"
@@ -231,7 +231,7 @@ type Tests() =
              StructEnd]
             (StructWithNullableFieldWithDefault(Field = nullable 42))
 
-    [<Test>]
+    (* Test *)
     member x.``Nullable with default value, set``() =
         x.TestStruct
             [StructHeader "NullableFieldWithDefault"
@@ -243,7 +243,7 @@ type Tests() =
             (StructWithNullableFieldWithDefault(Field = nullable 1))
 
 
-[<TestClass>]
+(* TestClass *)
 type Reading() =
     inherit Tests()
 
@@ -282,7 +282,7 @@ type Reading() =
 
 
     // Read-only tests    
-    [<Test>]
+    (* Test *)
     member __.``Error on missing required field``() =
         let data = 
             [StructHeader "StructField"
@@ -291,32 +291,32 @@ type Reading() =
         let m = MemoryProtocol(data)
         throws<ThriftSerializationException> (fun () -> read<StructWithStructField> m |> box) |> ignore
 
-    [<Test>]
+    (* Test *)
     member __.``ThriftSerializationException is thrown when the field type doesn't match its declaration``() =
         fails typeof<int> 9 [Int64 0L]
 
-    [<Test>]
+    (* Test *)
     member __.``ThriftSerializationException is thrown when the list element type doesn't match its declaration``() =
         fails typeof<List<int>> 15 [ListHeader (1, tid 9); Int64 1L]
 
-    [<Test>]
+    (* Test *)
     member __.``ThriftSerializationException is thrown when the set element type doesn't match its declaration``() =
         fails typeof<HashSet<int>> 14 [SetHeader (3, tid 9); Int64 1L]
 
-    [<Test>]
+    (* Test *)
     member __.``ThriftSerializationException is thrown when the map key type doesn't match its declaration``() =
         fails typeof<Dictionary<int, string>> 13 [MapHeader (1, tid 9, tid 11); Int64 1L; String "x"]
 
-    [<Test>]
+    (* Test *)
     member __.``ThriftSerializationException is thrown when the map value type doesn't match its declaration``() =
         fails typeof<Dictionary<int, string>> 13 [MapHeader (1, tid 8, tid 9); Int32 1; Int64 1L; MapEnd]
 
-    [<Test>]
+    (* Test *)
     member __.``ThriftSerializationException is thrown when the array value type doesn't match its declaration``() =
         fails typeof<int[]> 15 [ListHeader (1, tid 9); Int64 1L; ListEnd]
 
 
-[<TestClass>]
+(* TestClass *)
 type Writing() =
     inherit Tests()
 
@@ -347,12 +347,12 @@ type Writing() =
 
     // Write-only tests
 
-    [<Test>]
+    (* Test *)
     member __.``Error on required but unset field``() = run <| async {
         do! throwsAsync<ThriftSerializationException>(async {write (MemoryProtocol()) (StructWithStructField()); return obj()}) |> Async.Ignore
     }
 
-[<TestClass>]
+(* TestClass *)
 type Skipping() =
     inherit Tests()
     

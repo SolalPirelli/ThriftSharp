@@ -114,65 +114,65 @@ let failsOn<'T> =
     throws<ThriftParsingException> (fun () -> ThriftAttributesParser.ParseStruct(typeof<'T>.GetTypeInfo()) |> box) |> ignore
 
 
-[<TestClass>]
+(* TestClass *)
 type ``Primitives``() =
-    [<Test>] member __.``Boolean required field``() = ok typeof<bool> true
-    [<Test>] member __.``SByte required field``() =   ok typeof<sbyte> true
-    [<Test>] member __.``Int16 required field``() =   ok typeof<int16> true
-    [<Test>] member __.``Int32 required field``() =   ok typeof<int32> true
-    [<Test>] member __.``Int64 required field``() =   ok typeof<int64> true
-    [<Test>] member __.``Double required field``() =  ok typeof<double> true
-    [<Test>] member __.``String required field``() =  ok typeof<string> true
-    [<Test>] member __.``Binary required field``() =  ok typeof<sbyte[]> true
-    [<Test>] member __.``Enum required field``() =    ok typeof<MyEnum> true
+    (* Test *) member __.``Boolean required field``() = ok typeof<bool> true
+    (* Test *) member __.``SByte required field``() =   ok typeof<sbyte> true
+    (* Test *) member __.``Int16 required field``() =   ok typeof<int16> true
+    (* Test *) member __.``Int32 required field``() =   ok typeof<int32> true
+    (* Test *) member __.``Int64 required field``() =   ok typeof<int64> true
+    (* Test *) member __.``Double required field``() =  ok typeof<double> true
+    (* Test *) member __.``String required field``() =  ok typeof<string> true
+    (* Test *) member __.``Binary required field``() =  ok typeof<sbyte[]> true
+    (* Test *) member __.``Enum required field``() =    ok typeof<MyEnum> true
 
-    [<Test>] member __.``String optional field``() = ok typeof<string> false
-    [<Test>] member __.``Binary optional field``() = ok typeof<sbyte[]> false
+    (* Test *) member __.``String optional field``() = ok typeof<string> false
+    (* Test *) member __.``Binary optional field``() = ok typeof<sbyte[]> false
 
-[<TestClass>]
+(* TestClass *)
 type ``Collections``() =
-    [<Test>] member __.``Array required field``() =                ok typeof<int[]> true
-    [<Test>] member __.``IList required field``() =                ok typeof<IList<int>> true
-    [<Test>] member __.``List required field``() =                 ok typeof<List<int>> true
-    [<Test>] member __.``Custom IList required field``() =         ok typeof<CustomList<int>> true
-    [<Test>] member __.``ISet required field``() =                 ok typeof<ISet<int>> true
-    [<Test>] member __.``HashSet required field``() =              ok typeof<HashSet<int>> true
-    [<Test>] member __.``Custom ISet required field``() =          ok typeof<CustomSet<int>> true
-    [<Test>] member __.``IDictionary required field``() =          ok typeof<IDictionary<int,int>> true
-    [<Test>] member __.``Dictionary required field``() =           ok typeof<Dictionary<int,int>> true
-    [<Test>] member __.``Custom IDictionary required field``() =   ok typeof<CustomDictionary<int,int>> true
+    (* Test *) member __.``Array required field``() =                ok typeof<int[]> true
+    (* Test *) member __.``IList required field``() =                ok typeof<IList<int>> true
+    (* Test *) member __.``List required field``() =                 ok typeof<List<int>> true
+    (* Test *) member __.``Custom IList required field``() =         ok typeof<CustomList<int>> true
+    (* Test *) member __.``ISet required field``() =                 ok typeof<ISet<int>> true
+    (* Test *) member __.``HashSet required field``() =              ok typeof<HashSet<int>> true
+    (* Test *) member __.``Custom ISet required field``() =          ok typeof<CustomSet<int>> true
+    (* Test *) member __.``IDictionary required field``() =          ok typeof<IDictionary<int,int>> true
+    (* Test *) member __.``Dictionary required field``() =           ok typeof<Dictionary<int,int>> true
+    (* Test *) member __.``Custom IDictionary required field``() =   ok typeof<CustomDictionary<int,int>> true
 
-    [<Test>] member __.``Array optional field``() =                ok typeof<int[]> false
-    [<Test>] member __.``IList optional field``() =                ok typeof<IList<int>> false
-    [<Test>] member __.``List optional field``() =                 ok typeof<List<int>> false
-    [<Test>] member __.``Custom IList optional field``() =         ok typeof<CustomList<int>> false
-    [<Test>] member __.``ISet optional field``() =                 ok typeof<ISet<int>> false
-    [<Test>] member __.``HashSet optional field``() =              ok typeof<HashSet<int>> false
-    [<Test>] member __.``Custom ISet optional field``() =          ok typeof<CustomSet<int>> false
-    [<Test>] member __.``IDictionary optional field``() =          ok typeof<IDictionary<int,int>> false
-    [<Test>] member __.``Dictionary optional field``() =           ok typeof<Dictionary<int,int>> false
-    [<Test>] member __.``Custom IDictionary optional field``() =   ok typeof<CustomDictionary<int,int>> false
+    (* Test *) member __.``Array optional field``() =                ok typeof<int[]> false
+    (* Test *) member __.``IList optional field``() =                ok typeof<IList<int>> false
+    (* Test *) member __.``List optional field``() =                 ok typeof<List<int>> false
+    (* Test *) member __.``Custom IList optional field``() =         ok typeof<CustomList<int>> false
+    (* Test *) member __.``ISet optional field``() =                 ok typeof<ISet<int>> false
+    (* Test *) member __.``HashSet optional field``() =              ok typeof<HashSet<int>> false
+    (* Test *) member __.``Custom ISet optional field``() =          ok typeof<CustomSet<int>> false
+    (* Test *) member __.``IDictionary optional field``() =          ok typeof<IDictionary<int,int>> false
+    (* Test *) member __.``Dictionary optional field``() =           ok typeof<Dictionary<int,int>> false
+    (* Test *) member __.``Custom IDictionary optional field``() =   ok typeof<CustomDictionary<int,int>> false
 
-[<TestClass>]
+(* TestClass *)
 type ``Special collections``() =
-    [<Test>] member __.``IList implementation without parameterless ctor``() =       fails typeof<BadList<int>> true
-    [<Test>] member __.``ISet implementation without parameterless ctor``() =        fails typeof<BadSet<int>> true
-    [<Test>] member __.``IDictionary implementation without parameterless ctor``() = fails typeof<BadDictionary<int,int>> true
-    [<Test>] member __.``Both IList and ISet implementation``() =                    fails typeof<ListAndSet<int>> true
-    [<Test>] member __.``IList implementation with generic arg not from IList``() =  ok typeof<EvilList<int>> true
+    (* Test *) member __.``IList implementation without parameterless ctor``() =       fails typeof<BadList<int>> true
+    (* Test *) member __.``ISet implementation without parameterless ctor``() =        fails typeof<BadSet<int>> true
+    (* Test *) member __.``IDictionary implementation without parameterless ctor``() = fails typeof<BadDictionary<int,int>> true
+    (* Test *) member __.``Both IList and ISet implementation``() =                    fails typeof<ListAndSet<int>> true
+    (* Test *) member __.``IList implementation with generic arg not from IList``() =  ok typeof<EvilList<int>> true
 
-[<TestClass>]
+(* TestClass *)
 type ``Special structs``() =
-    [<Test>] member __.``No fields at all``() = parse<StructWithoutFields>.Fields.Count <=> 0
-    [<Test>] member __.``Only non-Thrift fields``() = parse<StructWithOnlyUnmarkedFields>.Fields.Count <=> 0
-    [<Test>] member __.``Some non-Thrift fields``() = parse<StructWithUnmarkedFields>.Fields.Count <=> 1
+    (* Test *) member __.``No fields at all``() = parse<StructWithoutFields>.Fields.Count <=> 0
+    (* Test *) member __.``Only non-Thrift fields``() = parse<StructWithOnlyUnmarkedFields>.Fields.Count <=> 0
+    (* Test *) member __.``Some non-Thrift fields``() = parse<StructWithUnmarkedFields>.Fields.Count <=> 1
     
-    [<Test>] member __.``Interface``() = failsOn<Interface>
-    [<Test>] member __.``Abstract class``() = failsOn<Abstract>
+    (* Test *) member __.``Interface``() = failsOn<Interface>
+    (* Test *) member __.``Abstract class``() = failsOn<Abstract>
 
-    [<Test>] member __.``Non-Thrift class``() = failsOn<UnmarkedStruct>
+    (* Test *) member __.``Non-Thrift class``() = failsOn<UnmarkedStruct>
 
-    [<Test>] 
+    (* Test
     member __.``Self-referencing``() = 
         parse<StructWithSelfReference>.Fields |> Seq.sortBy (fun f -> f.Id) 
                                               |> Seq.map (fun f -> f.BackingProperty.PropertyType)
@@ -180,27 +180,27 @@ type ``Special structs``() =
         <=>
         [ typeof<StructWithSelfReference>
           typeof<List<StructWithSelfReference>>
-          typeof<Dictionary<StructWithSelfReference,StructWithSelfReference>> ]
+          typeof<Dictionary<StructWithSelfReference,StructWithSelfReference>> ] *) 
 
-[<TestClass>]
+(* TestClass *)
 type ``Wrong primitive fields``() =
-    [<Test>] member __.``Required nullable field``() = fails typeof<System.Nullable<int32>> true
+    (* Test *) member __.``Required nullable field``() = fails typeof<System.Nullable<int32>> true
 
-    [<Test>] member __.``Unsigned byte field``() =  fails typeof<byte> true
-    [<Test>] member __.``Unsigned int16 field``() = fails typeof<uint16> true
-    [<Test>] member __.``Unsigned int32 field``() = fails typeof<uint32> true
-    [<Test>] member __.``Unsigned int64 field``() = fails typeof<uint64> true
-    [<Test>] member __.``Float field``() =          fails typeof<float32> true
-    [<Test>] member __.``Decimal field``() =        fails typeof<decimal> true
+    (* Test *) member __.``Unsigned byte field``() =  fails typeof<byte> true
+    (* Test *) member __.``Unsigned int16 field``() = fails typeof<uint16> true
+    (* Test *) member __.``Unsigned int32 field``() = fails typeof<uint32> true
+    (* Test *) member __.``Unsigned int64 field``() = fails typeof<uint64> true
+    (* Test *) member __.``Float field``() =          fails typeof<float32> true
+    (* Test *) member __.``Decimal field``() =        fails typeof<decimal> true
 
-    [<Test>] member __.``Boolean optional field``() = fails typeof<bool> false
-    [<Test>] member __.``SByte optional field``() =   fails typeof<sbyte> false
-    [<Test>] member __.``Int16 optional field``() =   fails typeof<int16> false
-    [<Test>] member __.``Int32 optional field``() =   fails typeof<int32> false
-    [<Test>] member __.``Int64 optional field``() =   fails typeof<int64> false
-    [<Test>] member __.``Double optional field``() =  fails typeof<double> false
-    [<Test>] member __.``Enum optional field``() = fails typeof<MyEnum> false
+    (* Test *) member __.``Boolean optional field``() = fails typeof<bool> false
+    (* Test *) member __.``SByte optional field``() =   fails typeof<sbyte> false
+    (* Test *) member __.``Int16 optional field``() =   fails typeof<int16> false
+    (* Test *) member __.``Int32 optional field``() =   fails typeof<int32> false
+    (* Test *) member __.``Int64 optional field``() =   fails typeof<int64> false
+    (* Test *) member __.``Double optional field``() =  fails typeof<double> false
+    (* Test *) member __.``Enum optional field``() = fails typeof<MyEnum> false
 
-    [<Test>] member __.``Non-Int32-based enum field``() = fails typeof<ByteEnum> true
+    (* Test *) member __.``Non-Int32-based enum field``() = fails typeof<ByteEnum> true
 
-    [<Test>] member __.``Non-Thrift enum field``() = fails typeof<EnumWithoutAttribute> true
+    (* Test *) member __.``Non-Thrift enum field``() = fails typeof<EnumWithoutAttribute> true

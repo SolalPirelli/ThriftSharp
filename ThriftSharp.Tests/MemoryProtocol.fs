@@ -33,15 +33,15 @@ type ThriftProtocolValue =
     | Binary of sbyte[]
 
 [<AutoOpen>]
-module ThriftProtocolValueExtensions =   
+module ThriftProtocolValueExtensions =
     let String (str: string) = Binary(Encoding.UTF8.GetBytes(str) |> Array.map sbyte)
 
 type MemoryProtocol(toRead: ThriftProtocolValue list) =
     let mutable writtenVals = []
     let toRead = Queue(toRead)
 
-    let write value = writtenVals <- value::writtenVals
-    let read() = toRead.Dequeue()
+    let write value = writtenVals <- value :: writtenVals
+    let read = toRead.Dequeue
 
     member x.WrittenValues with get() = List.rev writtenVals
     member x.IsEmpty with get() = toRead.Count = 0
@@ -113,7 +113,7 @@ type MemoryProtocol(toRead: ThriftProtocolValue list) =
             write (Binary bs)
 
         member x.FlushAndReadAsync() =
-            Task.FromResult(0) :> Task
+            Task.CompletedTask
 
 
         member x.ReadMessageHeader() =

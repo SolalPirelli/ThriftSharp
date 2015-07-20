@@ -13,13 +13,7 @@ type MemoryTransport(toRead: byte list) =
     let mutable isDisposed = false
     let toRead = Queue(toRead)
 
-    let write values = for value in values do writtenVals <- value::writtenVals
-    let read (out: byte[]) = 
-        for x = 0 to out.Length - 1 do
-            if toRead.Count > 0 then out.[x] <- toRead.Dequeue()
-            else failwith "Not enough bytes were read."
-
-    member x.WrittenValues with get() = List.rev writtenVals
+    member x.WrittenValues with get() = writtenVals
     member x.IsEmpty with get() = toRead.Count = 0
     member x.IsDisposed with get() = isDisposed
     member x.HasRead with get() = hasRead
@@ -30,23 +24,28 @@ type MemoryTransport(toRead: byte list) =
         member x.WriteBytes(bs) =
             if isDisposed then
                 failwith "Already disposed."
-            if hasRead then failwith "Cannot write after a read. Close the transport first."
-            write bs
+
+            if hasRead then 
+                failwith "Cannot write after a read. Close the transport first."
+
+            writtenVals <- writtenVals @ (Array.toList bs)
 
         member x.ReadBytes(out) =
             if isDisposed then
                 failwith "Already disposed."
-            if not hasRead then
-                hasRead <- true
-            read out
+
+            hasRead <- true
+            for x = 0 to out.Length - 1 do
+                if toRead.Count > 0 then out.[x] <- toRead.Dequeue()
+                else failwith "Not enough bytes were read."
 
         member x.FlushAndReadAsync() =
             if isDisposed then
                 failwith "Already disposed."
+
             hasRead <- true
-            Task.FromResult(0) :> Task
+
+            Task.CompletedTask
 
         member x.Dispose() =
-            if isDisposed then
-                failwith "Cannot dispose twice."
             isDisposed <- true

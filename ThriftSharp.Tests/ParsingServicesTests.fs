@@ -102,63 +102,63 @@ let failsOn<'T> =
 
 
 
-[<TestClass>]
+(* TestClass *)
 type __() =
     // Errors should be thrown when parsing services that are not interfaces
-    [<Test>] member __.``Error when service isn't an interface``() = failsOn<NotAnInterface>
+    (* Test *) member __.``Error when service isn't an interface``() = failsOn<NotAnInterface>
 
     // Errors should be thrown when parsing interfaces that are not Thrift services``() 
-    [<Test>] member __.``Error when interface isn't a service``() = failsOn<UnmarkedService>
+    (* Test *) member __.``Error when interface isn't a service``() = failsOn<UnmarkedService>
 
     // Errors should be thrown when parsing services without methods
-    [<Test>] member __.``Error on no methods``() = failsOn<EmptyService>
+    (* Test *) member __.``Error on no methods``() = failsOn<EmptyService>
 
     // Errors should be thrown when parsing services with non-Thrift methods
-    [<Test>] member __.``Error on non-Thrift methods``() = failsOn<ServiceWithUnmarkedMethod>
+    (* Test *) member __.``Error on non-Thrift methods``() = failsOn<ServiceWithUnmarkedMethod>
     
     // Errors should be thrown when parsing services with methods with unmarked parameters
-    [<Test>] member __.``Error on unmarked method parameter``() = failsOn<ServiceWithUnmarkedMethodParameter>
+    (* Test *) member __.``Error on unmarked method parameter``() = failsOn<ServiceWithUnmarkedMethodParameter>
     
     // Errors should be thrown when parsing methods with more than one cancellation token
-    [<Test>] member __.``Error on >1 cancellation tokens``() = failsOn<ServiceWithTooManyTokens>
+    (* Test *) member __.``Error on >1 cancellation tokens``() = failsOn<ServiceWithTooManyTokens>
 
     // Services with two-way methods should be parsed correctly
-    [<Test>] member __.``Method with no return value and no parameters``() = ok [] typeof<Task> false []
-    [<Test>] member __.``Method with int return value and no parameters``() = ok [] typeof<Task<int>> false []
-    [<Test>] member __.``Method with binary return value and no parameters``() = ok [] typeof<Task<sbyte[]>> false []
-    [<Test>] member __.``Method with struct return value and no parameters``() = ok [] typeof<Task<CustomException>> false []
-    [<Test>] member __.``Method with no return value and 1 int parameter``() = ok [typeof<int>] typeof<Task> false []
-    [<Test>] member __.``Method with no return value and 1 string parameter``() = ok [typeof<string>] typeof<Task> false []
-    [<Test>] member __.``Method with no return value and 1 struct parameter``() = ok [typeof<CustomException>] typeof<Task> false []
-    [<Test>] member __.``Method with no return value and 3 parameters``() = ok [typeof<bool>; typeof<CustomException>; typeof<int[]>] typeof<Task> false []
+    (* Test *) member __.``Method with no return value and no parameters``() = ok [] typeof<Task> false []
+    (* Test *) member __.``Method with int return value and no parameters``() = ok [] typeof<Task<int>> false []
+    (* Test *) member __.``Method with binary return value and no parameters``() = ok [] typeof<Task<sbyte[]>> false []
+    (* Test *) member __.``Method with struct return value and no parameters``() = ok [] typeof<Task<CustomException>> false []
+    (* Test *) member __.``Method with no return value and 1 int parameter``() = ok [typeof<int>] typeof<Task> false []
+    (* Test *) member __.``Method with no return value and 1 string parameter``() = ok [typeof<string>] typeof<Task> false []
+    (* Test *) member __.``Method with no return value and 1 struct parameter``() = ok [typeof<CustomException>] typeof<Task> false []
+    (* Test *) member __.``Method with no return value and 3 parameters``() = ok [typeof<bool>; typeof<CustomException>; typeof<int[]>] typeof<Task> false []
 
     // Errors should be thrown when parsing services with non-Task-returning methods
-    [<Test>] member __.``Error on method with no return type``() =     fails [] typeof<System.Void> false []
-    [<Test>] member __.``Error on method with int return type``() =    fails [] typeof<int> false []
-    [<Test>] member __.``Error on method with string return type``() = fails [] typeof<string> false []
-    [<Test>] member __.``Error on method with struct return type``() = fails [] typeof<CustomException> false []
+    (* Test *) member __.``Error on method with no return type``() =     fails [] typeof<System.Void> false []
+    (* Test *) member __.``Error on method with int return type``() =    fails [] typeof<int> false []
+    (* Test *) member __.``Error on method with string return type``() = fails [] typeof<string> false []
+    (* Test *) member __.``Error on method with struct return type``() = fails [] typeof<CustomException> false []
 
     // Services with one-way methods should be parsed correctly
-    [<Test>] member __.``One-way method with Task return type``() = ok [] typeof<Task> true []
+    (* Test *) member __.``One-way method with Task return type``() = ok [] typeof<Task> true []
 
     // Errors should be thrown when parsing services with one-way methods that do not return void
-    [<Test>] member __.``Error on one-way method with Task<T> return type``() = fails [] typeof<Task<int>> true []
+    (* Test *) member __.``Error on one-way method with Task<T> return type``() = fails [] typeof<Task<int>> true []
 
     // Services with methods that throw should be parsed correctly
-    [<Test>] member __.``Method with one thrown exception``() = ok [] typeof<Task> false [typeof<CustomException>]
-    [<Test>] member __.``Method with two thrown exceptions``() = ok [] typeof<Task> false [typeof<CustomException>; typeof<CustomException2>]
+    (* Test *) member __.``Method with one thrown exception``() = ok [] typeof<Task> false [typeof<CustomException>]
+    (* Test *) member __.``Method with two thrown exceptions``() = ok [] typeof<Task> false [typeof<CustomException>; typeof<CustomException2>]
 
     // Errors should be thrown when parsing services with methods that throw non-Exceptions
-    [<Test>] member __.``Error on non-Exception thrown class``() = fails [] typeof<Task> false [typeof<NotException>]
+    (* Test *) member __.``Error on non-Exception thrown class``() = fails [] typeof<Task> false [typeof<NotException>]
 
     // Errors should be thrown when parsing services with one-way methods that throw exceptions
-    [<Test>] member __.``Error on one-way method with thrown exceptions``() = fails [] typeof<Task> true [typeof<CustomException>]
+    (* Test *) member __.``Error on one-way method with thrown exceptions``() = fails [] typeof<Task> true [typeof<CustomException>]
 
     // Services with methods whose return value has a converter should be parsed correctly
-    [<Test>] 
+    (* Test
     member __.``Method with converted return value``() =
         let thriftService = parse<ServiceWithConvertedReturnValue>
 
         thriftService.Methods.Count <=> 1
         let meth = thriftService.Methods.First()
-        meth.Value.ReturnValue.Converter.GetType() <=> typeof<ThriftUnixDateConverter>
+        meth.Value.ReturnValue.Converter.GetType() <=> typeof<ThriftUnixDateConverter> *) 

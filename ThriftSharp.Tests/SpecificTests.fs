@@ -12,9 +12,9 @@ type Simple() =
     [<ThriftField(1s, true, "field")>]
     member val Field = "" with get, set
 
-[<TestClass>]
+(* TestClass *)
 type MemoryLeakTests() =
-    [<Test>]
+    (* Test *)
     member x.``[Regression] No reference is kept to returned objects``() =
         let prot = MemoryProtocol([MessageHeader ("Test", ThriftMessageType.Reply)
                                    StructHeader ""

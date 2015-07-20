@@ -86,7 +86,7 @@ type Tests() =
         expected exn
     }
 
-    [<Test>]
+    (* Test *)
     member x.``No arguments, no return value``() =
         x.Test (
             fun s -> s.NoArgs() |> awaitNonGenTask
@@ -106,7 +106,7 @@ type Tests() =
             ()
         )
 
-    [<Test>]
+    (* Test *)
     member x.``Undeclared exception thrown``() =
         x.TestException (
             fun s -> s.NoArgs() |> awaitNonGenTask
@@ -132,7 +132,7 @@ type Tests() =
             fun e -> e <=> ThriftProtocolException(ThriftProtocolExceptionType.InternalError, Message = "Error")
         )
 
-    [<Test>]
+    (* Test *)
     member x.``One argument, no return value``() =
         x.Test (
             fun s -> s.OneArg(1) |> awaitNonGenTask
@@ -155,7 +155,7 @@ type Tests() =
             ()
         )
 
-    [<Test>]
+    (* Test *)
     member x.``No arguments, with return value``() =
         x.Test (
             fun s -> s.WithReturn() |> Async.AwaitTask
@@ -178,7 +178,7 @@ type Tests() =
             1
         )
 
-    [<Test>]
+    (* Test *)
     member x.``One argument, a cancellation token and no return value``() =
         let source = CancellationTokenSource()
         x.Test (
@@ -203,7 +203,7 @@ type Tests() =
         )
         source.Cancel()
 
-    [<Test>]
+    (* Test *)
     member x.``One argument, an already-canceled token and no return value``() =
         let source = CancellationTokenSource()
         source.Cancel()
@@ -229,7 +229,7 @@ type Tests() =
             ()
         )
 
-    [<Test>]
+    (* Test *)
     member x.``Three arguments, with return value``() =
         x.Test (
             fun s -> s.Complex("x", 1.0, [| 1; 2 |]) |> Async.AwaitTask
@@ -268,7 +268,7 @@ type Tests() =
             List ["a"; "b"; "c"]
         )
 
-    [<Test>]
+    (* Test *)
     member x.``No args, converted return value``() =
         x.Test (
             fun s -> s.ConvertedReturn() |> Async.AwaitTask
@@ -291,7 +291,7 @@ type Tests() =
             date(18, 12, 1994)
         )
 
-    [<Test>]
+    (* Test *)
     member x.``Exception declared, but not thrown``() =
         x.Test (
             fun s -> s.WithException() |> Async.AwaitTask
@@ -314,7 +314,7 @@ type Tests() =
             1
         )
 
-    [<Test>]
+    (* Test *)
     member x.``Exception declared and thrown``() =
         x.TestException (
             fun s -> s.WithException() |> Async.AwaitTask
@@ -342,7 +342,7 @@ type Tests() =
             fun e -> e <=> MyException(Text = "Error")
         )
 
-    [<Test>]
+    (* Test *)
     member x.``One-way method``() =
         x.Test (
             fun s -> s.OneWay() |> awaitNonGenTask
@@ -358,7 +358,7 @@ type Tests() =
             ()
         )
 
-    [<Test>]
+    (* Test *)
     member x.``Null parameter``() =
         x.TestException (
             fun s -> x.GetService(MemoryProtocol()).Complex(null, 0.0, [| |]) |> Async.AwaitTask
@@ -384,7 +384,7 @@ type ServiceImpl(prot) =
         member x.WithException() = base.CallAsync<int>("WithException")
         member x.OneWay() =  base.CallAsync("OneWay")
 
-[<TestClass>]
+(* TestClass *)
 type ServiceImplementation() =
     inherit Tests()
 
@@ -392,7 +392,7 @@ type ServiceImplementation() =
         ServiceImpl(prot) :> IService
 
 
-[<TestClass>]
+(* TestClass *)
 type Proxy() =
     inherit Tests()
 
