@@ -67,18 +67,18 @@
     <Error Condition="!Exists('..\packages\xunit.runner.visualstudio.2.0.1\build\net20\xunit.runner.visualstudio.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\xunit.runner.visualstudio.2.0.1\build\net20\xunit.runner.visualstudio.props'))" />
   </Target>
   <ItemGroup>
-    <Compile Include="CircularTransport.fs" />
-    <Compile Include="MemoryTransport.fs" />
-    <Compile Include="MemoryProtocol.fs" />
-    <Compile Include="Utils.fs" />
-    <Compile Include="ConverterTests.fs" />
+    <Compile Include="Internals\CircularTransport.fs" />
+    <Compile Include="Internals\MemoryTransport.fs" />
+    <Compile Include="Internals\MemoryProtocol.fs" />
+    <Compile Include="Internals\Utils.fs" />
+    <None Include="packages.config" />
+    <Compile Include="Converters.fs" />
     <Compile Include="ParsingStructsTests.fs" />
     <Compile Include="ParsingServicesTests.fs" />
     <Compile Include="StructsTests.fs" />
     <Compile Include="BinaryProtocolTests.fs" />
     <Compile Include="ServiceCallTests.fs" />
     <Compile Include="SpecificTests.fs" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

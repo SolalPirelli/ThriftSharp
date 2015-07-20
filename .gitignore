@@ -1,6 +1,5 @@
 # User-specific files
-*.suo
-*.user
+*.vs
 
 # NuGet packages
 [Pp]ackages/
@@ -10,10 +9,6 @@
 [Rr]elease/
 [Bb]in/
 [Oo]bj/
-
-# MSTest results
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
 
 # NuGet build results
 *.nupkg
