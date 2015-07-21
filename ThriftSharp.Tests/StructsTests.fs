@@ -243,7 +243,7 @@ type Tests() =
             (StructWithNullableFieldWithDefault(Field = nullable 1))
 
 
-(* TestClass *)
+(* TestClass
 type Reading() =
     inherit Tests()
 
@@ -368,4 +368,4 @@ type Skipping() =
         m.IsEmpty <=> true
 
     override x.TestStruct data (value: 'a) =
-        () // not applicable
+        () // not applicable *)

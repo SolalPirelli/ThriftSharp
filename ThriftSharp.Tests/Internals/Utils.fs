@@ -10,8 +10,6 @@ open System.Reflection
 open System.Reflection.Emit
 open System.Threading
 open System.Threading.Tasks
-open Microsoft.FSharp.Quotations.Patterns
-open Linq.QuotationEvaluation
 open Xunit
 open ThriftSharp
 open ThriftSharp.Internals
@@ -46,14 +44,13 @@ type AttributeInfo =
     { typ: Type
       args: obj list
       namedArgs: (string * obj) list }
+    static member AsBuilder (ai: AttributeInfo) =
+        CustomAttributeBuilder(ai.typ.GetConstructors() |> Array.head, 
+                               ai.args |> List.toArray, 
+                               ai.namedArgs |> List.map (fst >> ai.typ.GetProperty) |> List.toArray, 
+                               ai.namedArgs |> List.map snd |> List.toArray)
 
-let asBuilder (ai: AttributeInfo) =
-    CustomAttributeBuilder(ai.typ.GetConstructors() |> Array.head, 
-                           ai.args |> List.toArray, 
-                           ai.namedArgs |> List.map (fst >> ai.typ.GetProperty) |> List.toArray, 
-                           ai.namedArgs |> List.map snd |> List.toArray)
-
-/// Creates an interface with the specified attributes and methds (parameters and attrs, return type, attrs)
+/// Creates an interface with the specified attributes and methods (parameters and their attributes, return type, method attributes)
 let makeInterface (attrs: AttributeInfo list) 
                   (meths: ((Type * AttributeInfo list) list * Type * AttributeInfo list) list) =    
     let guid = Guid.NewGuid()
@@ -64,7 +61,7 @@ let makeInterface (attrs: AttributeInfo list)
     
     let interfaceBuilder = moduleBuilder.DefineType("GeneratedType", TypeAttributes.Interface ||| TypeAttributes.Abstract ||| TypeAttributes.Public)
     
-    attrs |> List.map asBuilder |> List.iter interfaceBuilder.SetCustomAttribute
+    attrs |> List.iter (AttributeInfo.AsBuilder >> interfaceBuilder.SetCustomAttribute)
 
     meths |> List.iteri (fun n (args, retType, methAttrs) ->
         let methodBuilder = interfaceBuilder.DefineMethod(string n, 
@@ -72,16 +69,52 @@ let makeInterface (attrs: AttributeInfo list)
                                                           retType, 
                                                           args |> List.map fst |> List.toArray)
 
-        args |> List.iteri (fun i (typ, argAttrs) ->
+        args |> List.iteri (fun i (_, argAttrs) ->
              // i + 1 because 0 is the return value
             let paramBuilder = methodBuilder.DefineParameter(i + 1, ParameterAttributes.None, string i)
-            argAttrs |> List.map asBuilder |> List.iter paramBuilder.SetCustomAttribute )
+            argAttrs |> List.iter (AttributeInfo.AsBuilder >> paramBuilder.SetCustomAttribute) )
 
-        methAttrs |> List.map asBuilder |> List.iter methodBuilder.SetCustomAttribute )
+        methAttrs |> List.iter (AttributeInfo.AsBuilder >> methodBuilder.SetCustomAttribute) )
     
     interfaceBuilder.CreateType().GetTypeInfo()
 
 
+/// Creates a class with the specified attributes and properties (with their own attributes)
+let makeClass (attrs: AttributeInfo list) 
+              (props: (Type * AttributeInfo list) list) =
+    let guid = Guid.NewGuid()
+    let assemblyName = AssemblyName(guid.ToString())
+    let moduleBuilder = Thread.GetDomain()
+                              .DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run)
+                              .DefineDynamicModule(assemblyName.Name)
+    
+    let typeBuilder = moduleBuilder.DefineType("GeneratedType", TypeAttributes.Class ||| TypeAttributes.Public)
+    
+    attrs |> List.iter (AttributeInfo.AsBuilder >> typeBuilder.SetCustomAttribute)
+
+    props |> List.iteri (fun n (typ, attrs) ->
+        let fieldBuilder = typeBuilder.DefineField("_" + n.ToString(), typ, FieldAttributes.Private)
+
+        let getterBuilder = typeBuilder.DefineMethod("get_" + n.ToString(), MethodAttributes.Public ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, typ, Type.EmptyTypes)
+        let getterIL = getterBuilder.GetILGenerator()
+        getterIL.Emit(OpCodes.Ldarg_0)
+        getterIL.Emit(OpCodes.Ldfld, fieldBuilder)
+        getterIL.Emit(OpCodes.Ret)
+        
+        let setterBuilder = typeBuilder.DefineMethod("set_" + n.ToString(), MethodAttributes.Public ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, null, [| typ |])
+        let setterIL = setterBuilder.GetILGenerator()
+        setterIL.Emit(OpCodes.Ldarg_0)
+        setterIL.Emit(OpCodes.Ldarg_1)
+        setterIL.Emit(OpCodes.Stfld, fieldBuilder)
+        setterIL.Emit(OpCodes.Ret)
+
+        let propBuilder = typeBuilder.DefineProperty(n.ToString(), PropertyAttributes.None, typ, null)
+        propBuilder.SetGetMethod(getterBuilder)
+        propBuilder.SetSetMethod(setterBuilder)
+
+        attrs |> List.iter (AttributeInfo.AsBuilder >> propBuilder.SetCustomAttribute) )
+
+    typeBuilder.CreateType().GetTypeInfo()
 
 
 let tid (n: int) = byte n |> LanguagePrimitives.EnumOfValue
@@ -157,52 +190,3 @@ let writeMsgAsync<'T> methodName args = async {
     do! Thrift.CallMethodAsync<obj>(ThriftCommunication(m), svc, methodName, args) |> Async.AwaitTask |> Async.Ignore
     return m
 }
-
-let makeClass structAttrs propsAndAttrs =
-    let ctorAndArgs = function
-        | NewObject (ctor, args) -> ctor, (args |> Array.ofList |> Array.map (fun a -> a.EvalUntyped()))
-        | _ -> failwith "not a ctor and args"
-
-    let guid = Guid.NewGuid()
-    let assemblyName = AssemblyName(guid.ToString())
-    let moduleBuilder = Thread.GetDomain()
-                              .DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run)
-                              .DefineDynamicModule(assemblyName.Name)
-    
-    let typeBuilder = moduleBuilder.DefineType("GeneratedType", TypeAttributes.Class ||| TypeAttributes.Public)
-    
-    for expr in structAttrs do
-        let (ctor, args) = ctorAndArgs expr
-        typeBuilder.SetCustomAttribute(CustomAttributeBuilder(ctor, args))
-
-    for (name, typ, attrExprs) in propsAndAttrs do
-        // backing field
-        let fieldBuilder = typeBuilder.DefineField("_" + name, typ, FieldAttributes.Private)
-
-        // getter
-        let getterBuilder = typeBuilder.DefineMethod("get_" + name, MethodAttributes.Public ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, typ, Type.EmptyTypes)
-        let getterIL = getterBuilder.GetILGenerator()
-        getterIL.Emit(OpCodes.Ldarg_0)
-        getterIL.Emit(OpCodes.Ldfld, fieldBuilder)
-        getterIL.Emit(OpCodes.Ret)
-        
-        // setter
-        let setterBuilder = typeBuilder.DefineMethod("set_" + name, MethodAttributes.Public ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, null, [| typ |])
-        let setterIL = setterBuilder.GetILGenerator()
-        setterIL.Emit(OpCodes.Ldarg_0)
-        setterIL.Emit(OpCodes.Ldarg_1)
-        setterIL.Emit(OpCodes.Stfld, fieldBuilder)
-        setterIL.Emit(OpCodes.Ret)
-
-        // property
-        let propBuilder = typeBuilder.DefineProperty(name, PropertyAttributes.None, typ, null)
-        propBuilder.SetGetMethod(getterBuilder)
-        propBuilder.SetSetMethod(setterBuilder)
-
-        // attributes
-        for expr in attrExprs do
-            let (ctor, args) = ctorAndArgs expr
-            let attrBuilder = CustomAttributeBuilder(ctor, args)
-            propBuilder.SetCustomAttribute(attrBuilder)
-
-    typeBuilder.CreateType()

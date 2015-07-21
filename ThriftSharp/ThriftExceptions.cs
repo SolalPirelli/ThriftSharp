@@ -37,37 +37,37 @@ namespace ThriftSharp
         {
             return new ThriftParsingException( $"The type '{typeInfo.Name}' is not a concrete type."
                                              + Environment.NewLine
-                                             + "Only concrete types can be used in Thrift interfaces." );
+                                             + "Only concrete types can be used as Thrift structs." );
         }
 
         internal static ThriftParsingException StructWithoutAttribute( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The class or struct type '{typeInfo.Name}' is not part of a Thrift interface definition."
+            return new ThriftParsingException( $"The type '{typeInfo.Name}' is not part of a Thrift interface definition."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftStructAttribute attribute." );
         }
 
         internal static ThriftParsingException RequiredNullableField( PropertyInfo propertyInfo )
         {
-            return new ThriftParsingException( $"The Thrift field '{propertyInfo.Name}' is required, but its type is nullable."
+            return new ThriftParsingException( $"The Thrift field '{propertyInfo.Name}' (in type '{propertyInfo.DeclaringType.Name}') is required, but its type is nullable."
                                              + Environment.NewLine
                                              + "This is not supported. Please use non-nullable types for required value fields." );
         }
 
         internal static ThriftParsingException OptionalValueField( PropertyInfo propertyInfo )
         {
-            return new ThriftParsingException( $"The Thrift field '{propertyInfo.Name}' is optional, but its type is a value type."
+            return new ThriftParsingException( $"The Thrift field '{propertyInfo.Name}' (in type '{propertyInfo.DeclaringType.Name}') is optional, but its type is a value type."
                                              + Environment.NewLine
                                              + "This is not supported. Please use Nullable<T> for optional value fields." );
         }
 
         internal static ThriftParsingException UnknownValueType( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The type '{typeInfo.Name}' is an user-defined value type."
+            return new ThriftParsingException( $"The type '{typeInfo.Name}' is an unknown value type."
                                              + Environment.NewLine
                                              + "The only available value types are Thrift primitive types and nullable types."
                                              + Environment.NewLine
-                                             + "If this is unintentional, change the type to a reference type." );
+                                             + "If this is unintentional and you are the type's creator, change the type to a reference type." );
         }
 
         internal static ThriftParsingException UnsupportedMap( TypeInfo typeInfo )
@@ -98,6 +98,13 @@ namespace ThriftSharp
             return new ThriftParsingException( $"The collection type '{typeInfo.Name}' implements more than one of IDictionary<TKey, TValue>, ISet<T> and IList<T>."
                                              + Environment.NewLine
                                              + "This is not supported. Please only use collections implementing exactly one of these interfaces, or an array." );
+        }
+
+        internal static ThriftParsingException CollectionWithMultipleGenericImplementations( TypeInfo typeInfo )
+        {
+            return new ThriftParsingException( $"The collection type '{typeInfo.Name}' implements more than one version of the same generic interface."
+                                             + Environment.NewLine
+                                             + "This is not supported. Please only use collections implementing their generic interface exactly once." );
         }
 
         internal static ThriftParsingException NotAnException( TypeInfo typeInfo, MethodInfo methodInfo )

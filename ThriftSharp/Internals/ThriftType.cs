@@ -228,6 +228,7 @@ namespace ThriftSharp.Internals
                 }
             }
 
+            Tuple<TypeInfo, Type[]> instantiableVersion = null;
             foreach ( var iface in typeInfo.ImplementedInterfaces.Where( i => i.GenericTypeArguments.Length > 0 ) )
             {
                 var unboundIface = iface.GetGenericTypeDefinition();
@@ -238,11 +239,16 @@ namespace ThriftSharp.Internals
                         throw errorProvider( typeInfo );
                     }
 
-                    return Tuple.Create( typeInfo, iface.GenericTypeArguments );
+                    if ( instantiableVersion != null )
+                    {
+                        throw ThriftParsingException.CollectionWithMultipleGenericImplementations( typeInfo );
+                    }
+
+                    instantiableVersion = Tuple.Create( typeInfo, iface.GenericTypeArguments );
                 }
             }
 
-            return null;
+            return instantiableVersion;
         }
     }
 }
