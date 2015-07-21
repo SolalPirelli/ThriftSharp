@@ -1,20 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThriftSharp.Benchmarking", "ThriftSharp.Benchmarking\ThriftSharp.Benchmarking.csproj", "{53C4AC53-E1F1-408C-9AAC-15084D74EE77}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThriftSharp", "ThriftSharp\ThriftSharp.csproj", "{D1275E05-4238-447E-B6AB-F7301AA6CD2E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThriftSharp.Extensions", "ThriftSharp.Extensions\ThriftSharp.Extensions.csproj", "{7B5349A9-5CE4-432D-A32B-F870867649A0}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ThriftSharp.Tests", "ThriftSharp.Tests\ThriftSharp.Tests.fsproj", "{1F3EDE6E-7D84-45BD-9B0C-00198760A714}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThriftSharp.Benchmarking", "ThriftSharp.Benchmarking\ThriftSharp.Benchmarking.csproj", "{53C4AC53-E1F1-408C-9AAC-15084D74EE77}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{57FABA7B-17F1-4F1F-BFAB-45BE44158968}"
-	ProjectSection(SolutionItems) = preProject
-		TestSettings.runsettings = TestSettings.runsettings
-	EndProjectSection
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ThriftSharp.Tests", "ThriftSharp.Tests\ThriftSharp.Tests.fsproj", "{C2E804EC-9B0D-42C7-BD46-E041A3B5ADBF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,10 +17,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{53C4AC53-E1F1-408C-9AAC-15084D74EE77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{53C4AC53-E1F1-408C-9AAC-15084D74EE77}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{53C4AC53-E1F1-408C-9AAC-15084D74EE77}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{53C4AC53-E1F1-408C-9AAC-15084D74EE77}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D1275E05-4238-447E-B6AB-F7301AA6CD2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D1275E05-4238-447E-B6AB-F7301AA6CD2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D1275E05-4238-447E-B6AB-F7301AA6CD2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -34,10 +25,14 @@ Global
 		{7B5349A9-5CE4-432D-A32B-F870867649A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B5349A9-5CE4-432D-A32B-F870867649A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7B5349A9-5CE4-432D-A32B-F870867649A0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1F3EDE6E-7D84-45BD-9B0C-00198760A714}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1F3EDE6E-7D84-45BD-9B0C-00198760A714}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1F3EDE6E-7D84-45BD-9B0C-00198760A714}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1F3EDE6E-7D84-45BD-9B0C-00198760A714}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53C4AC53-E1F1-408C-9AAC-15084D74EE77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53C4AC53-E1F1-408C-9AAC-15084D74EE77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53C4AC53-E1F1-408C-9AAC-15084D74EE77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53C4AC53-E1F1-408C-9AAC-15084D74EE77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2E804EC-9B0D-42C7-BD46-E041A3B5ADBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2E804EC-9B0D-42C7-BD46-E041A3B5ADBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2E804EC-9B0D-42C7-BD46-E041A3B5ADBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2E804EC-9B0D-42C7-BD46-E041A3B5ADBF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
