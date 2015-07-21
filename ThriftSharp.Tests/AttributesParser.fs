@@ -407,6 +407,43 @@ module ``Parsing structs: Bad field types`` =
       InlineData(typeof<CustomValueType>)>]
     let ``Unknown value types are not allowed``(typ) =
         throws typ ("The type '" + typ.Name + "' is an unknown value type.")
+        
+
+    type InterfaceList<'T> =
+        interface inherit IList<'T> end
+
+    type InterfaceSet<'T> =
+        interface inherit ISet<'T> end
+
+    type InterfaceDictionary<'K,'V when 'K: equality> =
+        interface inherit IDictionary<'K,'V> end
+
+    [<Theory;
+      InlineData(typeof<InterfaceList<int>>, "list");
+      InlineData(typeof<InterfaceSet<int>>, "set");
+      InlineData(typeof<InterfaceDictionary<int,int>>, "map")>]
+    let ``Interface collections are not allowed``(typ, name) =
+        throws typ ("The " + name + " type '" + typ.Name + "' is not supported.")
+        
+
+    [<AbstractClass>]
+    type AbstractList<'T>() =
+        inherit List<'T>()
+
+    [<AbstractClass>]
+    type AbstractSet<'T>() =
+        inherit HashSet<'T>()
+
+    [<AbstractClass>]
+    type AbstractDictionary<'K,'V when 'K: equality>() =
+        inherit Dictionary<'K,'V>()
+
+    [<Theory;
+      InlineData(typeof<AbstractList<int>>, "list");
+      InlineData(typeof<AbstractSet<int>>, "set");
+      InlineData(typeof<AbstractDictionary<int,int>>, "map")>]
+    let ``Abstract collections are not allowed``(typ, name) =
+        throws typ ("The " + name + " type '" + typ.Name + "' is not supported.")
 
 
     type BadList<'T>( thisIsNotAParameterlessConstructor: obj ) =
@@ -425,10 +462,10 @@ module ``Parsing structs: Bad field types`` =
     let ``Collections without a parameterless constructor are not allowed``(typ: Type, name) =
         throws typ ("The " + name + " type '" + typ.Name + "' is not supported.")
         
-    type ListAndSet<'T>() =
-        inherit List<'T>()
-        interface ISet<'T> with
-            member x.Add(_: 'T) = false
+    type ListAndSet() =
+        inherit List<int>()
+        interface ISet<int> with
+            member x.Add(_: int) = false
             member x.Contains(_) = false
             member x.UnionWith(_) = ()
             member x.ExceptWith(_) = ()
@@ -441,9 +478,52 @@ module ``Parsing structs: Bad field types`` =
             member x.IsProperSupersetOf(_) = false
             member x.IsProperSubsetOf(_) = false
 
-    [<Fact>]
-    let ``Implementing both IList and ISet is not supported``() =
-        throws typeof<ListAndSet<int>> "The collection type 'ListAndSet`1' implements more than one of IDictionary<TKey, TValue>, ISet<T> and IList<T>."
+    type ListAndMap() =
+        inherit List<int>()
+        interface IDictionary<int,int> with
+            member x.Add(key: int, value: int): unit = ()
+            member x.Add(item: KeyValuePair<int,int>): unit = ()
+            member x.Clear(): unit = ()
+            member x.Contains(item: KeyValuePair<int,int>): bool = false
+            member x.ContainsKey(key: int): bool = false
+            member x.CopyTo(array: KeyValuePair<int,int> [], arrayIndex: int): unit = ()
+            member x.Count: int = 0
+            member x.GetEnumerator(): IEnumerator = Unchecked.defaultof<IEnumerator>
+            member x.GetEnumerator(): IEnumerator<KeyValuePair<int,int>> = Unchecked.defaultof<IEnumerator<KeyValuePair<int,int>>>
+            member x.IsReadOnly with get() = false
+            member x.Item with get _ = 0 and set _ _ = ()
+            member x.Keys with get() = Unchecked.defaultof<ICollection<int>>
+            member x.Values with get() = Unchecked.defaultof<ICollection<int>>
+            member x.Remove(_: int) = false
+            member x.Remove(_: KeyValuePair<int,int>) = false
+            member x.TryGetValue(_,_) = false
+
+    type SetAndMap() =
+        inherit HashSet<int>()
+        interface IDictionary<int,int> with
+            member x.Add(key: int, value: int): unit = ()
+            member x.Add(item: KeyValuePair<int,int>): unit = ()
+            member x.Clear(): unit = ()
+            member x.Contains(item: KeyValuePair<int,int>): bool = false
+            member x.ContainsKey(key: int): bool = false
+            member x.CopyTo(array: KeyValuePair<int,int> [], arrayIndex: int): unit = ()
+            member x.Count: int = 0
+            member x.GetEnumerator(): IEnumerator = Unchecked.defaultof<IEnumerator>
+            member x.GetEnumerator(): IEnumerator<KeyValuePair<int,int>> = Unchecked.defaultof<IEnumerator<KeyValuePair<int,int>>>
+            member x.IsReadOnly with get() = false
+            member x.Item with get _ = 0 and set _ _ = ()
+            member x.Keys with get() = Unchecked.defaultof<ICollection<int>>
+            member x.Values with get() = Unchecked.defaultof<ICollection<int>>
+            member x.Remove(_: int) = false
+            member x.Remove(_: KeyValuePair<int,int>) = false
+            member x.TryGetValue(_,_) = false
+
+    [<Theory;
+      InlineData(typeof<ListAndSet>);
+      InlineData(typeof<ListAndMap>);
+      InlineData(typeof<SetAndMap>)>]
+    let ``Implementing more than one of IList, ISet and IDictionary is not supported``(typ) =
+        throws typ ("The collection type '" + typ.Name + "' implements more than one of IDictionary<TKey, TValue>, ISet<T> and IList<T>")
 
 
     type WeirdList<'T>() =

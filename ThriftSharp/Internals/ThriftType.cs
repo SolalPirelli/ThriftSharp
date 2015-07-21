@@ -234,7 +234,7 @@ namespace ThriftSharp.Internals
                 var unboundIface = iface.GetGenericTypeDefinition();
                 if ( unboundIface == interfaceType )
                 {
-                    if ( !typeInfo.IsInterface && ( typeInfo.IsAbstract || !typeInfo.DeclaredConstructors.Any( c => c.GetParameters().Length == 0 ) ) )
+                    if ( typeInfo.IsAbstract || !typeInfo.DeclaredConstructors.Any( c => c.GetParameters().Length == 0 ) )
                     {
                         throw errorProvider( typeInfo );
                     }
