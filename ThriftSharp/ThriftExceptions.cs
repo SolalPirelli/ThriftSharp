@@ -21,28 +21,28 @@ namespace ThriftSharp
 
         internal static ThriftParsingException EnumWithoutAttribute( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The enum type '{typeInfo.FullName}' is not part of a Thrift interface definition."
+            return new ThriftParsingException( $"The enum type '{typeInfo.Name}' is not part of a Thrift interface definition."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftEnumAttribute attribute." );
         }
 
         internal static ThriftParsingException NonInt32Enum( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The enum type '{typeInfo.FullName}' has an underlying type different from Int32."
+            return new ThriftParsingException( $"The enum type '{typeInfo.Name}' has an underlying type different from Int32."
                                              + Environment.NewLine
                                              + "Only enums whose underlying type is Int32 are supported." );
         }
 
         internal static ThriftParsingException NotAConcreteType( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The type '{typeInfo.FullName}' is not a concrete type."
+            return new ThriftParsingException( $"The type '{typeInfo.Name}' is not a concrete type."
                                              + Environment.NewLine
                                              + "Only concrete types can be used in Thrift interfaces." );
         }
 
         internal static ThriftParsingException StructWithoutAttribute( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The class or struct type '{typeInfo.FullName}' is not part of a Thrift interface definition."
+            return new ThriftParsingException( $"The class or struct type '{typeInfo.Name}' is not part of a Thrift interface definition."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftStructAttribute attribute." );
         }
@@ -63,7 +63,7 @@ namespace ThriftSharp
 
         internal static ThriftParsingException UnknownValueType( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The type '{typeInfo.FullName}' is an user-defined value type."
+            return new ThriftParsingException( $"The type '{typeInfo.Name}' is an user-defined value type."
                                              + Environment.NewLine
                                              + "The only available value types are Thrift primitive types and nullable types."
                                              + Environment.NewLine
@@ -72,7 +72,7 @@ namespace ThriftSharp
 
         internal static ThriftParsingException UnsupportedMap( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The map type '{typeInfo.FullName}' is not supported."
+            return new ThriftParsingException( $"The map type '{typeInfo.Name}' is not supported."
                                              + Environment.NewLine
                                              + "Supported map types are IDictionary<TKey, TValue> "
                                              + "and any concrete implementation with a parameterless constructor." );
@@ -80,14 +80,14 @@ namespace ThriftSharp
 
         internal static ThriftParsingException UnsupportedSet( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The set type '{typeInfo.FullName}' is not supported."
+            return new ThriftParsingException( $"The set type '{typeInfo.Name}' is not supported."
                                              + Environment.NewLine
                                              + "Supported set types are ISet<T> and any concrete implementation with a parameterless constructor." );
         }
 
         internal static ThriftParsingException UnsupportedList( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The list type '{typeInfo.FullName}' is not supported."
+            return new ThriftParsingException( $"The list type '{typeInfo.Name}' is not supported."
                                              + Environment.NewLine
                                              + "Supported list types are arrays, IList<T> "
                                              + "and any concrete implementation of that interface with a parameterless constructor." );
@@ -95,21 +95,14 @@ namespace ThriftSharp
 
         internal static ThriftParsingException CollectionWithOrthogonalInterfaces( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The collection type '{typeInfo.FullName}' implements more than one of IDictionary<TKey, TValue>, ISet<T> and IList<T>."
+            return new ThriftParsingException( $"The collection type '{typeInfo.Name}' implements more than one of IDictionary<TKey, TValue>, ISet<T> and IList<T>."
                                              + Environment.NewLine
                                              + "This is not supported. Please only use collections implementing exactly one of these interfaces, or an array." );
         }
 
-        internal static ThriftParsingException ParameterWithoutAttribute( ParameterInfo info )
-        {
-            return new ThriftParsingException( $"Parameter '{info.Name}' of method '{info.Member.Name}' in type '{info.Member.DeclaringType.Name}' does not have a Thrift interface definition."
-                                             + Environment.NewLine
-                                             + "It must be decorated with the ThriftParameterAttribute attribute." );
-        }
-
         internal static ThriftParsingException NotAnException( TypeInfo typeInfo, MethodInfo methodInfo )
         {
-            return new ThriftParsingException( $"Type '{typeInfo.FullName}' was used in a ThriftThrowsClauseAttribute for method '{methodInfo.Name}', "
+            return new ThriftParsingException( $"Type '{typeInfo.Name}' was used in a ThriftThrowsAttribute for method '{methodInfo.Name}', "
                                              + "but does not inherit from Exception."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftStructAttribute." );
@@ -117,42 +110,49 @@ namespace ThriftSharp
 
         internal static ThriftParsingException NotAService( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The type '{typeInfo.FullName}' is not an interface." );
+            return new ThriftParsingException( $"The type '{typeInfo.Name}' is not an interface." );
         }
 
         internal static ThriftParsingException ServiceWithoutAttribute( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The interface '{typeInfo.FullName}' does not have a Thrift interface definition."
+            return new ThriftParsingException( $"The interface '{typeInfo.Name}' does not have a Thrift interface definition."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftServiceAttribute attribute." );
         }
 
         internal static ThriftParsingException NoMethods( TypeInfo typeInfo )
         {
-            return new ThriftParsingException( $"The interface '{typeInfo.FullName}' does not have any methods, and is therefore useless."
+            return new ThriftParsingException( $"The interface '{typeInfo.Name}' does not have any methods, and is therefore useless."
                                              + Environment.NewLine
                                              + "If this is unintentional, add some methods to it." );
         }
 
         internal static ThriftParsingException MethodWithoutAttribute( MethodInfo methodInfo )
         {
-            return new ThriftParsingException( $"The method '{methodInfo.Name}' is not part of the Thrift interface."
+            return new ThriftParsingException( $"The method '{methodInfo.Name}' (in type '{methodInfo.DeclaringType.Name}') is not part of the Thrift interface."
                                              + Environment.NewLine
                                              + "All methods in a Thrift service definition must be part of the Thrift interface."
                                              + Environment.NewLine
                                              + "If this is unintentional, mark it with the ThriftMethodAttribute attribute." );
         }
 
+        internal static ThriftParsingException ParameterWithoutAttribute( ParameterInfo info )
+        {
+            return new ThriftParsingException( $"Parameter '{info.Name}' of method '{info.Member.Name}' (in type '{info.Member.DeclaringType.Name}') does not have a Thrift interface definition."
+                                             + Environment.NewLine
+                                             + "It must be decorated with the ThriftParameterAttribute attribute." );
+        }
+
         internal static ThriftParsingException MoreThanOneCancellationToken( MethodInfo methodInfo )
         {
-            return new ThriftParsingException( $"The method '{methodInfo.Name}' has more than one CancellationToken parameter."
+            return new ThriftParsingException( $"The method '{methodInfo.Name}' (in type '{methodInfo.DeclaringType.Name}') has more than one CancellationToken parameter."
                                              + Environment.NewLine
                                              + "A Thrift method can only have at most one such parameter." );
         }
 
         internal static ThriftParsingException SynchronousMethod( MethodInfo methodInfo )
         {
-            return new ThriftParsingException( $"The method '{methodInfo.Name}' but does not return a Task or Task<T>."
+            return new ThriftParsingException( $"The method '{methodInfo.Name}' does not return a Task or Task<T>."
                                              + Environment.NewLine
                                              + "Only asynchronous calls are supported. Please wrap the return type in a Task." );
         }

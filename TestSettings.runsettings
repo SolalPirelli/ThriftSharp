@@ -9,8 +9,10 @@
                     <CodeCoverage>
                         <ModulePaths>
                             <Exclude>
-                                <!-- Exclude test projects -->
-                                <ModulePath>.*Tests.dll</ModulePath>
+                              <!-- Exclude test projects -->
+                              <ModulePath>.*Tests\.dll</ModulePath>
+                              <!-- Exclude xUnit itself -->
+                              <ModulePath>.*xunit.*</ModulePath>
                             </Exclude>
                         </ModulePaths>
                     </CodeCoverage>

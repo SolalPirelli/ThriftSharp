@@ -96,7 +96,7 @@ namespace ThriftSharp.Internals
         private static ThriftThrowsClause[] ParseThrowsClauses( MethodInfo methodInfo )
         {
             var clauses = methodInfo.GetCustomAttributes<ThriftThrowsAttribute>()
-                                    .Select( a => new ThriftThrowsClause( a.Id, a.Name, a.ExceptionTypeInfo, a.Converter ) )
+                                    .Select( a => new ThriftThrowsClause( a.Id, a.Name, a.ExceptionTypeInfo, a.ConverterInstance ) )
                                     .ToArray();
 
             var wrongClause = clauses.FirstOrDefault( c => !c.UnderlyingTypeInfo.Extends( typeof( Exception ) ) );

@@ -13,7 +13,6 @@ open System.Threading.Tasks
 open Microsoft.FSharp.Quotations.Patterns
 open Linq.QuotationEvaluation
 open Xunit
-open DeepEqual.Syntax
 open ThriftSharp
 open ThriftSharp.Internals
 
@@ -21,9 +20,11 @@ open ThriftSharp.Internals
 let nullable x = 
     Nullable(x)
 
-/// Ensures both objects are equal, comparing for collection, reference or structural equality
+
+/// Nicer syntax for assert equals, using deep equality
 let (<=>) (act: 'a) (exp: 'a) =
-    act.ShouldDeepEqual(exp)
+    DeepEqual.Syntax.ObjectExtensions.ShouldDeepEqual(act, exp)
+
 
 /// Simple computation expression to support Tasks, in the same way as F#'s AsyncBuilder
 type TaskBuilder() =
@@ -37,6 +38,51 @@ type TaskBuilder() =
         t.ContinueWith(fun (x: Task<_>) -> f x.Result).Unwrap()
 
 let task = TaskBuilder()
+
+
+/// Helper type because CustomAttributeBuilder is annoying
+[<NoComparison>]
+type AttributeInfo = 
+    { typ: Type
+      args: obj list
+      namedArgs: (string * obj) list }
+
+let asBuilder (ai: AttributeInfo) =
+    CustomAttributeBuilder(ai.typ.GetConstructors() |> Array.head, 
+                           ai.args |> List.toArray, 
+                           ai.namedArgs |> List.map (fst >> ai.typ.GetProperty) |> List.toArray, 
+                           ai.namedArgs |> List.map snd |> List.toArray)
+
+/// Creates an interface with the specified attributes and methds (parameters and attrs, return type, attrs)
+let makeInterface (attrs: AttributeInfo list) 
+                  (meths: ((Type * AttributeInfo list) list * Type * AttributeInfo list) list) =    
+    let guid = Guid.NewGuid()
+    let assemblyName = AssemblyName(guid.ToString())
+    let moduleBuilder = Thread.GetDomain()
+                              .DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run)
+                              .DefineDynamicModule(assemblyName.Name)
+    
+    let interfaceBuilder = moduleBuilder.DefineType("GeneratedType", TypeAttributes.Interface ||| TypeAttributes.Abstract ||| TypeAttributes.Public)
+    
+    attrs |> List.map asBuilder |> List.iter interfaceBuilder.SetCustomAttribute
+
+    meths |> List.iteri (fun n (args, retType, methAttrs) ->
+        let methodBuilder = interfaceBuilder.DefineMethod(string n, 
+                                                          MethodAttributes.Public ||| MethodAttributes.Abstract ||| MethodAttributes.Virtual, 
+                                                          retType, 
+                                                          args |> List.map fst |> List.toArray)
+
+        args |> List.iteri (fun i (typ, argAttrs) ->
+             // i + 1 because 0 is the return value
+            let paramBuilder = methodBuilder.DefineParameter(i + 1, ParameterAttributes.None, string i)
+            argAttrs |> List.map asBuilder |> List.iter paramBuilder.SetCustomAttribute )
+
+        methAttrs |> List.map asBuilder |> List.iter methodBuilder.SetCustomAttribute )
+    
+    interfaceBuilder.CreateType().GetTypeInfo()
+
+
+
 
 let tid (n: int) = byte n |> LanguagePrimitives.EnumOfValue
 
@@ -160,38 +206,3 @@ let makeClass structAttrs propsAndAttrs =
             propBuilder.SetCustomAttribute(attrBuilder)
 
     typeBuilder.CreateType()
-
-let makeInterface interfaceAttrs methodsAndAttrs =    
-    let ctorAndArgs = function
-        | NewObject (ctor, args) -> ctor, (args |> Array.ofList |> Array.map (fun a -> a.EvalUntyped()))
-        | _ -> failwith "not a ctor and args"
-
-    let guid = Guid.NewGuid()
-    let assemblyName = AssemblyName(guid.ToString())
-    let moduleBuilder = Thread.GetDomain()
-                              .DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run)
-                              .DefineDynamicModule(assemblyName.Name)
-    
-    let interfaceBuilder = moduleBuilder.DefineType("GeneratedType", TypeAttributes.Interface ||| TypeAttributes.Abstract ||| TypeAttributes.Public)
-        
-    for expr in interfaceAttrs do
-        let (ctor, args) = ctorAndArgs expr
-        interfaceBuilder.SetCustomAttribute(CustomAttributeBuilder(ctor, args))
-
-    methodsAndAttrs |> Seq.iteri (fun n (args, retType, attrExprs) ->
-        let methodBuilder = interfaceBuilder.DefineMethod(string n, MethodAttributes.Public ||| MethodAttributes.Abstract ||| MethodAttributes.Virtual, retType, args |> Array.map fst)
-
-        args |> Seq.iteri (fun i (_, argAttrExprs) ->
-            let paramBuilder = methodBuilder.DefineParameter(i + 1, ParameterAttributes.None, string i) // +1 because 0 is the return value
-            
-            for expr in argAttrExprs do
-                let (ctor, args) = ctorAndArgs expr
-                paramBuilder.SetCustomAttribute(CustomAttributeBuilder(ctor, args))
-            )
-
-        for expr in attrExprs do
-            let (ctor, args) = ctorAndArgs expr
-            methodBuilder.SetCustomAttribute(CustomAttributeBuilder(ctor, args))
-        )
-    
-    interfaceBuilder.CreateType()

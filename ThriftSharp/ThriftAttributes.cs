@@ -26,7 +26,11 @@ namespace ThriftSharp
             get { return _converter; }
             set
             {
-                Validation.IsNotNull( value, nameof( value ) );
+                if ( value == null )
+                {
+                    _converter = null;
+                    return;
+                }
 
                 if ( !_knownConverters.ContainsKey( value ) )
                 {
