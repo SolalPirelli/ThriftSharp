@@ -12,3 +12,6 @@
 
 # NuGet build results
 *.nupkg
+
+# VS test results
+TestResults/

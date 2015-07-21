@@ -5,17 +5,38 @@
 module ThriftSharp.Tests.Utils
 
 open System
-open System.Collections
 open System.Collections.Generic
 open System.Reflection
 open System.Reflection.Emit
 open System.Threading
-open Microsoft.FSharp.Reflection
+open System.Threading.Tasks
 open Microsoft.FSharp.Quotations.Patterns
 open Linq.QuotationEvaluation
 open Xunit
+open DeepEqual.Syntax
 open ThriftSharp
 open ThriftSharp.Internals
+
+// Use Nullable without having to open System (because of conflicts with e.g. Int32 in memory protocol)
+let nullable x = 
+    Nullable(x)
+
+/// Ensures both objects are equal, comparing for collection, reference or structural equality
+let (<=>) (act: 'a) (exp: 'a) =
+    act.ShouldDeepEqual(exp)
+
+/// Simple computation expression to support Tasks, in the same way as F#'s AsyncBuilder
+type TaskBuilder() =
+    member x.Zero() =
+        Task.CompletedTask
+        
+    member x.Bind(t: Task, f: unit -> Task): Task =
+        t.ContinueWith(fun _ -> f()).Unwrap()
+
+    member x.Bind(t: Task<'T>, f: 'T -> Task<'U>): Task<'U> =
+        t.ContinueWith(fun (x: Task<_>) -> f x.Result).Unwrap()
+
+let task = TaskBuilder()
 
 let tid (n: int) = byte n |> LanguagePrimitives.EnumOfValue
 
@@ -23,44 +44,11 @@ let date(dd, mm, yyyy) =
     let d = DateTime(yyyy, mm, dd, 00, 00, 00, DateTimeKind.Utc)
     d.ToLocalTime()
 
-// Use Nullable without having to open System (because of conflicts with e.g. Int32 in memory protocol) or use the long notation
-let nullable x = Nullable(x)
-
 let dict (vals: ('a * 'b) seq) =
     let dic = Dictionary()
     for (k,v) in vals do
         dic.Add(k, v)
     dic
-
-let rec private eq (act: obj) (exp: obj) = // can safely assume act and exp are of the same type
-    if act = null then
-        exp = null
-    elif act :? IDictionary then
-        let act = act :?> IDictionary
-        let exp = exp :?> IDictionary
-        eq act.Keys exp.Keys && eq act.Values exp.Values
-    elif not (act :? string) && act :? IEnumerable then
-        let act = (act :?> IEnumerable).GetEnumerator()
-        let exp = (exp :?> IEnumerable).GetEnumerator()
-        
-        let rec eqEnum (act: IEnumerator) (exp: IEnumerator) =
-            if act.MoveNext() then exp.MoveNext() && eq act.Current exp.Current && eqEnum act exp
-            else not (exp.MoveNext())
-
-        eqEnum act exp
-    elif FSharpType.IsUnion(act.GetType()) || act.GetType().IsEnum then
-        act = exp
-    // HACK HACK HACK
-    elif act.GetType().Assembly.FullName.Contains("ThriftSharp") then
-        act.GetType().GetRuntimeProperties()
-     |> Seq.filter (fun p -> p.Name = "Message" || p.DeclaringType = act.GetType())
-     |> Seq.forall (fun p -> eq (p.GetValue(act)) (p.GetValue(exp)))
-    else
-        Object.Equals(exp, act)
-
-/// Ensures both objects are equal, comparing for collection, reference or structural equality
-let (<=>) (act: 'a) (exp: 'a) =
-    Assert.Equal<'a>(exp, act) //if not (eq act exp) then Assert.True(false, sprintf "Expected: %A%sActual: %A" exp Environment.NewLine act)
 
 let throws<'T when 'T :> exn> func =
     let exn = ref Unchecked.defaultof<'T>

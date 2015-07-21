@@ -74,8 +74,8 @@
     <Compile Include="Internals\Utils.fs" />
     <Content Include="app.config" />
     <Content Include="packages.config" />
-    <Compile Include="BinaryProtocolTests.fs" />
     <Compile Include="Converters.fs" />
+    <Compile Include="BinaryProtocol.fs" />
     <Compile Include="ParsingServicesTests.fs" />
     <Compile Include="ParsingStructsTests.fs" />
     <Compile Include="ServiceCallTests.fs" />
@@ -83,6 +83,10 @@
     <Compile Include="StructsTests.fs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="DeepEqual">
+      <HintPath>..\packages\DeepEqual.1.4.0.0\lib\net40\DeepEqual.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FSharp.PowerPack">
       <HintPath>..\packages\FSPowerPack.Core.Community.2.0.0.0\Lib\Net40\FSharp.PowerPack.dll</HintPath>
       <Private>True</Private>
@@ -92,9 +96,6 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />

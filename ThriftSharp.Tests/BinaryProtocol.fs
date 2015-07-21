@@ -3,20 +3,22 @@
 
 module ThriftSharp.Tests.``Binary protocol``
 
+open Xunit
 open ThriftSharp
 open ThriftSharp.Internals
 open ThriftSharp.Protocols
 
+let (--) a b = a, b
+let (==) (a,b) c = a, b, c
+
 [<AbstractClass>]
 type Tests()  =
-    let (--) a b = a, b
-    let (==) (a,b) c = a, b, c
-
     abstract Test : bin: int list * rw: (IThriftProtocol -> (unit -> 'a) * ('a -> unit)) * inst: 'a -> unit
 
-    member x.TestEmpty rw = x.Test ([], rw, ())
+    member x.TestEmpty rw = 
+        x.Test ([], rw, ())
 
-    (* Test *)
+    [<Fact>]
     member x.``MessageHeader: call``() =
         x.Test (
             [0x80; 0x01; 0x00; 0x01 // version & message type (int32)
@@ -29,7 +31,7 @@ type Tests()  =
             ThriftMessageHeader("Message", ThriftMessageType.Call)
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``MessageHeader: one-way``() =
         x.Test (
             [0x80; 0x01; 0x00; 0x04 // version & message type (int32)
@@ -42,7 +44,7 @@ type Tests()  =
             ThriftMessageHeader("Me", ThriftMessageType.OneWay)
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``MessageHeader: reply``() =
         x.Test (
             [0x80; 0x01; 0x00; 0x02 // version & message type (int32)
@@ -55,7 +57,7 @@ type Tests()  =
             ThriftMessageHeader("Message", ThriftMessageType.Reply)
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``MessageHeader: exception``() =
         x.Test ( 
             [0x80; 0x01; 0x00; 0x03 // version & message type (int32)
@@ -68,29 +70,29 @@ type Tests()  =
             ThriftMessageHeader("Me", ThriftMessageType.Exception)
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``MessageEnd``() =
         x.TestEmpty (
             fun p -> p.ReadMessageEnd, p.WriteMessageEnd
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``StructHeader``() =
         x.Test (
             []
             --
             fun p -> p.ReadStructHeader, p.WriteStructHeader
             ==
-            ThriftStructHeader("")
+            ThriftStructHeader(null)
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``StructEnd``() =
         x.TestEmpty (
             fun p -> p.ReadStructEnd, p.WriteStructEnd
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``FieldHeader``() =
         x.Test (
             [11 // type (byte)
@@ -98,16 +100,16 @@ type Tests()  =
             --
             fun p -> p.ReadFieldHeader, p.WriteFieldHeader
             ==
-            ThriftFieldHeader(10s, "", ThriftTypeId.Binary)
+            ThriftFieldHeader(10s, null, ThriftTypeId.Binary)
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``FieldEnd``() =
         x.TestEmpty (
             fun p -> p.ReadFieldEnd, p.WriteFieldEnd
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``ListHeader``() =
         x.Test (
             [8 // element type (byte)
@@ -118,13 +120,13 @@ type Tests()  =
             ThriftCollectionHeader(20, ThriftTypeId.Int32)
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``ListEnd``() =
         x.TestEmpty (
             fun p -> p.ReadListEnd, p.WriteListEnd
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``SetHeader``() =
         x.Test (
             [4 // element type (byte)
@@ -135,13 +137,13 @@ type Tests()  =
             ThriftCollectionHeader(0, ThriftTypeId.Double)
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``SetEnd``() =
         x.TestEmpty (
             fun p -> p.ReadSetEnd, p.WriteSetEnd
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``MapHeader``() =
         x.Test (
             [6 // key type (byte)
@@ -153,13 +155,13 @@ type Tests()  =
             ThriftMapHeader(256, ThriftTypeId.Int16, ThriftTypeId.Int64)
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``MapEnd``() =
         x.TestEmpty (
             fun p -> p.ReadMapEnd, p.WriteMapEnd
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Boolean: true``() =
         x.Test (
             [1] // not zero (byte)
@@ -169,7 +171,7 @@ type Tests()  =
             true
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Boolean: false``() =
         x.Test (
             [0] // zero (byte)
@@ -179,7 +181,7 @@ type Tests()  =
             false
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``SByte``() =
         x.Test (
             [123]
@@ -189,7 +191,7 @@ type Tests()  =
             123y
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Double: positive``() =
         x.Test (
             [0x41; 0x32; 0xD6; 0x87; 0xE3; 0xD7; 0x0A; 0x3D] // 64 bit IEEE-754 floating-point number
@@ -199,7 +201,7 @@ type Tests()  =
             1234567.89
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Double: zero``() =
         x.Test (
             [0; 0; 0; 0; 0; 0; 0; 0] // 64 bit IEEE-754 floating-point number
@@ -209,7 +211,7 @@ type Tests()  =
             0.0
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Double: negative``() =
         x.Test (
             [0xC5; 0xF8; 0xEE; 0x90; 0xFF; 0x6C; 0x37; 0x3E] // 64-bit IEEE-754 floating-point number
@@ -219,7 +221,7 @@ type Tests()  =
             -123456789012345678901234567890.1234567890
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Double: PositiveInfinity``() =
         x.Test (
             [0x7F; 0xF0; 0x00; 0x00; 0x00; 0x00; 0x00; 0x00] // 64-bit IEEE-754 floating-point number
@@ -229,7 +231,7 @@ type Tests()  =
             System.Double.PositiveInfinity
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Double: NegativeInfinity``() =
         x.Test (
             [0xFF; 0xF0; 0x00; 0x00; 0x00; 0x00; 0x00; 0x00] // 64-bit IEEE-754 floating-point number
@@ -239,7 +241,7 @@ type Tests()  =
             System.Double.NegativeInfinity
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Double: Epsilon``() =
         x.Test (
             [0x00; 0x00; 0x00; 0x00; 0x00; 0x00; 0x00; 0x01] // 64-bit IEEE-754 floating-point number
@@ -249,7 +251,7 @@ type Tests()  =
             System.Double.Epsilon
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Int16: positive``() =
         x.Test (
             [48; 57] // int16
@@ -259,7 +261,7 @@ type Tests()  =
             12345s
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Int16: zero``() =
         x.Test (
             [0; 0] // int16
@@ -269,7 +271,7 @@ type Tests()  =
             0s
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Int16: negative``() =
         x.Test (
             [251; 35] // int16
@@ -279,7 +281,7 @@ type Tests()  =
             -1245s
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Int32: positive``() =
         x.Test (
             [73; 150; 2; 210] // int32
@@ -289,7 +291,7 @@ type Tests()  =
             1234567890
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Int32: zero``() =
         x.Test (
             [0; 0; 0; 0] // int32
@@ -299,7 +301,7 @@ type Tests()  =
             0
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Int32: negative``() =
         x.Test (
             [197; 33; 151; 79] // int32
@@ -309,7 +311,7 @@ type Tests()  =
             -987654321
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Int64: positive``() =
         x.Test (
             [17; 34; 16; 244; 177; 108; 28; 177] // int64
@@ -319,7 +321,7 @@ type Tests()  =
             1234567890987654321L
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Int64: zero``() =
         x.Test (
             [0; 0; 0; 0; 0; 0; 0; 0] // int64
@@ -329,7 +331,7 @@ type Tests()  =
             0L
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Int64: negative``() =
         x.Test (
             [242; 75; 37; 160; 129; 11; 237; 79] // int64
@@ -339,7 +341,7 @@ type Tests()  =
             -987654321987654321L
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``String: ASCII range``() =
         x.Test (
             [0; 0; 0; 22 // length (int32)
@@ -351,7 +353,7 @@ type Tests()  =
             "The quick brown fox..."
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``String: empty``() =
         x.Test (
             [0; 0; 0; 0] // length (int32)
@@ -361,7 +363,7 @@ type Tests()  =
             ""
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``String: UTF-8 range``() =
         x.Test (
             [0; 0; 0; 17 // length (int32)
@@ -373,7 +375,7 @@ type Tests()  =
             "ﷲ▼ᾢṘÈ௫"
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Binary: empty``() =
         x.Test (
             [0; 0; 0; 0] // length (int32)
@@ -383,7 +385,7 @@ type Tests()  =
             [| |]
         )
 
-    (* Test *)
+    [<Fact>]
     member x.``Binary``() =
         x.Test (
             [0; 0; 0; 7 // length (int32)
@@ -394,20 +396,11 @@ type Tests()  =
             [| 4y; 8y; 15y; 16y; 23y; 42y; -128y |]
         )
 
-(* TestClass *)
 type Reading() =
     inherit Tests() 
 
-    override x.Test (bin, rw, inst) =
-        let trans = MemoryTransport(bin |> List.map byte)
-        let obj = (ThriftBinaryProtocol(trans) |> rw |> fst) ()
-        obj <=> inst   
-
-
-    // Read-only tests
-
-    (* Test *)
-    member x.``Message header: wrong version``() =
+    [<Fact>]
+    let ``Message header: wrong version``() =
         let data = 
             [0x80; 0x02; 0x00; 0x03 // WRONG version & message type (int32)
              0x00; 0x00; 0x00; 0x02 // "Me" length in UTF-8 (int32)
@@ -415,12 +408,11 @@ type Reading() =
              0x00; 0x00; 0x00; 0x00] // ID (int32)
         let trans = MemoryTransport(data |> List.map byte)
 
-        throws (ThriftBinaryProtocol(trans).ReadMessageHeader >> box)
-        <=>
-        ThriftProtocolException(ThriftProtocolExceptionType.InvalidProtocol)
+        let exn = Assert.Throws<ThriftProtocolException>(ThriftBinaryProtocol(trans).ReadMessageHeader >> box)
+        exn.ExceptionType <=> nullable(ThriftProtocolExceptionType.InvalidProtocol)
 
-    (* Test *)
-    member x.``Message header: old version``() =
+    [<Fact>]
+    let ``Message header: old version``() =
         let data =
             [0x00; 0x00; 0x00; 0x07 // "Message" length in UTF-8 (int32)
              0x4D; 0x65; 0x73; 0x73; 0x61; 0x67; 0x65 // "Message" in UTF-8 (string)
@@ -430,43 +422,42 @@ type Reading() =
         ThriftBinaryProtocol(trans).ReadMessageHeader() <=> ThriftMessageHeader("Message", ThriftMessageType.Exception)
         trans.IsEmpty <=> true
 
-    (* Test *)
-    member x.``FieldStop``() =
+    [<Fact>]
+    let ``FieldStop``() =
         let trans = MemoryTransport([0uy])
         ThriftBinaryProtocol(trans).ReadFieldHeader().TypeId <=> ThriftTypeId.Empty
         trans.IsEmpty <=> true
 
-(* TestClass *)
+    override x.Test (bin, rw, inst) =
+        let trans = MemoryTransport(bin |> List.map byte)
+        let obj = (ThriftBinaryProtocol(trans) |> rw |> fst) ()
+        obj <=> inst   
+
 type Writing() =
     inherit Tests()
+    [<Fact>]
+    let ``FieldStop``() =
+        let trans = MemoryTransport()
+        do ThriftBinaryProtocol(trans).WriteFieldStop()
+        trans.WrittenValues <=> [0uy]
 
     override x.Test (bin, rw, inst) =
         let trans = MemoryTransport()
         do (ThriftBinaryProtocol(trans) |> rw |> snd) inst
         trans.WrittenValues <=> (bin |> List.map byte)
 
-
-    // Write-only tests
-
-    (* Test *)
-    member x.``FieldStop``() =
-        let trans = MemoryTransport()
-        ThriftBinaryProtocol(trans).WriteFieldStop()
-        trans.WrittenValues <=> [0uy]
-
-(* TestClass *)
 type Other() =
-    (* Test *)
-    member x.``Dispose() works``() =
+    [<Fact>]
+    let ``Dispose() works``() =
         let trans = MemoryTransport()
         let prot = ThriftBinaryProtocol(trans)
-        prot.Dispose()
+        do prot.Dispose()
         trans.IsDisposed <=> true
 
-    (* Test *)
-    member x.``FlushAndReadAsync() works``() = run <| async {
+    [<Fact>]
+    let ``FlushAndReadAsync() works``() = task {
         let trans = MemoryTransport()
         let prot = ThriftBinaryProtocol(trans)
-        do! prot.FlushAndReadAsync() |> Async.AwaitIAsyncResult |> Async.Ignore
+        do! prot.FlushAndReadAsync()
         trans.HasRead <=> true
     }
