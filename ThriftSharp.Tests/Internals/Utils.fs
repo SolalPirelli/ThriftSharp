@@ -2,8 +2,7 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 
 [<AutoOpen>]
-module ThriftSharp.Tests.Utils
-
+module ThriftSharp.Tests.Utils 
 open System
 open System.Collections.Generic
 open System.Reflection
@@ -14,29 +13,29 @@ open Xunit
 open ThriftSharp
 open ThriftSharp.Internals
 
-// Use Nullable without having to open System (because of conflicts with e.g. Int32 in memory protocol)
-let nullable x = 
-    Nullable(x)
-
+/// Use Nullable without having to open System (because of conflicts with e.g. Int32 in memory protocol)
+let nullable = System.Nullable
+let date(dd, mm, yyyy) = DateTime(yyyy, mm, dd, 00, 00, 00, DateTimeKind.Utc)
 
 /// Nicer syntax for assert equals, using deep equality
 let (<=>) (act: 'a) (exp: 'a) =
     DeepEqual.Syntax.ObjectExtensions.ShouldDeepEqual(act, exp)
 
 
-/// Simple computation expression to support Tasks, in the same way as F#'s AsyncBuilder
-type TaskBuilder() =
-    member x.Zero() =
-        Task.CompletedTask
-        
-    member x.Bind(t: Task, f: unit -> Task): Task =
-        t.ContinueWith(fun _ -> f()).Unwrap()
+/// Converts a non-generic Task to a Task<unit>
+let asUnit (t: Task) =
+    let tcs = TaskCompletionSource<unit>()
+    t.ContinueWith(fun _ -> match t.Status with
+                            | TaskStatus.RanToCompletion -> tcs.SetResult(())
+                            | TaskStatus.Faulted -> tcs.SetException(t.Exception.InnerException)
+                            | _ -> tcs.SetCanceled()) |> ignore
+    tcs.Task
 
-    member x.Bind(t: Task<'T>, f: 'T -> Task<'U>): Task<'U> =
-        t.ContinueWith(fun (x: Task<_>) -> f x.Result).Unwrap()
 
-let task = TaskBuilder()
-
+/// Converts any Async to a non-generic Task
+let asTask (a: Async<_>) =
+    (Async.StartAsTask a) :> Task
+    
 
 /// Helper type because CustomAttributeBuilder is annoying
 [<NoComparison>]
@@ -45,7 +44,7 @@ type AttributeInfo =
       args: obj list
       namedArgs: (string * obj) list }
     static member AsBuilder (ai: AttributeInfo) =
-        CustomAttributeBuilder(ai.typ.GetConstructors() |> Array.head, 
+        CustomAttributeBuilder(ai.typ.GetConstructors().[0], 
                                ai.args |> List.toArray, 
                                ai.namedArgs |> List.map (fst >> ai.typ.GetProperty) |> List.toArray, 
                                ai.namedArgs |> List.map snd |> List.toArray)
@@ -77,7 +76,6 @@ let makeInterface (attrs: AttributeInfo list)
         methAttrs |> List.iter (AttributeInfo.AsBuilder >> methodBuilder.SetCustomAttribute) )
     
     interfaceBuilder.CreateType().GetTypeInfo()
-
 
 /// Creates a class with the specified attributes and properties (with their own attributes)
 let makeClass (attrs: AttributeInfo list) 
@@ -118,10 +116,6 @@ let makeClass (attrs: AttributeInfo list)
 
 
 let tid (n: int) = byte n |> LanguagePrimitives.EnumOfValue
-
-let date(dd, mm, yyyy) = 
-    let d = DateTime(yyyy, mm, dd, 00, 00, 00, DateTimeKind.Utc)
-    d.ToLocalTime()
 
 let dict (vals: ('a * 'b) seq) =
     let dic = Dictionary()
@@ -177,7 +171,7 @@ let write prot obj =
 
 let readMsgAsync<'T> prot name =
     let svc = ThriftAttributesParser.ParseService(typeof<'T>.GetTypeInfo())
-    Thrift.CallMethodAsync<obj>(ThriftCommunication(prot), svc, name, [| |]) |> Async.AwaitTask
+    Thrift.CallMethodAsync<obj>({ new ThriftCommunication() with member x.CreateProtocol(_) = prot }, svc, name, [| |]) |> Async.AwaitTask
 
 
 let writeMsgAsync<'T> methodName args = async {
@@ -187,6 +181,6 @@ let writeMsgAsync<'T> methodName args = async {
                             StructEnd
                             MessageEnd])
     let svc = ThriftAttributesParser.ParseService(typeof<'T>.GetTypeInfo())
-    do! Thrift.CallMethodAsync<obj>(ThriftCommunication(m), svc, methodName, args) |> Async.AwaitTask |> Async.Ignore
+    do! Thrift.CallMethodAsync<obj>({ new ThriftCommunication() with member x.CreateProtocol(_) = m :> Protocols.IThriftProtocol }, svc, methodName, args) |> Async.AwaitTask |> Async.Ignore
     return m
 }

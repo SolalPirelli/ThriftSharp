@@ -30,12 +30,19 @@ namespace ThriftSharp
     /// <summary>
     /// Builds a Thrift communication method.
     /// </summary>
-    public sealed class ThriftCommunication : IThriftTransportPicker
+    public class ThriftCommunication : IThriftTransportPicker
     {
         private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds( 5 );
 
         private readonly Func<IThriftTransport, IThriftProtocol> _protocolCreator;
         private readonly Func<CancellationToken, IThriftTransport> _transportFactory;
+
+
+        /// <summary>
+        /// Internal constructor to let unit tests extend this class.
+        /// </summary>
+        [Obsolete( "Use this only for unit tests." )]
+        internal ThriftCommunication() { }
 
         /// <summary>
         /// Initializes a new instance of the ThriftCommunication class with the specified protocol creator.
@@ -53,20 +60,6 @@ namespace ThriftSharp
         {
             _protocolCreator = comm._protocolCreator;
             _transportFactory = transportFactory;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the ThriftCommunication class
-        /// from the specified protocol.
-        /// </summary>
-        /// <remarks>
-        /// This should only be used in unit tests.
-        /// </remarks>
-        [Obsolete( "Only use this constructor in unit tests." )]
-        internal ThriftCommunication( IThriftProtocol protocol )
-        {
-            _protocolCreator = _ => protocol;
-            _transportFactory = _ => null;
         }
 
         /// <summary>
@@ -94,11 +87,10 @@ namespace ThriftSharp
             return new ThriftCommunication( this, token => new HttpThriftTransport( url, token, realHeaders, realTimeout ) );
         }
 
-
         /// <summary>
         /// Creates a single-use IThriftProtocol object.
         /// </summary>
-        internal IThriftProtocol CreateProtocol( CancellationToken token )
+        internal virtual IThriftProtocol CreateProtocol( CancellationToken token )
         {
             return _protocolCreator( _transportFactory( token ) );
         }

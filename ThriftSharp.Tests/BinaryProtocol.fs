@@ -455,9 +455,9 @@ type Other() =
         trans.IsDisposed <=> true
 
     [<Fact>]
-    let ``FlushAndReadAsync() works``() = task {
+    let ``FlushAndReadAsync() works``() = asTask <| async {
         let trans = MemoryTransport()
         let prot = ThriftBinaryProtocol(trans)
-        do! prot.FlushAndReadAsync()
+        do! prot.FlushAndReadAsync() |> Async.AwaitTask
         trans.HasRead <=> true
     }

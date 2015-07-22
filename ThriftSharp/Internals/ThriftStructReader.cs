@@ -469,7 +469,7 @@ namespace ThriftSharp.Internals
                     ),
                     endOfLoop
                 ),
-                
+
                 Expression.Call( protocolParam, Methods.IThriftProtocol_ReadStructEnd ),
             };
 

@@ -5,6 +5,7 @@ namespace ThriftSharp.Tests
 
 open System.Collections.Generic
 open System.Text
+open System.Threading
 open System.Threading.Tasks
 open ThriftSharp.Protocols
 open ThriftSharp.Internals
@@ -36,185 +37,188 @@ type ThriftProtocolValue =
 module ThriftProtocolValueExtensions =
     let String (str: string) = Binary(Encoding.UTF8.GetBytes(str) |> Array.map sbyte)
 
-type MemoryProtocol(toRead: ThriftProtocolValue list) =
+type MemoryProtocol(toRead: ThriftProtocolValue list, ?token: CancellationToken) =
     let mutable writtenVals = []
     let toRead = Queue(toRead)
 
     let write value = writtenVals <- value :: writtenVals
     let read = toRead.Dequeue
 
-    member x.WrittenValues with get() = List.rev writtenVals
-    member x.IsEmpty with get() = toRead.Count = 0
+    member __.WrittenValues with get() = List.rev writtenVals
+    member __.IsEmpty with get() = toRead.Count = 0
 
     new() = MemoryProtocol([])
 
     interface IThriftProtocol with
-        member x.WriteMessageHeader(h) =
+        member __.WriteMessageHeader(h) =
            write (MessageHeader (h.Name, h.MessageType))
 
-        member x.WriteMessageEnd() =
+        member __.WriteMessageEnd() =
             write MessageEnd
 
-        member x.WriteStructHeader(h) =
+        member __.WriteStructHeader(h) =
             write (StructHeader (h.Name))
 
-        member x.WriteStructEnd() =
+        member __.WriteStructEnd() =
             write StructEnd
 
-        member x.WriteFieldHeader(h) =
+        member __.WriteFieldHeader(h) =
             write (FieldHeader (h.Id, h.Name, h.TypeId))
 
-        member x.WriteFieldEnd() =
+        member __.WriteFieldEnd() =
             write FieldEnd
 
-        member x.WriteFieldStop() =
+        member __.WriteFieldStop() =
             write FieldStop
 
-        member x.WriteMapHeader(h) =
+        member __.WriteMapHeader(h) =
             write (MapHeader (h.Count, h.KeyTypeId, h.ValueTypeId))
 
-        member x.WriteMapEnd() =
+        member __.WriteMapEnd() =
             write MapEnd
 
-        member x.WriteListHeader(h) =
+        member __.WriteListHeader(h) =
             write (ListHeader (h.Count, h.ElementTypeId))
 
-        member x.WriteListEnd() =
+        member __.WriteListEnd() =
             write ListEnd
 
-        member x.WriteSetHeader(h) =
+        member __.WriteSetHeader(h) =
             write (SetHeader (h.Count, h.ElementTypeId))
 
-        member x.WriteSetEnd() =
+        member __.WriteSetEnd() =
             write SetEnd
 
-        member x.WriteBoolean(b) =
+        member __.WriteBoolean(b) =
             write (Bool b)
 
-        member x.WriteSByte(b) =
+        member __.WriteSByte(b) =
             write (SByte b)
 
-        member x.WriteDouble(d) =
+        member __.WriteDouble(d) =
             write (Double d)
 
-        member x.WriteInt16(n) =
+        member __.WriteInt16(n) =
             write (Int16 n)
 
-        member x.WriteInt32(n) =
+        member __.WriteInt32(n) =
             write (Int32 n)
 
-        member x.WriteInt64(n) =
+        member __.WriteInt64(n) =
             write (Int64 n)
 
-        member x.WriteString(s) =
+        member __.WriteString(s) =
             write (String s)
 
-        member x.WriteBinary(bs) =
+        member __.WriteBinary(bs) =
             write (Binary bs)
 
-        member x.FlushAndReadAsync() =
-            Task.CompletedTask
+
+        member __.FlushAndReadAsync() =
+            match token with
+            | Some t when t.IsCancellationRequested -> Task.FromCanceled(t)
+            | _ -> Task.CompletedTask
 
 
-        member x.ReadMessageHeader() =
+        member __.ReadMessageHeader() =
             match read() with
             | MessageHeader (name, typ) -> ThriftMessageHeader(name, typ)
             | x -> failwithf "Expected a message header, got %A" x
 
-        member x.ReadMessageEnd() =
+        member __.ReadMessageEnd() =
             match read() with
             | MessageEnd -> ()
             | x -> failwithf "Expected a message end, got %A" x
 
-        member x.ReadStructHeader() =
+        member __.ReadStructHeader() =
             match read() with
             | StructHeader name -> ThriftStructHeader(name)
             | x -> failwithf "Expected a struct header, got %A" x
 
-        member x.ReadStructEnd() =
+        member __.ReadStructEnd() =
             match read() with
             | StructEnd -> ()
             | x -> failwithf "Expected a struct end, got %A" x
 
-        member x.ReadFieldHeader() =
+        member __.ReadFieldHeader() =
             match read() with
             | FieldHeader (id, name, typ) -> ThriftFieldHeader(id, name, typ)
             | FieldStop -> Unchecked.defaultof<ThriftFieldHeader>
             | x -> failwithf "Expected a field header or stop, got %A" x
 
-        member x.ReadFieldEnd() =
+        member __.ReadFieldEnd() =
             match read() with
             | FieldEnd -> ()
             | x -> failwithf "Expected a field end, got %A" x
 
-        member x.ReadMapHeader() =
+        member __.ReadMapHeader() =
             match read() with
             | MapHeader (len, kt, valt) -> ThriftMapHeader(len, kt, valt)
             | x -> failwithf "Expected a map header, got %A" x
 
-        member x.ReadMapEnd() =
+        member __.ReadMapEnd() =
             match read() with
             | MapEnd -> ()
             | x -> failwithf "Expected a map end, got %A" x
 
-        member x.ReadListHeader() =
+        member __.ReadListHeader() =
             match read() with
             | ListHeader (len, typ) -> ThriftCollectionHeader(len, typ)
             | x -> failwithf "Expected a list header, got %A" x
 
-        member x.ReadListEnd() =
+        member __.ReadListEnd() =
             match read() with
             | ListEnd -> ()
             | x -> failwithf "Expected a list end, got %A" x
 
-        member x.ReadSetHeader() =
+        member __.ReadSetHeader() =
             match read() with
             | SetHeader (len, typ) -> ThriftCollectionHeader(len, typ)
             | x -> failwithf "Expected a set header, got %A" x
 
-        member x.ReadSetEnd() =
+        member __.ReadSetEnd() =
             match read() with
             | SetEnd -> ()
             | x -> failwithf "Expected a set end, got %A" x
 
-        member x.ReadBoolean() =
+        member __.ReadBoolean() =
             match read() with
             | Bool b -> b
             | x -> failwithf "Expected a bool, got %A" x
 
-        member x.ReadSByte() =
+        member __.ReadSByte() =
             match read() with
             | SByte b -> b
             | x -> failwithf "Expected a sbyte, got %A" x
 
-        member x.ReadDouble() =
+        member __.ReadDouble() =
             match read() with
             | Double d -> d
             | x -> failwithf "Expected a double, got %A" x
 
-        member x.ReadInt16() =
+        member __.ReadInt16() =
             match read() with
             | Int16 n -> n
             | x -> failwithf "Expected an int16, got %A" x
 
-        member x.ReadInt32() =
+        member __.ReadInt32() =
             match read() with
             | Int32 n -> n
             | x -> failwithf "Expected an int32, got %A" x
 
-        member x.ReadInt64() =
+        member __.ReadInt64() =
             match read() with
             | Int64 n -> n
             | x -> failwithf "Expected an int64, got %A" x
 
-        member x.ReadString() =
+        member __.ReadString() =
             match read() with
             | Binary bytes -> Encoding.UTF8.GetString(bytes |> Array.map byte)
             | x -> failwithf "Expected a string, got %A" x
 
-        member x.ReadBinary() =
+        member __.ReadBinary() =
             match read() with
             | Binary bs -> bs
             | x -> failwithf "Expected binary, got %A" x
 
-        member x.Dispose() = ()
+        member __.Dispose() = ()
