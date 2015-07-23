@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="Internals\ThriftClientMessageReader.cs" />
     <Compile Include="Internals\ThriftClientMessageWriter.cs" />
+    <Compile Include="Internals\ThriftConverter.cs" />
     <Compile Include="Internals\ThriftWireField.cs" />
     <Compile Include="Internals\ThriftStructReader.cs" />
     <Compile Include="Internals\ThriftTypeId.cs" />

@@ -288,12 +288,12 @@ namespace ThriftSharp.Internals
             Expression getter = field.Getter;
             if ( field.Converter != null )
             {
+                // Same comments as in ThriftStructReader: explicit methods needed because of explicit implementations
                 if ( Nullable.GetUnderlyingType( field.UnderlyingType ) == null )
                 {
                     getter = Expression.Call(
-                        Expression.Constant( field.Converter ),
-                        "ConvertBack",
-                        Types.None,
+                        Expression.Constant( field.Converter.Value ),
+                        field.Converter.InterfaceTypeInfo.GetDeclaredMethod( "ConvertBack" ),
                         getter
                     );
                 }
@@ -301,9 +301,8 @@ namespace ThriftSharp.Internals
                 {
                     getter = Expression.Convert(
                         Expression.Call(
-                            Expression.Constant( field.Converter ),
-                            "ConvertBack",
-                            Types.None,
+                            Expression.Constant( field.Converter.Value ),
+                            field.Converter.InterfaceTypeInfo.GetDeclaredMethod( "ConvertBack" ),
                             Expression.Convert(
                                 getter,
                                 Nullable.GetUnderlyingType( field.UnderlyingType )
@@ -333,60 +332,61 @@ namespace ThriftSharp.Internals
                 Expression.Call( protocolParam, Methods.IThriftProtocol_WriteFieldEnd )
             );
 
-
-            if ( field.IsRequired && field.WireType.TypeInfo.IsClass )
+            if ( field.State == ThriftWireFieldState.AlwaysPresent )
             {
-                return Expression.IfThenElse(
-                    Expression.Equal(
-                        getter,
-                        Expression.Constant( null )
-                    ),
-                    Expression.Throw(
-                        Expression.Call(
-                            Methods.ThriftSerializationException_RequiredFieldIsNull,
-                            Expression.Constant( field.Name )
-                        )
-                    ),
-                    writingExpr
-                );
+                return writingExpr;
             }
-            if ( field.DefaultValue != null || field.WireType.NullableType != null || field.WireType.TypeInfo.IsClass )
+
+            if ( field.State == ThriftWireFieldState.Required )
             {
-                Expression defaultValueExpr;
-                // if it has a default value, use it
-                if ( field.DefaultValue != null )
+                if ( field.WireType.TypeInfo.IsClass || field.WireType.NullableType != null )
                 {
-                    if ( field.WireType.TypeInfo.IsClass )
-                    {
-                        // if it's a class, it's OK
-                        defaultValueExpr = Expression.Constant( field.DefaultValue );
-                    }
-                    else
-                    {
-                        // otherwise we need to make the default value a Nullable.
-                        defaultValueExpr = Expression.New(
-                           field.WireType.TypeInfo.DeclaredConstructors.Single(),
-                           Expression.Constant( field.DefaultValue )
-                       );
-                    }
+                    return Expression.IfThenElse(
+                        Expression.Equal(
+                            getter,
+                            Expression.Constant( null )
+                        ),
+                        Expression.Throw(
+                            Expression.Call(
+                                Methods.ThriftSerializationException_RequiredFieldIsNull,
+                                Expression.Constant( field.Name )
+                            )
+                        ),
+                        writingExpr
+                    );
+                }
+                return writingExpr;
+            }
+
+            Expression defaultValueExpr;
+            if ( field.DefaultValue == null )
+            {
+                defaultValueExpr = Expression.Constant( null );
+            }
+            else
+            {
+                if ( field.WireType.NullableType == null )
+                {
+                    // if it's a class, it's OK
+                    defaultValueExpr = Expression.Constant( field.DefaultValue );
                 }
                 else
                 {
-                    // otherwise it's always a reference type
-                    defaultValueExpr = Expression.Constant( null );
+                    // otherwise we need to make the default value a Nullable.
+                    defaultValueExpr = Expression.New(
+                       field.WireType.TypeInfo.DeclaredConstructors.Single(),
+                       Expression.Constant( field.DefaultValue )
+                   );
                 }
-
-                return Expression.IfThen(
-                    Expression.NotEqual(
-                        getter,
-                        defaultValueExpr
-                    ),
-                    writingExpr
-                );
             }
 
-            return writingExpr;
-
+            return Expression.IfThen(
+                Expression.NotEqual(
+                    field.Getter,
+                    defaultValueExpr
+                ),
+                writingExpr
+            );
         }
 
 

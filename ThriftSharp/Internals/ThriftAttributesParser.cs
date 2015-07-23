@@ -30,7 +30,7 @@ namespace ThriftSharp.Internals
             }
 
             var propertyTypeInfo = propertyInfo.PropertyType.GetTypeInfo();
-            if ( !attr.IsRequired && propertyTypeInfo.IsValueType && Nullable.GetUnderlyingType( propertyInfo.PropertyType ) == null )
+            if ( !attr.IsRequired && attr.DefaultValue == null && propertyTypeInfo.IsValueType && Nullable.GetUnderlyingType( propertyInfo.PropertyType ) == null )
             {
                 throw ThriftParsingException.OptionalValueField( propertyInfo );
             }
@@ -39,7 +39,34 @@ namespace ThriftSharp.Internals
                 throw ThriftParsingException.RequiredNullableField( propertyInfo );
             }
 
-            return new ThriftField( attr.Id, attr.Name, attr.IsRequired, attr.DefaultValue, attr.ConverterInstance, propertyInfo );
+            object defaultValue = null;
+            if ( attr.DefaultValue != null )
+            {
+                if ( attr.Converter == null )
+                {
+                    defaultValue = attr.DefaultValue;
+                    if ( defaultValue.GetType() != propertyInfo.PropertyType )
+                    {
+                        throw ThriftParsingException.DefaultValueOfWrongType( propertyInfo );
+                    }
+                }
+                else
+                {
+                    // Converting the value now greatly simplifies the serialization code
+                    defaultValue = attr.ThriftConverter
+                                       .InterfaceTypeInfo
+                                       .GetDeclaredMethod( "Convert" )
+                                       .Invoke( attr.ThriftConverter.Value, new object[] { attr.DefaultValue } );
+
+                    // defaultValue is explicitly allowed to be null here, it doesn't cause any problems
+                    if ( defaultValue != null && defaultValue.GetType() != propertyInfo.PropertyType )
+                    {
+                        throw ThriftParsingException.DefaultValueOfWrongType( propertyInfo );
+                    }
+                }
+            }
+
+            return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue, attr.ThriftConverter, propertyInfo );
         }
 
         /// <summary>
@@ -87,7 +114,7 @@ namespace ThriftSharp.Internals
                 throw ThriftParsingException.ParameterWithoutAttribute( parameterInfo );
             }
 
-            return new ThriftParameter( attr.Id, attr.Name, parameterInfo.ParameterType.GetTypeInfo(), attr.ConverterInstance );
+            return new ThriftParameter( attr.Id, attr.Name, parameterInfo.ParameterType.GetTypeInfo(), attr.ThriftConverter );
         }
 
         /// <summary>
@@ -96,7 +123,7 @@ namespace ThriftSharp.Internals
         private static ThriftThrowsClause[] ParseThrowsClauses( MethodInfo methodInfo )
         {
             var clauses = methodInfo.GetCustomAttributes<ThriftThrowsAttribute>()
-                                    .Select( a => new ThriftThrowsClause( a.Id, a.Name, a.ExceptionTypeInfo, a.ConverterInstance ) )
+                                    .Select( a => new ThriftThrowsClause( a.Id, a.Name, a.ExceptionTypeInfo, a.ThriftConverter ) )
                                     .ToArray();
 
             var wrongClause = clauses.FirstOrDefault( c => !c.UnderlyingTypeInfo.Extends( typeof( Exception ) ) );
@@ -145,7 +172,7 @@ namespace ThriftSharp.Internals
                 throw ThriftParsingException.MoreThanOneCancellationToken( methodInfo );
             }
 
-            return new ThriftMethod( attr.Name, attr.IsOneWay, new ThriftReturnValue( unwrapped.GetTypeInfo(), attr.ConverterInstance ), throwsClauses, parameters );
+            return new ThriftMethod( attr.Name, attr.IsOneWay, new ThriftReturnValue( unwrapped.GetTypeInfo(), attr.ThriftConverter ), throwsClauses, parameters );
         }
 
         /// <summary>

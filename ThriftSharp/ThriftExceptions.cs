@@ -56,9 +56,16 @@ namespace ThriftSharp
 
         internal static ThriftParsingException OptionalValueField( PropertyInfo propertyInfo )
         {
-            return new ThriftParsingException( $"The Thrift field '{propertyInfo.Name}' (in type '{propertyInfo.DeclaringType.Name}') is optional, but its type is a value type."
+            return new ThriftParsingException( $"The Thrift field '{propertyInfo.Name}' (in type '{propertyInfo.DeclaringType.Name}') is optional without a default value, but its type is a value type."
                                              + Environment.NewLine
                                              + "This is not supported. Please use Nullable<T> for optional value fields." );
+        }
+
+        internal static ThriftParsingException DefaultValueOfWrongType( PropertyInfo propertyInfo )
+        {
+            return new ThriftParsingException( $"The default value of the Thrift field '{propertyInfo.Name}' (in type '{propertyInfo.DeclaringType.Name}') does not have the correct type."
+                                             + Environment.NewLine
+                                             + "If the field has a converter, the default value must be of the same type as the converter's input." );
         }
 
         internal static ThriftParsingException UnknownValueType( TypeInfo typeInfo )

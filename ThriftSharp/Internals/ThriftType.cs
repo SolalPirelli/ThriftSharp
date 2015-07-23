@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using ThriftSharp.Utilities;
 
 namespace ThriftSharp.Internals
 {
@@ -162,11 +161,11 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the Thrift wire type associated with the specified type and converter.
         /// </summary>
-        public static ThriftType Get( Type type, object converter )
+        public static ThriftType Get( Type type, ThriftConverter converter )
         {
             if ( converter != null )
             {
-                type = converter.GetType().GetTypeInfo().GetGenericInterfaces( typeof( IThriftValueConverter<,> ) )[0].GenericTypeArguments[0];
+                type = converter.FromType;
                 var nullableType = Nullable.GetUnderlyingType( type );
                 if ( nullableType != null )
                 {

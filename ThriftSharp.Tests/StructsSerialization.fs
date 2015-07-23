@@ -38,25 +38,108 @@ type StructWithStructField() =
     [<ThriftField(1s, true, "Field")>]
     member val Field = Unchecked.defaultof<SimpleStruct> with get, set
 
-[<ThriftStruct("ConvertedField")>]
-type StructWithConvertedField() =
-    [<ThriftField(1s, true, "Field", Converter = typeof<ThriftUnixDateConverter>)>]
-    member val Field = System.DateTime.Now with get, set
 
-[<ThriftStruct("NullableConvertedField")>]
-type StructWithNullableConvertedField() =
-    [<ThriftField(1s, false, "Field", Converter = typeof<ThriftUnixDateConverter>)>]
-    member val Field = nullable System.DateTime.Now with get, set
+// A field can be:
+// - of a value or reference type
+// - required or not
+// - with a converter or not
+//   - if so, the wire type can be a value or reference type
+// - with a default value or not
+// That's 24 combinations. Gotta test'em all!
+// [value/reference] [required/optional] without a converter nor a default value are already tested by less specific tests
+// required with default fields don't make sense
+// That's a total of 14 things we need to test separately.
 
-[<ThriftStruct("NullableField")>]
-type StructWithNullableField() =
-    [<ThriftField(1s, false, "Field")>]
-    member val Field = System.Nullable() with get, set
+type IntToIntConverter() =
+    interface IThriftValueConverter<int, int> with
+        member x.Convert(i) = 10 + i
+        member x.ConvertBack(i) = i - 10
 
-[<ThriftStruct("NullableFieldWithDefault")>]
-type StructWithNullableFieldWithDefault() =
-    [<ThriftField(1s, false, "Field", DefaultValue = 42)>]
-    member val Field = System.Nullable() with get, set
+type IntToStringConverter() =
+    interface IThriftValueConverter<int, string> with
+        member x.Convert(i) = i.ToString()
+        member x.ConvertBack(s) = System.Int32.Parse(s)
+        
+type StringToIntConverter() =
+    interface IThriftValueConverter<string, int> with
+        member x.Convert(s) = System.Int32.Parse(s)
+        member x.ConvertBack(i) = i.ToString()
+
+type StringToStringConverter() =
+    interface IThriftValueConverter<string, string> with
+        member x.Convert(s) = if s = null then null else "0" + s
+        member x.ConvertBack(s) = if s = null then null else s.Substring(1)
+        
+[<ThriftStruct("S")>]
+type Struct_ValueOptionalFieldWithDefault() =
+    [<ThriftField(1s, false, "F", DefaultValue = 1)>]
+    member val Field = 0 with get, set
+
+[<ThriftStruct("S")>]
+type Struct_ValueRequiredConvertedToValueField() =
+    [<ThriftField(1s, true, "F", Converter = typeof<IntToIntConverter>)>]
+    member val Field = 0 with get, set
+
+[<ThriftStruct("S")>]
+type Struct_ValueOptionalConvertedToValueField() =
+    [<ThriftField(1s, false, "F", Converter = typeof<IntToIntConverter>)>]
+    member val Field = System.Nullable<int>() with get, set
+
+[<ThriftStruct("S")>]
+type Struct_ValueOptionalConvertedToValueFieldWithDefault() =
+    [<ThriftField(1s, false, "F", DefaultValue = 1, Converter = typeof<IntToIntConverter>)>]
+    member val Field = 0 with get, set
+
+[<ThriftStruct("S")>]
+type Struct_ValueRequiredConvertedToRefField() =
+    [<ThriftField(1s, true, "F", Converter = typeof<StringToIntConverter>)>]
+    member val Field = 0 with get, set
+
+[<ThriftStruct("S")>]
+type Struct_ValueOptionalConvertedToRefField() =
+    [<ThriftField(1s, false, "F", Converter = typeof<StringToIntConverter>)>]
+    member val Field = System.Nullable<int>() with get, set
+
+[<ThriftStruct("S")>]
+type Struct_ValueOptionalConvertedToRefFieldWithDefault() =
+    [<ThriftField(1s, false, "F", DefaultValue = "1", Converter = typeof<StringToIntConverter>)>]
+    member val Field = 0 with get, set
+        
+[<ThriftStruct("S")>]
+type Struct_RefOptionalFieldWithDefault() =
+    [<ThriftField(1s, false, "F", DefaultValue = "1")>]
+    member val Field = Unchecked.defaultof<string> with get, set
+
+[<ThriftStruct("S")>]
+type Struct_RefRequiredConvertedToValueField() =
+    [<ThriftField(1s, true, "F", Converter = typeof<IntToStringConverter>)>]
+    member val Field = Unchecked.defaultof<string> with get, set
+
+[<ThriftStruct("S")>]
+type Struct_RefOptionalConvertedToValueField() =
+    [<ThriftField(1s, false, "F", Converter = typeof<IntToStringConverter>)>]
+    member val Field = Unchecked.defaultof<string> with get, set
+
+[<ThriftStruct("S")>]
+type Struct_RefOptionalConvertedToValueFieldWithDefault() =
+    [<ThriftField(1s, false, "F", DefaultValue = 1, Converter = typeof<IntToStringConverter>)>]
+    member val Field = Unchecked.defaultof<string> with get, set
+
+[<ThriftStruct("S")>]
+type Struct_RefRequiredConvertedToRefField() =
+    [<ThriftField(1s, true, "F", Converter = typeof<StringToStringConverter>)>]
+    member val Field = Unchecked.defaultof<string> with get, set
+
+[<ThriftStruct("S")>]
+type Struct_RefOptionalConvertedToRefField() =
+    [<ThriftField(1s, false, "F", Converter = typeof<StringToStringConverter>)>]
+    member val Field = Unchecked.defaultof<string> with get, set
+
+[<ThriftStruct("S")>]
+type Struct_RefOptionalConvertedToRefFieldWithDefault() =
+    [<ThriftField(1s, false, "F", DefaultValue = "1", Converter = typeof<StringToStringConverter>)>]
+    member val Field = Unchecked.defaultof<string> with get, set
+
 
 // These tests use Fact rather than Theory, they're not really suited to no-name tests
 [<AbstractClass>]
@@ -68,7 +151,7 @@ type Tests() =
     [<Fact>] 
     member x.Bool() = 
         x.Test [Bool true]        
-               ThriftTypeId.Boolean 
+               ThriftTypeId.Boolean
                true
 
     [<Fact>] 
@@ -302,51 +385,218 @@ type Tests() =
                ThriftTypeId.Struct
                (SimpleStruct(Field = 1))
 
-    // Converted fields
+    // All of the special structs we declared earlier
+    // And each optional one needs two tests!
+    
     [<Fact>]
-    member x.``Converted``() =
-        x.TestStruct [StructHeader "ConvertedField"
-                      FieldHeader (1s, "Field", ThriftTypeId.Int32)
-                      Int32 787708800
+    member x. ``Value optional field with default, not set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldStop
+                      StructEnd]
+                     (Struct_ValueOptionalFieldWithDefault(Field = 1))
+
+    [<Fact>]
+    member x. ``Value optional field with default, set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Int32)
+                      Int32 2
                       FieldEnd
                       FieldStop
                       StructEnd]
-                     (StructWithConvertedField(Field = date(18, 12, 1994)))
+                     (Struct_ValueOptionalFieldWithDefault(Field = 2))
 
     [<Fact>]
-    member x.``Converted nullable``() =
-        x.TestStruct [StructHeader "NullableConvertedField"
-                      FieldHeader (1s, "Field", ThriftTypeId.Int32)
-                      Int32 787708800
+    member x. ``Value required field converted to a value type``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Int32)
+                      Int32 2
                       FieldEnd
                       FieldStop
                       StructEnd]
-                     (StructWithNullableConvertedField(Field = nullable(date(18, 12, 1994))))
+                     (Struct_ValueRequiredConvertedToValueField(Field = 12))
 
-    // Special nullable fields
     [<Fact>]
-    member x.``Nullable, not set``() =
-        x.TestStruct [StructHeader "NullableField"
+    member x. ``Value optional field converted to a value type, not set``() =
+        x.TestStruct [StructHeader "S"
                       FieldStop
                       StructEnd]
-                     (StructWithNullableField(Field = System.Nullable()))
+                     (Struct_ValueOptionalConvertedToValueField())
 
     [<Fact>]
-    member x.``Nullable with default value, not set``() =
-        x.TestStruct [StructHeader "NullableFieldWithDefault"
-                      FieldStop
-                      StructEnd]
-                     (StructWithNullableFieldWithDefault(Field = nullable 42))
-
-    [<Fact>]
-    member x.``Nullable with default value, set``() =
-        x.TestStruct [StructHeader "NullableFieldWithDefault"
-                      FieldHeader (1s, "Field", ThriftTypeId.Int32)
-                      Int32 1
+    member x. ``Value optional field converted to a value type, set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Int32)
+                      Int32 2
                       FieldEnd
                       FieldStop
                       StructEnd]
-                     (StructWithNullableFieldWithDefault(Field = nullable 1))
+                     (Struct_ValueOptionalConvertedToValueField(Field = nullable 12))
+
+    [<Fact>]
+    member x. ``Value optional field converted to a value type with default, not set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldStop
+                      StructEnd]
+                     (Struct_ValueOptionalConvertedToValueFieldWithDefault(Field = 11))
+
+    [<Fact>]
+    member x. ``Value optional field converted to a value type with default, set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Int32)
+                      Int32 2
+                      FieldEnd
+                      FieldStop
+                      StructEnd]
+                     (Struct_ValueOptionalConvertedToValueFieldWithDefault(Field = 12))
+
+    [<Fact>]
+    member x. ``Value required field converted to a ref type``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Binary)
+                      String "2"
+                      FieldEnd
+                      FieldStop
+                      StructEnd]
+                     (Struct_ValueRequiredConvertedToRefField(Field = 2))
+
+    [<Fact>]
+    member x. ``Value optional field converted to a ref type, not set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldStop
+                      StructEnd]
+                     (Struct_ValueOptionalConvertedToRefField())
+
+    [<Fact>]
+    member x. ``Value optional field converted to a ref type, set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Binary)
+                      String "2"
+                      FieldEnd
+                      FieldStop
+                      StructEnd]
+                     (Struct_ValueOptionalConvertedToRefField(Field = nullable 2))
+
+    [<Fact>]
+    member x. ``Value optional field converted to a ref type with default, not set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldStop
+                      StructEnd]
+                     (Struct_ValueOptionalConvertedToRefFieldWithDefault(Field = 1))
+
+    [<Fact>]
+    member x. ``Value optional field converted to a ref type with default, set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Binary)
+                      String "2"
+                      FieldEnd
+                      FieldStop
+                      StructEnd]
+                     (Struct_ValueOptionalConvertedToRefFieldWithDefault(Field = 2))
+
+    [<Fact>]
+    member x. ``Ref optional field with default, not set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldStop
+                      StructEnd]
+                     (Struct_RefOptionalFieldWithDefault(Field = "1"))
+
+    [<Fact>]
+    member x. ``Ref optional field with default, set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Binary)
+                      String "2"
+                      FieldEnd
+                      FieldStop
+                      StructEnd]
+                     (Struct_RefOptionalFieldWithDefault(Field = "2"))
+
+    [<Fact>]
+    member x. ``Ref required field converted to a value type``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Int32)
+                      Int32 2
+                      FieldEnd
+                      FieldStop
+                      StructEnd]
+                     (Struct_RefRequiredConvertedToValueField(Field = "2"))
+
+    [<Fact>]
+    member x. ``Ref optional field converted to a value type, not set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldStop
+                      StructEnd]
+                     (Struct_RefOptionalConvertedToValueField())
+
+    [<Fact>]
+    member x. ``Ref optional field converted to a value type, set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Int32)
+                      Int32 2
+                      FieldEnd
+                      FieldStop
+                      StructEnd]
+                     (Struct_RefOptionalConvertedToValueField(Field = "2"))
+
+    [<Fact>]
+    member x. ``Ref optional field converted to a value type with default, not set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldStop
+                      StructEnd]
+                     (Struct_RefOptionalConvertedToValueFieldWithDefault(Field = "1"))
+
+    [<Fact>]
+    member x. ``Ref optional field converted to a value type with default, set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Int32)
+                      Int32 2
+                      FieldEnd
+                      FieldStop
+                      StructEnd]
+                     (Struct_RefOptionalConvertedToValueFieldWithDefault(Field = "2"))
+
+    [<Fact>]
+    member x. ``Ref required field converted to a ref type``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Binary)
+                      String "2"
+                      FieldEnd
+                      FieldStop
+                      StructEnd]
+                     (Struct_RefRequiredConvertedToRefField(Field = "02"))
+
+    [<Fact>]
+    member x. ``Ref optional field converted to a ref type, not set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldStop
+                      StructEnd]
+                     (Struct_RefOptionalConvertedToRefField())
+
+    [<Fact>]
+    member x. ``Ref optional field converted to a ref type, set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Binary)
+                      String "2"
+                      FieldEnd
+                      FieldStop
+                      StructEnd]
+                     (Struct_RefOptionalConvertedToRefField(Field = "02"))
+
+    [<Fact>]
+    member x. ``Ref optional field converted to a ref type with default, not set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldStop
+                      StructEnd]
+                     (Struct_RefOptionalConvertedToRefFieldWithDefault(Field = "01"))
+
+    [<Fact>]
+    member x. ``Ref optional field converted to a ref type with default, set``() =
+        x.TestStruct [StructHeader "S"
+                      FieldHeader (1s, "F", ThriftTypeId.Binary)
+                      String "2"
+                      FieldEnd
+                      FieldStop
+                      StructEnd]
+                     (Struct_RefOptionalConvertedToRefFieldWithDefault(Field = "02"))
 
 type Reading() =
     inherit Tests()

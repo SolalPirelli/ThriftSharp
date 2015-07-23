@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ThriftSharp.Internals;
 using ThriftSharp.Utilities;
 
 namespace ThriftSharp
@@ -14,7 +15,7 @@ namespace ThriftSharp
     /// </summary>
     public abstract class ThriftConvertibleAttribute : Attribute
     {
-        private static readonly Dictionary<Type, object> _knownConverters = new Dictionary<Type, object>();
+        private static readonly Dictionary<Type, ThriftConverter> _knownConverters = new Dictionary<Type, ThriftConverter>();
 
         private Type _converter;
 
@@ -51,18 +52,18 @@ namespace ThriftSharp
                         throw new ArgumentException( $"The type '{value.Name}' does not have a parameterless constructor." );
                     }
 
-                    _knownConverters.Add( value, ctor.Invoke( null ) );
+                    _knownConverters.Add( value, new ThriftConverter( ctor.Invoke( null ), ifaces[0] ) );
                 }
 
                 _converter = value;
-                ConverterInstance = _knownConverters[value];
+                ThriftConverter = _knownConverters[value];
             }
         }
 
         /// <summary>
         /// Gets the converter.
         /// </summary>
-        internal object ConverterInstance { get; private set; }
+        internal ThriftConverter ThriftConverter { get; private set; }
     }
 
     /// <summary>

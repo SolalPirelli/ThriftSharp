@@ -4,6 +4,13 @@ using System.Reflection;
 
 namespace ThriftSharp.Internals
 {
+    internal enum ThriftWireFieldState
+    {
+        AlwaysPresent,
+        Required,
+        Optional
+    }
+
     /// <summary>
     /// Component of a Thrift struct; can represent either a real field, or a virtual one.
     /// </summary>
@@ -17,11 +24,11 @@ namespace ThriftSharp.Internals
 
         public readonly Type UnderlyingType;
 
-        public readonly bool IsRequired;
+        public readonly ThriftWireFieldState State;
 
         public readonly object DefaultValue;
 
-        public readonly object Converter;
+        public readonly ThriftConverter Converter;
 
         public readonly Expression Getter;
 
@@ -29,15 +36,15 @@ namespace ThriftSharp.Internals
 
         private ThriftWireField( short id, string name,
                                  ThriftType wireType, TypeInfo underlyingTypeInfo,
-                                 bool isRequired, object defaultValue,
-                                 object converter,
+                                 ThriftWireFieldState state, object defaultValue,
+                                 ThriftConverter converter,
                                  Expression getter, Func<Expression, Expression> setter )
         {
             Id = id;
             Name = name;
             WireType = wireType;
             UnderlyingType = underlyingTypeInfo.AsType();
-            IsRequired = isRequired;
+            State = state;
             DefaultValue = defaultValue;
             Converter = converter;
             Getter = getter;
@@ -50,7 +57,7 @@ namespace ThriftSharp.Internals
             var propExpr = Expression.Property( structVar, field.BackingProperty );
             return new ThriftWireField( field.Id, field.Name,
                                         field.WireType, field.BackingProperty.PropertyType.GetTypeInfo(),
-                                        field.IsRequired, field.DefaultValue,
+                                        field.IsRequired ? ThriftWireFieldState.Required : ThriftWireFieldState.Optional, field.DefaultValue,
                                         field.Converter,
                                         propExpr, e => Expression.Assign( propExpr, e ) );
         }
@@ -63,7 +70,7 @@ namespace ThriftSharp.Internals
             );
             return new ThriftWireField( param.Id, param.Name,
                                         param.WireType, param.UnderlyingTypeInfo,
-                                        false, null,
+                                        ThriftWireFieldState.AlwaysPresent, null,
                                         param.Converter,
                                         getterExpr, null );
         }
@@ -72,7 +79,7 @@ namespace ThriftSharp.Internals
         {
             return new ThriftWireField( clause.Id, clause.Name,
                                         clause.WireType, clause.UnderlyingTypeInfo,
-                                        false, null,
+                                        ThriftWireFieldState.Optional, null,
                                         clause.Converter,
                                         null, Expression.Throw );
         }
@@ -85,7 +92,7 @@ namespace ThriftSharp.Internals
             );
             return new ThriftWireField( 0, null,
                                         value.WireType, value.UnderlyingTypeInfo,
-                                        false, null,
+                                        ThriftWireFieldState.Optional, null,
                                         value.Converter,
                                         returnValueVar, setter );
         }

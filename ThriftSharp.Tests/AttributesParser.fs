@@ -67,6 +67,11 @@ module ``Parsing services: Normal methods`` =
     type CustomStruct() = class end
 
     let test(args: (Type * Type) list, retType: Type * Type, isOneWay: bool) =
+        let makeConverter (c: Type) =
+            if c = null then null
+            else ThriftConverter(Activator.CreateInstance(c), 
+                                 ReflectionExtensions.GetGenericInterfaces(c.GetTypeInfo(), typedefof<IThriftValueConverter<_,_>>).[0])
+
         let serviceAttrs = [{ typ = typeof<ThriftServiceAttribute>; args = ["Service"]; namedArgs = [] }]
         let methodAttrs = [{ typ = typeof<ThriftMethodAttribute>; args = ["Method"]; namedArgs = ["IsOneWay", box isOneWay; "Converter", box (snd retType)] }]
         let methodArgs = args |> List.mapi (fun n (t, c) -> (t, [{ typ = typeof<ThriftParameterAttribute>; args = [int16 n; n.ToString()]; namedArgs = ["Converter", box c] }]))
@@ -78,12 +83,12 @@ module ``Parsing services: Normal methods`` =
             new ThriftMethod(
                 "Method", 
                 isOneWay, 
-                new ThriftReturnValue(ReflectionExtensions.UnwrapTask(fst retType).GetTypeInfo(), if snd retType = null then null else Activator.CreateInstance(snd retType)), 
+                new ThriftReturnValue(ReflectionExtensions.UnwrapTask(fst retType).GetTypeInfo(), makeConverter (snd retType)), 
                 [| |], 
                 args |> List.mapi (fun n (t, c) -> new ThriftParameter(int16 n, 
                                                                        n.ToString(), 
                                                                        t.GetTypeInfo(), 
-                                                                       if c = null then null else Activator.CreateInstance(c))) |> List.toArray)
+                                                                       makeConverter c)) |> List.toArray)
 
         // makeInterface names methods with a counter
         service <=> new ThriftService("Service", dict [("0", expectedMethod)])
@@ -164,6 +169,10 @@ module ``Parsing services: Methods with exceptions`` =
       InlineData(typeof<CustomException>, null);
       InlineData(typeof<CustomException>, typeof<StructToExceptionConverter>)>]
     let ``Normal exceptions``(exnType, convType) =
+        let makeConverter (c: Type) =
+            if c = null then null
+            else ThriftConverter(Activator.CreateInstance(c), 
+                                 ReflectionExtensions.GetGenericInterfaces(c.GetTypeInfo(), typedefof<IThriftValueConverter<_,_>>).[0])
         let iface = makeIface [exnType, convType] false
         let service = ThriftAttributesParser.ParseService iface
 
@@ -172,7 +181,7 @@ module ``Parsing services: Methods with exceptions`` =
                 "Method", 
                 false, 
                 new ThriftReturnValue(typeof<Void>.GetTypeInfo(), null), 
-                [| ThriftThrowsClause(0s, "0", exnType.GetTypeInfo(), if convType = null then null else Activator.CreateInstance(convType)) |],
+                [| ThriftThrowsClause(0s, "0", exnType.GetTypeInfo(), makeConverter convType) |],
                 [| |])
 
         // makeInterface names methods with a counter
@@ -377,7 +386,7 @@ module ``Parsing structs: Normal fields`` =
     [<Theory;
       MemberData("ValuePrimitives")>]
     let ``Optional value primitive fields are not allowed``(typ) =
-        throws typ false "The Thrift field '0' (in type 'GeneratedType') is optional, but its type is a value type"
+        throws typ false "The Thrift field '0' (in type 'GeneratedType') is optional without a default value, but its type is a value type"
 
     [<Theory;
       MemberData("ValuePrimitives")>]

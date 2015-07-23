@@ -353,7 +353,7 @@ namespace ThriftSharp.Internals
         public static Expression CreateReaderForFields( ParameterExpression protocolParam, List<ThriftWireField> wireFields )
         {
             var fieldHeaderVar = Expression.Variable( typeof( ThriftFieldHeader ) );
-            var isSetVars = wireFields.Where( f => f.UnderlyingType.GetTypeInfo().IsValueType && ( f.IsRequired || f.DefaultValue != null ) )
+            var isSetVars = wireFields.Where( f => f.UnderlyingType.GetTypeInfo().IsValueType && ( f.State == ThriftWireFieldState.Required || f.DefaultValue != null ) )
                                       .ToDictionary( f => f, _ => Expression.Variable( typeof( bool ) ) );
 
             var endOfLoop = Expression.Label();
@@ -364,13 +364,14 @@ namespace ThriftSharp.Internals
                 var setter = field.Setter;
                 if ( field.Converter != null )
                 {
+                    // The GetDeclaredMethod("Convert") calls are required since the converter interface might be implemented explicitly,
+                    // which means Expression.Call(..., "Convert", ...) won't find it.
                     if ( Nullable.GetUnderlyingType( field.UnderlyingType ) == null )
                     {
                         setter = expr => field.Setter(
                             Expression.Call(
-                                Expression.Constant( field.Converter ),
-                                "Convert", // The converter type is unknown here (even the interface since it's generic)
-                                Types.None,
+                                Expression.Constant( field.Converter.Value ),
+                                field.Converter.InterfaceTypeInfo.GetDeclaredMethod( "Convert" ),
                                 expr
                             )
                         );
@@ -380,9 +381,8 @@ namespace ThriftSharp.Internals
                         setter = expr => field.Setter(
                             Expression.Convert(
                                 Expression.Call(
-                                    Expression.Constant( field.Converter ),
-                                    "Convert", // idem
-                                    Types.None,
+                                    Expression.Constant( field.Converter.Value ),
+                                    field.Converter.InterfaceTypeInfo.GetDeclaredMethod( "Convert" ),
                                     Expression.Convert(
                                         expr,
                                         field.WireType.TypeInfo.AsType()
@@ -481,21 +481,21 @@ namespace ThriftSharp.Internals
                 // - isn't required (to provide the proper ThriftProtocolException instead of a generic "unset field")
                 // - might be a value type
                 // thus it could pick the "== null" branch and crash
-                if ( field.DefaultValue != null || field.IsRequired )
+                if ( field.DefaultValue != null || field.State == ThriftWireFieldState.Required )
                 {
                     var check = isSetVars.ContainsKey( field )
                       ? (Expression) Expression.IsFalse( isSetVars[field] )
                       : Expression.Equal( field.Getter, Expression.Constant( null ) );
 
-                    if ( field.DefaultValue != null )
+                    if ( field.DefaultValue == null )
                     {
                         statements.Add(
                             Expression.IfThen(
                                 check,
-                                field.Setter(
-                                    Expression.Convert(
-                                        Expression.Constant( field.DefaultValue ),
-                                        field.WireType.TypeInfo.AsType()
+                                Expression.Throw(
+                                    Expression.Call(
+                                        Methods.ThriftSerializationException_MissingRequiredField,
+                                        Expression.Constant( field.Name )
                                     )
                                 )
                             )
@@ -506,11 +506,8 @@ namespace ThriftSharp.Internals
                         statements.Add(
                             Expression.IfThen(
                                 check,
-                                Expression.Throw(
-                                    Expression.Call(
-                                        Methods.ThriftSerializationException_MissingRequiredField,
-                                        Expression.Constant( field.Name )
-                                    )
+                                field.Setter(
+                                    Expression.Constant( field.DefaultValue )
                                 )
                             )
                         );

@@ -19,10 +19,10 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the converter associated with the field, if any.
         /// </summary>
-        public readonly object Converter;
+        public readonly ThriftConverter Converter;
 
 
-        protected ThriftConvertibleValue( TypeInfo typeInfo, object converter )
+        protected ThriftConvertibleValue( TypeInfo typeInfo, ThriftConverter converter )
         {
             WireType = ThriftType.Get( typeInfo.AsType(), converter );
             Converter = converter;
@@ -60,7 +60,7 @@ namespace ThriftSharp.Internals
         public readonly PropertyInfo BackingProperty;
 
 
-        public ThriftField( short id, string name, bool isRequired, object defaultValue, object converter, PropertyInfo backingProperty )
+        public ThriftField( short id, string name, bool isRequired, object defaultValue, ThriftConverter converter, PropertyInfo backingProperty )
             : base( backingProperty.PropertyType.GetTypeInfo(), converter )
         {
             Id = id;
@@ -127,7 +127,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Initializes a new instance of the ThriftThrowsClause class with the specified values.
         /// </summary>
-        public ThriftThrowsClause( short id, string name, TypeInfo typeInfo, object converter )
+        public ThriftThrowsClause( short id, string name, TypeInfo typeInfo, ThriftConverter converter )
             : base( typeInfo, converter )
         {
             Id = id;
@@ -160,7 +160,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Initializes a new instance of the ThriftMethodParameter class with the specified values.
         /// </summary>
-        public ThriftParameter( short id, string name, TypeInfo typeInfo, object converter )
+        public ThriftParameter( short id, string name, TypeInfo typeInfo, ThriftConverter converter )
             : base( typeInfo, converter )
         {
             Id = id;
@@ -183,7 +183,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Initializes a new instance of the ThriftMethodReturnValue class with the specified values.
         /// </summary>
-        public ThriftReturnValue( TypeInfo typeInfo, object converter )
+        public ThriftReturnValue( TypeInfo typeInfo, ThriftConverter converter )
             : base( typeInfo, converter )
         {
             UnderlyingTypeInfo = typeInfo;
