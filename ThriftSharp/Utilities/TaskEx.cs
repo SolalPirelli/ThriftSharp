@@ -22,7 +22,7 @@ namespace ThriftSharp.Utilities
         /// </summary>
         public static Task<TResult> TimeoutAfter<TResult>( this Task<TResult> task, TimeSpan timeout )
         {
-            if ( timeout == Timeout.InfiniteTimeSpan )
+            if ( task.IsCompleted || timeout == Timeout.InfiniteTimeSpan )
             {
                 return task;
             }
@@ -36,11 +36,10 @@ namespace ThriftSharp.Utilities
             task.ContinueWith( ( antecedent, state ) =>
                 {
                     var tuple = (Tuple<CancellationTokenSource, TaskCompletionSource<TResult>>) state;
-                    tuple.Item1.Cancel();
                     MarshalTaskResults( antecedent, tuple.Item2 );
+                    tuple.Item1.Cancel();
                 },
-                Tuple.Create( timeoutSource, resultSource ),
-                TaskContinuationOptions.ExecuteSynchronously
+                Tuple.Create( timeoutSource, resultSource )
             );
 
             return resultSource.Task;
