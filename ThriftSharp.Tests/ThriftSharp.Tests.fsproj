@@ -78,7 +78,7 @@
     <Compile Include="BinaryProtocol.fs" />
     <Compile Include="AttributesParser.fs" />
     <Compile Include="ServiceCalls.fs" />
-    <Compile Include="SpecificTests.fs" />
+    <Compile Include="MemoryLeaks.fs" />
     <Compile Include="StructsTests.fs" />
   </ItemGroup>
   <ItemGroup>
