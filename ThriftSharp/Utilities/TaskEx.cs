@@ -50,7 +50,7 @@ namespace ThriftSharp.Utilities
             switch ( source.Status )
             {
                 case TaskStatus.Faulted:
-                    proxy.TrySetException( source.Exception );
+                    proxy.TrySetException( source.Exception.InnerException );
                     break;
 
                 case TaskStatus.Canceled:
