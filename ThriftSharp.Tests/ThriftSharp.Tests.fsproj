@@ -79,7 +79,7 @@
     <Compile Include="AttributesParser.fs" />
     <Compile Include="ServiceCalls.fs" />
     <Compile Include="MemoryLeaks.fs" />
-    <Compile Include="StructsTests.fs" />
+    <Compile Include="StructsSerialization.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="DeepEqual">

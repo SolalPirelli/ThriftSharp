@@ -192,7 +192,7 @@ namespace ThriftSharp
 
         internal static ThriftSerializationException RequiredFieldIsNull( string fieldName )
         {
-            return new ThriftSerializationException( $"Field '{fieldName}' is a required field and cannot be null when writing it." );
+            return new ThriftSerializationException( $"Field '{fieldName}' is a required field but was null." );
         }
 
         internal static ThriftSerializationException NullParameter( string parameterName )
@@ -207,7 +207,7 @@ namespace ThriftSharp
 
         internal static ThriftSerializationException TypeIdMismatch( ThriftTypeId expectedId, ThriftTypeId actualId )
         {
-            return new ThriftSerializationException( $"Deserialization error: Expected type {expectedId}, but type {actualId} was read." );
+            return new ThriftSerializationException( $"Expected type {expectedId}, but type {actualId} was read." );
         }
     }
 }

@@ -2,7 +2,8 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 
 [<AutoOpen>]
-module ThriftSharp.Tests.Utils 
+module ThriftSharp.Tests.Utils
+
 open System
 open System.Collections.Generic
 open System.Reflection
@@ -16,6 +17,14 @@ open ThriftSharp.Internals
 /// Use Nullable without having to open System (because of conflicts with e.g. Int32 in memory protocol)
 let nullable = System.Nullable
 let date(dd, mm, yyyy) = DateTime(yyyy, mm, dd, 00, 00, 00, DateTimeKind.Utc)
+
+
+/// Easily create IDictionary instances
+let dict vals =
+    let dic = Dictionary()
+    Seq.iter dic.Add vals
+    dic
+
 
 /// Nicer syntax for assert equals, using deep equality
 let (<=>) (act: 'a) (exp: 'a) =
@@ -33,7 +42,7 @@ let asUnit (t: Task) =
 
 
 /// Converts any Async to a non-generic Task
-let asTask (a: Async<_>) =
+let asTask a =
     (Async.StartAsTask a) :> Task
     
 
@@ -113,74 +122,3 @@ let makeClass (attrs: AttributeInfo list)
         attrs |> List.iter (AttributeInfo.AsBuilder >> propBuilder.SetCustomAttribute) )
 
     typeBuilder.CreateType().GetTypeInfo()
-
-
-let tid (n: int) = byte n |> LanguagePrimitives.EnumOfValue
-
-let dict (vals: ('a * 'b) seq) =
-    let dic = Dictionary()
-    for (k,v) in vals do
-        dic.Add(k, v)
-    dic
-
-let throws<'T when 'T :> exn> func =
-    let exn = ref Unchecked.defaultof<'T>
-
-    try
-        func() |> ignore
-    with
-    | ex when typeof<'T>.IsAssignableFrom(ex.GetType()) -> 
-        exn := ex :?> 'T
-    | ex -> 
-        Assert.True(false, sprintf "Expected an exception of type %A, but got one of type %A (message: %s)" typeof<'T> (ex.GetType()) ex.Message)
-    
-    if Object.Equals(!exn, null) then
-        Assert.True(false, "Expected an exception, but none was thrown.")
-    !exn
-
-let throwsAsync<'T when 'T :> exn> (func: Async<obj>) = 
-    Async.FromContinuations(fun (cont, econt, _) ->
-        Async.StartWithContinuations(
-            func,
-            (fun _ -> econt(Exception("Expected an exception, but none was thrown."))),
-            (fun e -> match (match e with :? AggregateException as e -> e.InnerException | _ -> e) with
-                      | e when typeof<'T>.IsAssignableFrom(e.GetType()) -> 
-                          cont (e :?> 'T)
-                      | e ->
-                          econt(Exception(sprintf "Expected an %A, got an %A (message: %s)" typeof<'T> (e.GetType()) e.Message))),
-            (fun e -> if typeof<'T> <> typeof<OperationCanceledException> then
-                          econt(Exception(sprintf "Expected an %A, got an OperationCanceledException." typeof<'T>))
-                      else
-                          cont (box e :?> 'T))
-        )
-    )
-
-let run x = x |> Async.Ignore |> Async.RunSynchronously
-
-let read<'T> prot =
-    let thriftStruct = ThriftAttributesParser.ParseStruct(typeof<'T>.GetTypeInfo())
-    ThriftStructReader.Read<'T>(thriftStruct, prot)
-
-let write prot obj =
-    let thriftStruct = ThriftAttributesParser.ParseStruct(obj.GetType().GetTypeInfo())
-    let meth = typeof<ThriftStructWriter>.GetMethod("Write").MakeGenericMethod([| obj.GetType() |])
-    try
-        meth.Invoke(null, [| thriftStruct; obj; prot |]) |> ignore
-    with
-    | :? TargetInvocationException as e -> raise e.InnerException
-
-let readMsgAsync<'T> prot name =
-    let svc = ThriftAttributesParser.ParseService(typeof<'T>.GetTypeInfo())
-    Thrift.CallMethodAsync<obj>({ new ThriftCommunication() with member x.CreateProtocol(_) = prot }, svc, name, [| |]) |> Async.AwaitTask
-
-
-let writeMsgAsync<'T> methodName args = async {
-    let m = MemoryProtocol([MessageHeader ("", ThriftMessageType.Reply)
-                            StructHeader ""
-                            FieldStop
-                            StructEnd
-                            MessageEnd])
-    let svc = ThriftAttributesParser.ParseService(typeof<'T>.GetTypeInfo())
-    do! Thrift.CallMethodAsync<obj>({ new ThriftCommunication() with member x.CreateProtocol(_) = m :> Protocols.IThriftProtocol }, svc, methodName, args) |> Async.AwaitTask |> Async.Ignore
-    return m
-}

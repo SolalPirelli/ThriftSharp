@@ -497,7 +497,7 @@ type Tests() =
                 MessageEnd]
                [MessageHeader ("", ThriftMessageType.Reply)
                 StructHeader ""
-                FieldHeader (0s, "", tid 8)
+                FieldHeader (0s, "", ThriftTypeId.Int32)
                 Int32 787708800
                 FieldEnd
                 FieldStop
