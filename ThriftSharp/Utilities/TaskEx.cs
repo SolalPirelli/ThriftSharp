@@ -67,8 +67,6 @@ namespace ThriftSharp.Utilities
                     proxy.TrySetResult( source.Result );
                     break;
             }
-
-            throw new InvalidOperationException( "This should never happen." );
         }
     }
 }

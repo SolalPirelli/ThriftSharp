@@ -104,7 +104,7 @@ type Tests() =
     member x.TestException<'e when 'e :> exn> call expectedWrite expectedRead checker = asTask <| async {
         let mutable prot: IThriftProtocol = null
         let svc = x.GetService(fun t -> prot <- MemoryProtocol(expectedRead, t); prot)
-        let! ex = Assert.ThrowsAsync<'e>(fun() -> call(svc) :> Task) |> Async.AwaitTask
+        let! ex = Assert.ThrowsAnyAsync<'e>(fun() -> call(svc) :> Task) |> Async.AwaitTask
         (prot :?> MemoryProtocol).WrittenValues <=> expectedWrite
         checker(ex)
     }
@@ -245,7 +245,7 @@ type Tests() =
     member x.``No return value, 4 args + cancellation token (cancelled)``() =
         let tokenSource = CancellationTokenSource()
         tokenSource.Cancel()
-        x.TestException<TaskCanceledException>
+        x.TestException<System.OperationCanceledException>
                (fun s -> s.NoReturn5(true, 1, 1.0, "abc", tokenSource.Token) |> asUnit)
                [MessageHeader ("NoReturn5", ThriftMessageType.Call)
                 StructHeader ""
@@ -482,7 +482,7 @@ type Tests() =
     member x.``Return value, 4 args + cancellation token (cancelled)``() =
         let tokenSource = CancellationTokenSource()
         tokenSource.Cancel()
-        x.TestException<TaskCanceledException>
+        x.TestException<System.OperationCanceledException>
                (fun s -> s.Return5(true, 1, 1.0, "abc", tokenSource.Token) |> asUnit)
                [MessageHeader ("Return5", ThriftMessageType.Call)
                 StructHeader ""

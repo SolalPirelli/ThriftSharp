@@ -81,15 +81,13 @@ namespace ThriftSharp.Transport
                 request.Headers[header.Key] = header.Value;
             }
 
-            using ( var requestStream = await request.GetRequestStreamAsync().TimeoutAfter( _timeout ) )
+            // N.B.: GetRequestStreamAsync doesn't make any HTTP calls, only GetResponseAsync does.
+            using ( var requestStream = await request.GetRequestStreamAsync() )
             {
                 _outputStream.WriteTo( requestStream );
                 _outputStream.Dispose();
-
-                await requestStream.FlushAsync( _token );
+                requestStream.Flush();
             }
-
-            _token.ThrowIfCancellationRequested();
 
             // Don't keep the output stream for longer than what's needed,
             // and don't create the input stream before it's needed either.
@@ -98,7 +96,13 @@ namespace ThriftSharp.Transport
             _inputStream = new MemoryStream();
 
             var response = await request.GetResponseAsync().TimeoutAfter( _timeout );
+
+            _token.ThrowIfCancellationRequested();
+
             await response.GetResponseStream().CopyToAsync( _inputStream );
+            _inputStream.Seek( 0, SeekOrigin.Begin );
+
+            _token.ThrowIfCancellationRequested();
         }
 
         #region IDisposable implementation

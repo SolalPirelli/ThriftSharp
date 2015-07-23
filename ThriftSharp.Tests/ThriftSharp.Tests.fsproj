@@ -76,6 +76,7 @@
     <Content Include="packages.config" />
     <Compile Include="Converters.fs" />
     <Compile Include="BinaryProtocol.fs" />
+    <Compile Include="HttpTransport.fs" />
     <Compile Include="AttributesParser.fs" />
     <Compile Include="ServiceCalls.fs" />
     <Compile Include="MemoryLeaks.fs" />
