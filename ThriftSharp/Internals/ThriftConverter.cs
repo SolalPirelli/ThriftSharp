@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace ThriftSharp.Internals
 {
-    public sealed class ThriftConverter
+    internal sealed class ThriftConverter
     {
         public object Value { get; }
         public TypeInfo InterfaceTypeInfo { get; }

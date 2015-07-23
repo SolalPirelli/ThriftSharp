@@ -2,7 +2,6 @@
 // This code is licensed under the MIT License (see Licence.txt for details).
 
 using System;
-using System.Linq.Expressions;
 
 namespace ThriftSharp.Utilities
 {
@@ -19,7 +18,7 @@ namespace ThriftSharp.Utilities
         {
             if ( obj == null )
             {
-                throw new ArgumentException( $"Parameter {parameterName} must not be null." );
+                throw new ArgumentNullException( $"Parameter {parameterName} must not be null." );
             }
         }
 

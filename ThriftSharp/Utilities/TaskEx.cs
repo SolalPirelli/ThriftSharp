@@ -20,12 +20,9 @@ namespace ThriftSharp.Utilities
         /// <summary>
         /// Makes the <see cref="Task{TResult}" /> timeout after the specified amount of time.
         /// </summary>
-        /// <remarks>
-        /// This method assumes timeout != 0 and does not optimize for that edge case
-        /// </remarks>
         public static Task<TResult> TimeoutAfter<TResult>( this Task<TResult> task, TimeSpan timeout )
         {
-            if ( task.IsCompleted || timeout == Timeout.InfiniteTimeSpan )
+            if ( timeout == Timeout.InfiniteTimeSpan )
             {
                 return task;
             }
@@ -43,9 +40,7 @@ namespace ThriftSharp.Utilities
                     MarshalTaskResults( antecedent, tuple.Item2 );
                 },
                 Tuple.Create( timeoutSource, resultSource ),
-                CancellationToken.None,
-                TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default
+                TaskContinuationOptions.ExecuteSynchronously
             );
 
             return resultSource.Task;

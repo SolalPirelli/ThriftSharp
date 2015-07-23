@@ -26,6 +26,8 @@ namespace ThriftSharp
         /// <param name="communication">The means of communication with the server.</param>
         protected ThriftServiceImplementation( ThriftCommunication communication )
         {
+            Validation.IsNotNull( communication, nameof( communication ) );
+
             _service = ThriftAttributesParser.ParseService( typeof( TService ).GetTypeInfo() );
             _communication = communication;
         }

@@ -82,6 +82,7 @@
     <Compile Include="MemoryLeaks.fs" />
     <Compile Include="StructsSerialization.fs" />
     <Compile Include="Communication.fs" />
+    <Compile Include="ParametersValidation.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="DeepEqual">

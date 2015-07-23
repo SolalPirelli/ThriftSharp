@@ -10,7 +10,7 @@
                         <ModulePaths>
                             <Exclude>
                               <!-- Exclude test projects -->
-                              <ModulePath>.*Tests\.dll</ModulePath>
+                              <ModulePath>.*Tests.*</ModulePath>
                               <!-- Exclude xUnit itself -->
                               <ModulePath>.*xunit.*</ModulePath>
                             </Exclude>
