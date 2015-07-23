@@ -223,14 +223,6 @@ namespace ThriftSharp.Internals
                     }
                     return Expression.Call( protocolParam, Methods.IThriftProtocol_WriteBinary, value );
 
-                case ThriftTypeId.Struct:
-                    return Expression.Call(
-                        typeof( ThriftStructWriter ),
-                        "Write",
-                        new[] { value.Type },
-                        Expression.Constant( thriftType.Struct ), value, protocolParam
-                    );
-
                 case ThriftTypeId.Map:
                     return CreateWriterForMap( protocolParam, thriftType, value );
 
@@ -243,7 +235,12 @@ namespace ThriftSharp.Internals
                     return CreateWriterForListOrSet( protocolParam, thriftType, value );
 
                 default:
-                    throw new InvalidOperationException( "Cannot create a writer for the type " + thriftType.Id );
+                    return Expression.Call(
+                        typeof( ThriftStructWriter ),
+                        "Write",
+                        new[] { value.Type },
+                        Expression.Constant( thriftType.Struct ), value, protocolParam
+                    );
             }
         }
 

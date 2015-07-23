@@ -291,14 +291,6 @@ namespace ThriftSharp.Internals
                     }
                     return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadBinary );
 
-                case ThriftTypeId.Struct:
-                    return Expression.Call(
-                        typeof( ThriftStructReader ),
-                        "Read",
-                        new[] { thriftType.TypeInfo.AsType() },
-                        Expression.Constant( thriftType.Struct ), protocolParam
-                    );
-
                 case ThriftTypeId.Map:
                     return CreateReaderForMap( protocolParam, thriftType );
 
@@ -311,7 +303,12 @@ namespace ThriftSharp.Internals
                     return CreateReaderForListOrSet( protocolParam, thriftType );
 
                 default:
-                    throw new InvalidOperationException( "Cannot create a reader for the type " + thriftType.Id );
+                    return Expression.Call(
+                        typeof( ThriftStructReader ),
+                        "Read",
+                        new[] { thriftType.TypeInfo.AsType() },
+                        Expression.Constant( thriftType.Struct ), protocolParam
+                    );
             }
         }
 
