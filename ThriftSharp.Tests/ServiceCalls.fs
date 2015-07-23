@@ -266,6 +266,45 @@ type Tests() =
                 MessageEnd]
                []
                (fun _ -> ())
+               
+    [<Fact>]
+    member x.``No return value, declared exception not thrown``() =
+        x.Test (fun s -> s.NoReturnException() |> asUnit)
+              [MessageHeader ("NoReturnException", ThriftMessageType.Call)
+               StructHeader ""
+               FieldStop
+               StructEnd
+               MessageEnd]
+              [MessageHeader ("", ThriftMessageType.Reply)
+               StructHeader ""
+               FieldStop
+               StructEnd
+               MessageEnd]
+              ()
+
+    [<Fact>]
+    member x.``No return value, declared exception thrown``() =
+        x.TestException<CustomException> 
+              (fun s -> s.NoReturnException() |> asUnit)
+              [MessageHeader ("NoReturnException", ThriftMessageType.Call)
+               StructHeader ""
+               FieldStop
+               StructEnd
+               MessageEnd]
+              [MessageHeader ("", ThriftMessageType.Reply)
+               StructHeader ""
+               FieldHeader (1s, "exn", ThriftTypeId.Struct)
+               StructHeader ("CustomException")
+               FieldHeader (1s, "Value", ThriftTypeId.Binary)
+               String "Oops"
+               FieldEnd
+               FieldStop
+               StructEnd
+               FieldEnd
+               FieldStop
+               StructEnd
+               MessageEnd]
+              (fun e -> e.Value <=> "Oops")
 
     [<Fact>]
     member x.``No return value, undeclared exception thrown``() =
@@ -486,7 +525,48 @@ type Tests() =
                 StructEnd
                 MessageEnd]
                (fun e -> e.Message <=> "Error"; e.ExceptionType <=> nullable ThriftProtocolExceptionType.InternalError)
+               
+    [<Fact>]
+    member x.``Return value, declared exception not thrown``() =
+        x.Test (fun s -> s.ReturnException())
+              [MessageHeader ("ReturnException", ThriftMessageType.Call)
+               StructHeader ""
+               FieldStop
+               StructEnd
+               MessageEnd]
+              [MessageHeader ("", ThriftMessageType.Reply)
+               StructHeader ""
+               FieldHeader (0s, null, ThriftTypeId.Int32)
+               Int32 1
+               FieldEnd
+               FieldStop
+               StructEnd
+               MessageEnd]
+              1
 
+    [<Fact>]
+    member x.``Return value, declared exception thrown``() =
+        x.TestException<CustomException> 
+              (fun s -> s.ReturnException() |> asUnit)
+              [MessageHeader ("ReturnException", ThriftMessageType.Call)
+               StructHeader ""
+               FieldStop
+               StructEnd
+               MessageEnd]
+              [MessageHeader ("", ThriftMessageType.Reply)
+               StructHeader ""
+               FieldHeader (1s, "exn", ThriftTypeId.Struct)
+               StructHeader ("CustomException")
+               FieldHeader (1s, "Value", ThriftTypeId.Binary)
+               String "Oops"
+               FieldEnd
+               FieldStop
+               StructEnd
+               FieldEnd
+               FieldStop
+               StructEnd
+               MessageEnd]
+              (fun e -> e.Value <=> "Oops")
     [<Fact>]
     member x.``Converted return value``() =
         x.Test (fun s -> s.ConvertedReturn())
