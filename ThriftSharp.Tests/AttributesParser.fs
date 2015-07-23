@@ -394,6 +394,72 @@ module ``Parsing structs: Normal fields`` =
         throws (typedefof<Nullable<_>>.MakeGenericType([| typ |])) true 
                "The Thrift field '0' (in type 'GeneratedType') is required, but its type is nullable"
         
+module ``Parsing structs: Fields with default values`` =
+    let test (typ: Type) value =
+        let thriftStruct = ThriftAttributesParser.ParseStruct(typ.GetTypeInfo())
+        thriftStruct.Fields.Count <=> 1
+        thriftStruct.Fields.[0].DefaultValue <=> box value
+
+    let throws (typ: Type) expected =
+        let exn = Assert.Throws<ThriftParsingException>(fun () -> ThriftAttributesParser.ParseStruct(typ.GetTypeInfo()) |> ignore)
+        Assert.Contains(expected, exn.Message)
+
+
+    type StringToIntConverter() =
+        interface IThriftValueConverter<string, int> with
+            member x.Convert(s) = Int32.Parse(s)
+            member x.ConvertBack(i) = i.ToString()
+
+    [<ThriftStruct("S")>]
+    type DefaultValue() =
+        [<ThriftField(1s, true, "F", DefaultValue = 1)>]
+        member val Field = 0 with get, set
+        
+    [<Fact>]
+    let ``Default value``() =
+        test typeof<DefaultValue> 1
+
+
+    [<ThriftStruct("S")>]
+    type ConvertedDefaultValue() =
+        [<ThriftField(1s, true, "F", DefaultValue = "1", Converter = typeof<StringToIntConverter>)>]
+        member val Field = 0 with get, set
+        
+    [<Fact>]
+    let ``Default value for converted field``() =
+        test typeof<ConvertedDefaultValue> 1
+
+
+    [<ThriftStruct("S")>]
+    type WrongDefaultValue() =
+        [<ThriftField(1s, true, "F", DefaultValue = true)>]
+        member val Field = 0 with get, set
+        
+    [<Fact>]
+    let ``Wrong default value type``() =
+        throws typeof<WrongDefaultValue> "The default value of the Thrift field 'Field' (in type 'WrongDefaultValue') does not have the correct type."
+
+
+    [<ThriftStruct("S")>]
+    type ConvertedWrongDefaultValue1() =
+        [<ThriftField(1s, true, "F", DefaultValue = 1, Converter = typeof<StringToIntConverter>)>]
+        member val Field = 0 with get, set
+
+    [<Fact>]
+    let ``Wrong default value type for converted field (converted one)``() =
+        throws typeof<ConvertedWrongDefaultValue1> "The default value of the Thrift field 'Field' (in type 'ConvertedWrongDefaultValue1') does not have the correct type."
+
+
+    [<ThriftStruct("S")>]
+    type ConvertedWrongDefaultValue2() =
+        [<ThriftField(1s, true, "F", DefaultValue = true, Converter = typeof<StringToIntConverter>)>]
+        member val Field = 0 with get, set
+
+    [<Fact>]
+    let ``Wrong default value type for converted field (unrelated)``() =
+        throws typeof<ConvertedWrongDefaultValue2> "The default value of the Thrift field 'Field' (in type 'ConvertedWrongDefaultValue2') does not have the correct type."
+
+
 module ``Parsing structs: Bad field types`` =
     let makeStruct fieldType =
         makeClass [{ typ = typeof<ThriftStructAttribute>; args = ["Struct"]; namedArgs = [] }]

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using ThriftSharp.Protocols;
@@ -358,32 +357,10 @@ namespace ThriftSharp.Internals
                 return writingExpr;
             }
 
-            Expression defaultValueExpr;
-            if ( field.DefaultValue == null )
-            {
-                defaultValueExpr = Expression.Constant( null );
-            }
-            else
-            {
-                if ( field.WireType.NullableType == null )
-                {
-                    // if it's a class, it's OK
-                    defaultValueExpr = Expression.Constant( field.DefaultValue );
-                }
-                else
-                {
-                    // otherwise we need to make the default value a Nullable.
-                    defaultValueExpr = Expression.New(
-                       field.WireType.TypeInfo.DeclaredConstructors.Single(),
-                       Expression.Constant( field.DefaultValue )
-                   );
-                }
-            }
-
             return Expression.IfThen(
                 Expression.NotEqual(
                     field.Getter,
-                    defaultValueExpr
+                    Expression.Constant( field.DefaultValue )
                 ),
                 writingExpr
             );

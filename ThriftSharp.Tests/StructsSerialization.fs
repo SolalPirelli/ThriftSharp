@@ -606,7 +606,7 @@ type Reading() =
                             [typeof<'e>, [{typ = typeof<ThriftFieldAttribute>; args = [1s; true; "Field"]; namedArgs = []}]]
 
         let data = [StructHeader "Struct"
-                    FieldHeader (1s, "Field", ThriftType.Get(typeof<'e>, null).Id)] 
+                    FieldHeader (1s, "Field", ThriftType.Get(typeof<'e>).Id)] 
                  @  fieldData 
                  @ [FieldEnd
                     FieldStop

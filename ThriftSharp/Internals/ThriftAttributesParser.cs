@@ -44,25 +44,24 @@ namespace ThriftSharp.Internals
             {
                 if ( attr.Converter == null )
                 {
-                    defaultValue = attr.DefaultValue;
-                    if ( defaultValue.GetType() != propertyInfo.PropertyType )
+                    if ( attr.DefaultValue.GetType() != propertyInfo.PropertyType )
                     {
                         throw ThriftParsingException.DefaultValueOfWrongType( propertyInfo );
                     }
+                    defaultValue = attr.DefaultValue;
                 }
                 else
                 {
-                    // Converting the value now greatly simplifies the serialization code
+                    if ( attr.DefaultValue.GetType() != attr.ThriftConverter.FromType )
+                    {
+                        throw ThriftParsingException.DefaultValueOfWrongType( propertyInfo );
+                    }
+
+                    // Converting the value now simplifies the serialization code
                     defaultValue = attr.ThriftConverter
                                        .InterfaceTypeInfo
                                        .GetDeclaredMethod( "Convert" )
                                        .Invoke( attr.ThriftConverter.Value, new object[] { attr.DefaultValue } );
-
-                    // defaultValue is explicitly allowed to be null here, it doesn't cause any problems
-                    if ( defaultValue != null && defaultValue.GetType() != propertyInfo.PropertyType )
-                    {
-                        throw ThriftParsingException.DefaultValueOfWrongType( propertyInfo );
-                    }
                 }
             }
 

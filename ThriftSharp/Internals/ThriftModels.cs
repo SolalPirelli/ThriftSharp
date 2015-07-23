@@ -24,7 +24,7 @@ namespace ThriftSharp.Internals
 
         protected ThriftConvertibleValue( TypeInfo typeInfo, ThriftConverter converter )
         {
-            WireType = ThriftType.Get( typeInfo.AsType(), converter );
+            WireType = ThriftType.Get( converter?.FromType ?? typeInfo.AsType() );
             Converter = converter;
         }
     }
