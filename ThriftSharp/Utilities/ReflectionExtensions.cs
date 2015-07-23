@@ -14,17 +14,18 @@ namespace ThriftSharp.Utilities
     internal static class ReflectionExtensions
     {
         /// <summary>
-        /// Gets the specified generic interface definition on the TypeInfo, or null if it doesn't implement it.
+        /// Gets all implementations of the specified generic interface definitions on the TypeInfo.
         /// </summary>
-        public static TypeInfo GetGenericInterface( this TypeInfo typeInfo, Type interfaceType )
+        public static TypeInfo[] GetGenericInterfaces( this TypeInfo typeInfo, Type interfaceType )
         {
             if ( typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == interfaceType )
             {
-                return typeInfo;
+                return new[] { typeInfo };
             }
             return typeInfo.ImplementedInterfaces
-                           .FirstOrDefault( i => i.GenericTypeArguments.Length > 0 && i.GetGenericTypeDefinition() == interfaceType )
-                           ?.GetTypeInfo();
+                           .Where( i => i.GenericTypeArguments.Length > 0 && i.GetGenericTypeDefinition() == interfaceType )
+                           .Select( t => t.GetTypeInfo() )
+                           .ToArray();
         }
 
         /// <summary>

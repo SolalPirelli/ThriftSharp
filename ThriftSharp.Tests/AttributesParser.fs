@@ -22,7 +22,7 @@ module ``Parsing: Converters`` =
 
     [<Fact>]
     let ``Converter not implementing IThriftValueConverter<,> is not allowed``() =
-        throws<string>("The type must implement IThriftValueConverter")
+        throws<string>("The type 'String' does not IThriftValueConverter<TFrom, TTo>")
 
 
     type BadConverter(notAParameterlessCtor: obj) =
@@ -32,7 +32,7 @@ module ``Parsing: Converters`` =
 
     [<Fact>]
     let ``Converter without a parameterless ctor is not allowed``() =
-        throws<BadConverter>("The type must have a parameterless constructor.")
+        throws<BadConverter>("The type 'BadConverter' does not have a parameterless constructor.")
 
         
     type GoodConverter() =
@@ -44,6 +44,23 @@ module ``Parsing: Converters`` =
     let ``Converter getter works properly``() =
         let attribute = ThriftParameterAttribute(0s, "param", Converter=typeof<GoodConverter>)
         attribute.Converter <=> typeof<GoodConverter>
+
+
+    type ConverterOfInts() =
+        interface IThriftValueConverter<int, int> with
+            member x.Convert(i) = i
+            member x.ConvertBack(i) = i
+
+    type ConverterOfIntsAndStrings() =
+        inherit ConverterOfInts()
+
+        interface IThriftValueConverter<string, string> with
+            member x.Convert(s) = s
+            member x.ConvertBack(s) = s
+
+    [<Fact>]
+    let ``Converter implementing IThriftValueConverter twice is not allowed``() =
+        throws<ConverterOfIntsAndStrings>("The type 'ConverterOfIntsAndStrings' implements IThriftValueConverter<TFrom, TTo> more than once")
 
 module ``Parsing services: Normal methods`` =
     [<ThriftStruct("CustomStruct")>]

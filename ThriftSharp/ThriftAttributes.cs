@@ -35,16 +35,20 @@ namespace ThriftSharp
                 if ( !_knownConverters.ContainsKey( value ) )
                 {
                     var typeInfo = value.GetTypeInfo();
-                    var iface = typeInfo.GetGenericInterface( typeof( IThriftValueConverter<,> ) );
-                    if ( iface == null )
+                    var ifaces = typeInfo.GetGenericInterfaces( typeof( IThriftValueConverter<,> ) );
+                    if ( ifaces.Length == 0 )
                     {
-                        throw new ArgumentException( "The type must implement IThriftValueConverter." );
+                        throw new ArgumentException( $"The type '{value.Name}' does not IThriftValueConverter<TFrom, TTo>." );
+                    }
+                    if ( ifaces.Length > 1 )
+                    {
+                        throw new ArgumentException( $"The type '{value.Name}' implements IThriftValueConverter<TFrom, TTo> more than once." );
                     }
 
                     var ctor = typeInfo.DeclaredConstructors.FirstOrDefault( c => c.GetParameters().Length == 0 );
                     if ( ctor == null )
                     {
-                        throw new ArgumentException( "The type must have a parameterless constructor." );
+                        throw new ArgumentException( $"The type '{value.Name}' does not have a parameterless constructor." );
                     }
 
                     _knownConverters.Add( value, ctor.Invoke( null ) );

@@ -166,7 +166,7 @@ namespace ThriftSharp.Internals
         {
             if ( converter != null )
             {
-                type = converter.GetType().GetTypeInfo().GetGenericInterface( typeof( IThriftValueConverter<,> ) ).GenericTypeArguments[0];
+                type = converter.GetType().GetTypeInfo().GetGenericInterfaces( typeof( IThriftValueConverter<,> ) )[0].GenericTypeArguments[0];
                 var nullableType = Nullable.GetUnderlyingType( type );
                 if ( nullableType != null )
                 {
