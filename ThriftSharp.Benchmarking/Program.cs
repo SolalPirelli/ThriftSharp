@@ -11,10 +11,12 @@ namespace ThriftSharp.Benchmarking
     {
         public static void Main( string[] args )
         {
-            foreach ( var type in Assembly.GetExecutingAssembly().GetTypes().Where( t => t.Namespace == "ThriftSharp.Benchmarking.Models" ) )
+            foreach ( var type in Assembly.GetExecutingAssembly()
+                                          .GetTypes()
+                                          .Where( t => t.Namespace == "ThriftSharp.Benchmarking.Models" && t.IsPublic )
+                                          .OrderBy( t => t.Name ) )
             {
-                var result = Benchmarker.Benchmark( type, 10000, 10 );
-                Console.WriteLine( result );
+                Console.WriteLine( Benchmarker.Benchmark( type, 10000, 10 ) );
             }
         }
     }
