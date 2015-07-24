@@ -425,13 +425,14 @@ type Reading() =
     [<Fact>]
     let ``FieldStop``() =
         let trans = MemoryTransport([0uy])
-        ThriftBinaryProtocol(trans).ReadFieldHeader().TypeId <=> ThriftTypeId.Empty
+        ThriftBinaryProtocol(trans).ReadFieldHeader() <=> null
         trans.IsEmpty <=> true
 
     override x.Test (bin, rw, inst) =
         let trans = MemoryTransport(bin |> List.map byte)
         let obj = (ThriftBinaryProtocol(trans) |> rw |> fst) ()
-        obj <=> inst   
+        obj <=> inst
+        trans.IsEmpty <=> true
 
 type Writing() =
     inherit Tests()

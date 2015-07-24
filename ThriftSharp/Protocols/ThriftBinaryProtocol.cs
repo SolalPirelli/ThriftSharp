@@ -86,7 +86,7 @@ namespace ThriftSharp.Protocols
         /// </summary>
         public ThriftStructHeader ReadStructHeader()
         {
-            return default( ThriftStructHeader );
+            return new ThriftStructHeader( null );
         }
 
         /// <summary>
@@ -97,13 +97,18 @@ namespace ThriftSharp.Protocols
 
         /// <summary>
         /// Reads a field header.
-        /// Returns a header with the empty type ID if there are no more fields in the struct currently being read.
+        /// Returns null if there are no more fields in the struct currently being read.
         /// </summary>
         public ThriftFieldHeader ReadFieldHeader()
         {
             _transport.ReadBytes( _buffer1 );
             var tid = (ThriftTypeId) _buffer1[0];
-            short id = tid == ThriftTypeId.Empty ? (short) 0 : ReadInt16();
+            if ( tid == ThriftTypeId.Empty )
+            {
+                return null;
+            }
+
+            short id = ReadInt16();
             return new ThriftFieldHeader( id, null, tid );
         }
 

@@ -456,8 +456,8 @@ namespace ThriftSharp.Internals
                         ),
                         Expression.IfThen(
                             Expression.Equal(
-                                Expression.Field( fieldHeaderVar, Fields.ThriftFieldHeader_TypeId ),
-                                Expression.Constant( ThriftTypeId.Empty )
+                                fieldHeaderVar,
+                                Expression.Constant( null )
                             ),
                             Expression.Break( endOfLoop )
                         ),
@@ -590,7 +590,7 @@ namespace ThriftSharp.Internals
                     while ( true )
                     {
                         var fieldHeader = protocol.ReadFieldHeader();
-                        if ( fieldHeader.TypeId == ThriftTypeId.Empty )
+                        if ( fieldHeader == null )
                         {
                             break;
                         }

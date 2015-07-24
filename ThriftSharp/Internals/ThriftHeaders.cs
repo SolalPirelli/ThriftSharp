@@ -6,7 +6,7 @@ namespace ThriftSharp.Internals
     /// <summary>
     /// Header of Thrift collections (List and Set).
     /// </summary>
-    internal struct ThriftCollectionHeader
+    internal sealed class ThriftCollectionHeader
     {
         /// <summary>
         /// Gets the number of elements in the collection.
@@ -34,7 +34,7 @@ namespace ThriftSharp.Internals
     /// <summary>
     /// Header of Thrift maps.
     /// </summary>
-    internal struct ThriftMapHeader
+    internal sealed class ThriftMapHeader
     {
         /// <summary>
         /// Gets the number of elements in the map.
@@ -69,7 +69,7 @@ namespace ThriftSharp.Internals
     /// <summary>
     /// Header of Thrift fields.
     /// </summary>
-    internal struct ThriftFieldHeader
+    internal sealed class ThriftFieldHeader
     {
         /// <summary>
         /// Gets the field's ID.
@@ -103,7 +103,7 @@ namespace ThriftSharp.Internals
     /// <summary>
     /// Header of Thrift structs.
     /// </summary>
-    internal struct ThriftStructHeader
+    internal sealed class ThriftStructHeader
     {
         /// <summary>
         /// Gets the struct's name.
@@ -124,7 +124,7 @@ namespace ThriftSharp.Internals
     /// <summary>
     /// Header of Thrift messages.
     /// </summary>
-    internal struct ThriftMessageHeader
+    internal sealed class ThriftMessageHeader
     {
         // N.B. Thrift# does not implement message sequence IDs, as it does not need them
 

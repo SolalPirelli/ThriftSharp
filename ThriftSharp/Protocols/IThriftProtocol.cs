@@ -34,7 +34,7 @@ namespace ThriftSharp.Protocols
 
         /// <summary>
         /// Reads a field header.
-        /// Returns a header with the empty type ID if there are no more fields in the struct currently being read.
+        /// Returns null if there are no more fields in the struct currently being read.
         /// </summary>
         ThriftFieldHeader ReadFieldHeader();
 
