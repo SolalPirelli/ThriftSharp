@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace ThriftSharp.Utilities
 {
     /// <summary>
-    /// Reflection utility methods and extension methods.
+    /// Reflection utility extension methods.
     /// </summary>
     internal static class ReflectionExtensions
     {

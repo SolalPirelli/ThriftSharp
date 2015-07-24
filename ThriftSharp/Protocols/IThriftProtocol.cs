@@ -8,7 +8,7 @@ using ThriftSharp.Internals;
 namespace ThriftSharp.Protocols
 {
     /// <summary>
-    /// Protocol that can send and receive primitive types as well as containers, structs and messages.
+    /// Protocol that can send and receive Thrift types and messages.
     /// </summary>
     internal interface IThriftProtocol : IDisposable
     {
@@ -33,7 +33,8 @@ namespace ThriftSharp.Protocols
         void ReadStructEnd();
 
         /// <summary>
-        /// Reads a field header, or returns null if an end-of-field token was encountered.
+        /// Reads a field header.
+        /// Returns a header with the empty type ID if there are no more fields in the struct currently being read.
         /// </summary>
         ThriftFieldHeader ReadFieldHeader();
 
@@ -73,7 +74,7 @@ namespace ThriftSharp.Protocols
         void ReadMapEnd();
 
         /// <summary>
-        /// Reads a boolean value.
+        /// Reads a boolean.
         /// </summary>
         bool ReadBoolean();
 
@@ -103,7 +104,7 @@ namespace ThriftSharp.Protocols
         long ReadInt64();
 
         /// <summary>
-        /// Reads a string.
+        /// Reads an UTF-8 string.
         /// </summary>
         string ReadString();
 
@@ -179,7 +180,7 @@ namespace ThriftSharp.Protocols
         void WriteMapEnd();
 
         /// <summary>
-        /// Writes the specified boolean value.
+        /// Writes the specified boolean.
         /// </summary>
         void WriteBoolean( bool value );
 
@@ -219,7 +220,7 @@ namespace ThriftSharp.Protocols
         void WriteBinary( sbyte[] value );
 
         /// <summary>
-        /// Asynchronously flushes the written data, and reads all input in advance.
+        /// Asynchronously flushes the written data and reads all input.
         /// </summary>
         Task FlushAndReadAsync();
     }

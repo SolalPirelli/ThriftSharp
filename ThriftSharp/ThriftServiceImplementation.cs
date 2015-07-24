@@ -21,7 +21,7 @@ namespace ThriftSharp
         private readonly ThriftCommunication _communication;
 
         /// <summary>
-        /// Initializes a new instance of the ThriftServiceImplementation class with the specified protocol.
+        /// Initializes a new instance of the ThriftServiceImplementation class with the specified means of communication.
         /// </summary>
         /// <param name="communication">The means of communication with the server.</param>
         protected ThriftServiceImplementation( ThriftCommunication communication )
@@ -234,7 +234,7 @@ namespace ThriftSharp
         }
 
         /// <summary>
-        /// Gets the method name from an expression returning it.
+        /// Gets the method name from an expression returning it, of the form `x => x.Method`.
         /// </summary>
         private static string GetMethodName<T>( Expression<T> expr )
         {

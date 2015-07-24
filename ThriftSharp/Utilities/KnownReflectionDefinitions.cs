@@ -9,6 +9,17 @@ using ThriftSharp.Protocols;
 
 namespace ThriftSharp.Utilities
 {
+    /// <summary>
+    /// Cached Types used by the rest of the code.
+    /// </summary>
+    internal static class Types
+    {
+        public static readonly Type[] None = new Type[0];
+    }
+
+    /// <summary>
+    /// Cached TypeInfos used by the rest of the code.
+    /// </summary>
     internal static class TypeInfos
     {
         public static readonly TypeInfo
@@ -24,7 +35,9 @@ namespace ThriftSharp.Utilities
             ThriftSerializationException = typeof( ThriftSerializationException ).GetTypeInfo();
     }
 
-
+    /// <summary>
+    /// Cached ConstructorInfos used by the rest of the code.
+    /// </summary>
     internal static class Constructors
     {
         public static readonly ConstructorInfo
@@ -36,6 +49,9 @@ namespace ThriftSharp.Utilities
             ThriftProtocolException = typeof( ThriftProtocolException ).GetTypeInfo().DeclaredConstructors.Single( c => c.GetParameters().Length == 1 );
     }
 
+    /// <summary>
+    /// Cached MethodInfos used by the rest of the code.
+    /// </summary>
     internal static class Methods
     {
         public static readonly MethodInfo
@@ -93,6 +109,9 @@ namespace ThriftSharp.Utilities
             IThriftProtocol_WriteSetEnd = TypeInfos.IThriftProtocol.GetDeclaredMethod( "WriteSetEnd" );
     }
 
+    /// <summary>
+    /// Cached FieldInfos used by the rest of the code.
+    /// </summary>
     internal static class Fields
     {
         public static readonly FieldInfo
@@ -104,10 +123,5 @@ namespace ThriftSharp.Utilities
             ThriftCollectionHeader_Count = TypeInfos.ThriftCollectionHeader.GetDeclaredField( "Count" ),
             ThriftFieldHeader_Id = TypeInfos.ThriftFieldHeader.GetDeclaredField( "Id" ),
             ThriftFieldHeader_TypeId = TypeInfos.ThriftFieldHeader.GetDeclaredField( "TypeId" );
-    }
-
-    internal static class Types
-    {
-        public static readonly Type[] None = new Type[0];
     }
 }

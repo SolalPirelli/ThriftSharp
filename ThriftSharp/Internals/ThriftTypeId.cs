@@ -24,7 +24,7 @@ namespace ThriftSharp.Internals
         SByte = 3,
 
         /// <summary>
-        /// 64-bit IEEE-754 floating point.
+        /// 64-bit IEEE-754 floating-point number.
         /// </summary>
         Double = 4,
 
@@ -44,11 +44,8 @@ namespace ThriftSharp.Internals
         Int64 = 10,
 
         /// <summary>
-        /// Signed bytes array (or string, see remarks).
+        /// Array of signed bytes, or UTF-8 string.
         /// </summary>
-        /// <remarks>
-        /// This can also be used to represent an UTF-8 string.
-        /// </remarks>
         Binary = 11,
 
         /// <summary>

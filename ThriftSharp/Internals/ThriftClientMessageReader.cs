@@ -134,7 +134,7 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Reads a ThriftMessage returned by the specified ThriftMethod on the specified ThriftProtocol.
+        /// Reads a ThriftMessage returned by the specified method on the specified protocol.
         /// </summary>
         public static T Read<T>( ThriftMethod method, IThriftProtocol protocol )
         {

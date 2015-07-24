@@ -9,17 +9,17 @@ namespace ThriftSharp
     public interface IThriftValueConverter<TFrom, TTo>
     {
         /// <summary>
-        /// Converts the specified object.
+        /// Converts the specified value.
         /// </summary>
-        /// <param name="value">The object.</param>
-        /// <remarks>A converted form of the object.</remarks>
+        /// <param name="value">The value.</param>
+        /// <remarks>A converted form of the value.</remarks>
         TTo Convert( TFrom value );
 
         /// <summary>
-        /// Converts the specified object.
+        /// Converts back the specified value.
         /// </summary>
-        /// <param name="value">The object.</param>
-        /// <remarks>A converted form of the object.</remarks>
+        /// <param name="value">The value.</param>
+        /// <remarks>A converted form of the value.</remarks>
         TFrom ConvertBack( TTo value );
     }
 }

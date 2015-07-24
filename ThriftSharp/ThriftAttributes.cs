@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using ThriftSharp.Internals;
 using ThriftSharp.Utilities;
@@ -11,7 +10,7 @@ using ThriftSharp.Utilities;
 namespace ThriftSharp
 {
     /// <summary>
-    /// Specifies a converter to be used when serializing the value.
+    /// Base class for attributes that can specify a converter to be used when serializing values.
     /// </summary>
     public abstract class ThriftConvertibleAttribute : Attribute
     {
@@ -35,42 +34,33 @@ namespace ThriftSharp
 
                 if ( !_knownConverters.ContainsKey( value ) )
                 {
-                    var typeInfo = value.GetTypeInfo();
-                    var ifaces = typeInfo.GetGenericInterfaces( typeof( IThriftValueConverter<,> ) );
-                    if ( ifaces.Length == 0 )
-                    {
-                        throw new ArgumentException( $"The type '{value.Name}' does not IThriftValueConverter<TFrom, TTo>." );
-                    }
-                    if ( ifaces.Length > 1 )
-                    {
-                        throw new ArgumentException( $"The type '{value.Name}' implements IThriftValueConverter<TFrom, TTo> more than once." );
-                    }
-
-                    var ctor = typeInfo.DeclaredConstructors.FirstOrDefault( c => c.GetParameters().Length == 0 );
-                    if ( ctor == null )
-                    {
-                        throw new ArgumentException( $"The type '{value.Name}' does not have a parameterless constructor." );
-                    }
-
-                    _knownConverters.Add( value, new ThriftConverter( ctor.Invoke( null ), ifaces[0] ) );
+                    _knownConverters.Add( value, new ThriftConverter( value ) );
                 }
 
                 _converter = value;
-                ThriftConverter = _knownConverters[value];
             }
         }
 
         /// <summary>
         /// Gets the converter.
         /// </summary>
-        internal ThriftConverter ThriftConverter { get; private set; }
+        internal ThriftConverter ThriftConverter
+        {
+            get { return Converter == null ? null : _knownConverters[Converter]; }
+        }
+
+
+        /// <summary>
+        /// Initializes a new instance of the ThriftConvertibleAttribute class, ensuring only Thrift# classes can inherit from it.
+        /// </summary>
+        internal ThriftConvertibleAttribute() { }
     }
 
     /// <summary>
-    /// Required attribute for Thrift enums.
+    /// Required attribute marking enums as Thrift enums.
     /// </summary>
     /// <remarks>
-    /// This is only a marker attribute that ensures users do not involuntarily use wrong enums.
+    /// This is only a marker attribute that ensures the wrong enums are not involuntarily used.
     /// </remarks>
     [AttributeUsage( AttributeTargets.Enum )]
     public sealed class ThriftEnumAttribute : Attribute
@@ -82,11 +72,9 @@ namespace ThriftSharp
     }
 
     /// <summary>
-    /// Required attribute for Thrift fields.
-    /// </summary>
-    /// <remarks>
+    /// Required attribute marking properties as Thrift fields.
     /// Properties without this attribute will be ignored.
-    /// </remarks>
+    /// </summary>
     [AttributeUsage( AttributeTargets.Property )]
     public sealed class ThriftFieldAttribute : ThriftConvertibleAttribute
     {
@@ -117,9 +105,9 @@ namespace ThriftSharp
         /// <summary>
         /// Initializes a new instance of the ThriftFieldAttribute class with the specified values.
         /// </summary>
-        /// <param name="id">The ID of the field the attribute is applied to. Must be positive.</param>
+        /// <param name="id">The Thrift ID of the field the attribute is applied to.</param>
         /// <param name="isRequired">Whether the field the attribute is applied to is required.</param>
-        /// <param name="name">The name of the field the attribute is applied to.</param>
+        /// <param name="name">The Thrift name of the field the attribute is applied to.</param>
         public ThriftFieldAttribute( short id, bool isRequired, string name )
         {
             Validation.IsNeitherNullNorWhitespace( name, nameof( name ) );
@@ -131,7 +119,7 @@ namespace ThriftSharp
     }
 
     /// <summary>
-    /// Required attribute for Thrift structs.
+    /// Required attribute marking classes as Thrift structs.
     /// </summary>
     [AttributeUsage( AttributeTargets.Class )]
     public sealed class ThriftStructAttribute : Attribute
@@ -145,7 +133,7 @@ namespace ThriftSharp
         /// <summary>
         /// Initializes a new instance of the ThriftStructAttribute class with the specified name.
         /// </summary>
-        /// <param name="name">The name of the struct the attribute is applied to.</param>
+        /// <param name="name">The Thrift name of the struct the attribute is applied to.</param>
         public ThriftStructAttribute( string name )
         {
             Validation.IsNeitherNullNorWhitespace( name, nameof( name ) );
@@ -155,7 +143,7 @@ namespace ThriftSharp
     }
 
     /// <summary>
-    /// Required attribute for Thrift method parameters.
+    /// Required attribute marking Thrift method parameters.
     /// </summary>
     [AttributeUsage( AttributeTargets.Parameter )]
     public sealed class ThriftParameterAttribute : ThriftConvertibleAttribute
@@ -174,8 +162,8 @@ namespace ThriftSharp
         /// <summary>
         /// Initializes a new instance of the ThriftParameterAttribute class with the specified ID and name.
         /// </summary>
-        /// <param name="id">The ID of the parameter the attribute is applied to. Must be positive.</param>
-        /// <param name="name">The name of the parameter the attribute is applied to.</param>
+        /// <param name="id">The Thrift ID of the parameter the attribute is applied to.</param>
+        /// <param name="name">The Thrift name of the parameter the attribute is applied to.</param>
         public ThriftParameterAttribute( short id, string name )
         {
             Validation.IsNeitherNullNorWhitespace( name, nameof( name ) );
@@ -186,7 +174,7 @@ namespace ThriftSharp
     }
 
     /// <summary>
-    /// Optional attribute for Thrift methods specifying a "throws" clause.
+    /// Optional attribute marking methods to specify a Thrift "throws" clause.
     /// </summary>
     [AttributeUsage( AttributeTargets.Method )]
     public sealed class ThriftThrowsAttribute : ThriftConvertibleAttribute
@@ -210,8 +198,8 @@ namespace ThriftSharp
         /// <summary>
         /// Initializes a new instance of the ThriftThrowsAttribute class with the specified values.
         /// </summary>
-        /// <param name="id">The ID of the clause defined by the attribute.</param>
-        /// <param name="name">The name of the clause defined by the attribute.</param>
+        /// <param name="id">The Thrift ID of the clause defined by the attribute.</param>
+        /// <param name="name">The Thrift name of the clause defined by the attribute.</param>
         /// <param name="exceptionType">The type of the exception whose clause is defined by the attribute.</param>
         public ThriftThrowsAttribute( short id, string name, Type exceptionType )
         {
@@ -225,11 +213,9 @@ namespace ThriftSharp
     }
 
     /// <summary>
-    /// Required attribute for Thrift methods.
-    /// </summary>
-    /// <remarks>
+    /// Required attribute marking methods as Thrift methods.
     /// Methods without this attribute will be ignored.
-    /// </remarks>
+    /// </summary>
     [AttributeUsage( AttributeTargets.Method )]
     public sealed class ThriftMethodAttribute : ThriftConvertibleAttribute
     {
@@ -240,17 +226,15 @@ namespace ThriftSharp
 
         /// <summary>
         /// Gets or sets a value indicating whether the method is a one-way method.
-        /// </summary>
-        /// <remarks>
         /// One-way methods are sent by the client but not replied to by the server.
-        /// </remarks>
+        /// </summary>
         public bool IsOneWay { get; set; }
 
 
         /// <summary>
-        /// Initializes a new instance of the ThriftMethodAttribute class with the specified values.
+        /// Initializes a new instance of the ThriftMethodAttribute class with the specified name.
         /// </summary>
-        /// <param name="name">The name of the method the attribute is applied to.</param>
+        /// <param name="name">The Thrift name of the method the attribute is applied to.</param>
         public ThriftMethodAttribute( string name )
         {
             Validation.IsNeitherNullNorWhitespace( name, nameof( name ) );
@@ -260,7 +244,7 @@ namespace ThriftSharp
     }
 
     /// <summary>
-    /// Required attribute for Thrift services.
+    /// Required attribute marking interfaces as Thrift services.
     /// </summary>
     [AttributeUsage( AttributeTargets.Interface )]
     public sealed class ThriftServiceAttribute : Attribute
@@ -274,7 +258,7 @@ namespace ThriftSharp
         /// <summary>
         /// Initializes a new instance of the ThriftServiceAttribute class with the specified name.
         /// </summary>
-        /// <param name="name">The name of the service the attribute is applied to.</param>
+        /// <param name="name">The Thrift name of the service the attribute is applied to.</param>
         public ThriftServiceAttribute( string name )
         {
             Validation.IsNeitherNullNorWhitespace( name, nameof( name ) );

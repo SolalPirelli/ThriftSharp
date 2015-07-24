@@ -68,9 +68,7 @@ module ``Parsing services: Normal methods`` =
 
     let test(args: (Type * Type) list, retType: Type * Type, isOneWay: bool) =
         let makeConverter (c: Type) =
-            if c = null then null
-            else ThriftConverter(Activator.CreateInstance(c), 
-                                 ReflectionExtensions.GetGenericInterfaces(c.GetTypeInfo(), typedefof<IThriftValueConverter<_,_>>).[0])
+            if c = null then null else ThriftConverter(c)
 
         let serviceAttrs = [{ typ = typeof<ThriftServiceAttribute>; args = ["Service"]; namedArgs = [] }]
         let methodAttrs = [{ typ = typeof<ThriftMethodAttribute>; args = ["Method"]; namedArgs = ["IsOneWay", box isOneWay; "Converter", box (snd retType)] }]
@@ -170,9 +168,8 @@ module ``Parsing services: Methods with exceptions`` =
       InlineData(typeof<CustomException>, typeof<StructToExceptionConverter>)>]
     let ``Normal exceptions``(exnType, convType) =
         let makeConverter (c: Type) =
-            if c = null then null
-            else ThriftConverter(Activator.CreateInstance(c), 
-                                 ReflectionExtensions.GetGenericInterfaces(c.GetTypeInfo(), typedefof<IThriftValueConverter<_,_>>).[0])
+            if c = null then null else ThriftConverter(c)
+
         let iface = makeIface [exnType, convType] false
         let service = ThriftAttributesParser.ParseService iface
 

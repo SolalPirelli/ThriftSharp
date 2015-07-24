@@ -30,7 +30,7 @@ namespace ThriftSharp
         WrongMethodName = 3,
 
         /// <summary>
-        /// The sequence ID of a message is wrong.
+        /// The sequence ID of the message is wrong.
         /// </summary>
         BadSequenceId = 4,
 
@@ -46,10 +46,8 @@ namespace ThriftSharp
 
         /// <summary>
         /// A protocol error occured.
-        /// </summary>
-        /// <remarks>
         /// This can happen when the client and server Thrift versions do not match.
-        /// </remarks>
+        /// </summary>
         ProtocolError = 7,
 
         /// <summary>

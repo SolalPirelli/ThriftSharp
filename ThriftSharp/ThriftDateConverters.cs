@@ -6,7 +6,7 @@ using System;
 namespace ThriftSharp
 {
     /// <summary>
-    /// Converts 32-bit integer timestamps to <see cref="DateTime" /> using the Unix format, 
+    /// Converts 32-bit integer timestamps to <see cref="DateTime" /> values using the Unix format, 
     /// i.e. the number of seconds since Jan. 1, 1970 00:00:00 UTC.
     /// </summary>
     /// <remarks>
@@ -39,7 +39,7 @@ namespace ThriftSharp
     }
 
     /// <summary>
-    /// Converts 64-bit integer timestamps to <see cref="DateTime" /> using the Unix format, 
+    /// Converts 64-bit integer timestamps to <see cref="DateTime" /> values using the Unix format, 
     /// i.e. the number of seconds since Jan. 1, 1970 00:00:00 UTC.
     /// </summary>
     /// <remarks>
@@ -72,7 +72,7 @@ namespace ThriftSharp
     }
 
     /// <summary>
-    /// Converts 64-bit integer timestamps to <see cref="DateTime" /> using the Java format, 
+    /// Converts 64-bit integer timestamps to <see cref="DateTime" /> values using the Java format, 
     /// i.e. the number of milliseconds since Jan. 1, 1970 00:00:00.000 UTC.
     /// </summary>
     /// <remarks>
@@ -106,7 +106,7 @@ namespace ThriftSharp
 
 
     /// <summary>
-    /// Converts 32-bit integer timestamps to <see cref="DateTimeOffset" /> using the Unix format, 
+    /// Converts 32-bit integer timestamps to <see cref="DateTimeOffset" /> values using the Unix format, 
     /// i.e. the number of seconds since Jan. 1, 1970 00:00:00 UTC.
     /// </summary>
     public sealed class ThriftUnixDateOffsetConverter : IThriftValueConverter<int, DateTimeOffset>
@@ -135,7 +135,7 @@ namespace ThriftSharp
     }
 
     /// <summary>
-    /// Converts 64-bit integer timestamps to <see cref="DateTimeOffset" /> using the Unix format, 
+    /// Converts 64-bit integer timestamps to <see cref="DateTimeOffset" /> values using the Unix format, 
     /// i.e. the number of seconds since Jan. 1, 1970 00:00:00 UTC.
     /// </summary>
     public sealed class ThriftUnixLongDateOffsetConverter : IThriftValueConverter<long, DateTimeOffset>
@@ -164,7 +164,7 @@ namespace ThriftSharp
     }
 
     /// <summary>
-    /// Converts 64-bit integer timestamps to <see cref="DateTimeOffset" /> using the Java format, 
+    /// Converts 64-bit integer timestamps to <see cref="DateTimeOffset" /> values using the Java format, 
     /// i.e. the number of milliseconds since Jan. 1, 1970 00:00:00.000 UTC.
     /// </summary>
     public sealed class ThriftJavaDateOffsetConverter : IThriftValueConverter<long, DateTimeOffset>

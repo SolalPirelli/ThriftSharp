@@ -14,7 +14,7 @@ namespace ThriftSharp.Internals
         public readonly int Count;
 
         /// <summary>
-        /// Gets the collection element's Thrift type ID.
+        /// Gets the collection elements' type ID.
         /// </summary>
         public readonly ThriftTypeId ElementTypeId;
 
@@ -23,7 +23,7 @@ namespace ThriftSharp.Internals
         /// Initializes a new instance of the ThriftCollectionHeader class with the specified values.
         /// </summary>
         /// <param name="count">The number of elements.</param>
-        /// <param name="elementTypeId">The elements' Thrift type ID.</param>
+        /// <param name="elementTypeId">The elements' type ID.</param>
         public ThriftCollectionHeader( int count, ThriftTypeId elementTypeId )
         {
             Count = count;
@@ -42,12 +42,12 @@ namespace ThriftSharp.Internals
         public readonly int Count;
 
         /// <summary>
-        /// Gets the map keys' Thrift type ID.
+        /// Gets the map keys' type ID.
         /// </summary>
         public readonly ThriftTypeId KeyTypeId;
 
         /// <summary>
-        /// Gets the map values' Thrift type ID.
+        /// Gets the map values' type ID.
         /// </summary>
         public readonly ThriftTypeId ValueTypeId;
 
@@ -56,8 +56,8 @@ namespace ThriftSharp.Internals
         /// Initializes a new instance of the ThriftMapHeader class with the specified values.
         /// </summary>
         /// <param name="count">The number of elements.</param>
-        /// <param name="keyTypeId">The keys' Thrift type ID.</param>
-        /// <param name="valueTypeId">The values' Thrift type ID.</param>
+        /// <param name="keyTypeId">The keys' type ID.</param>
+        /// <param name="valueTypeId">The values' type ID.</param>
         public ThriftMapHeader( int count, ThriftTypeId keyTypeId, ThriftTypeId valueTypeId )
         {
             Count = count;
@@ -82,7 +82,7 @@ namespace ThriftSharp.Internals
         public readonly string Name;
 
         /// <summary>
-        /// Gets the field's Thrift type ID.
+        /// Gets the field's type ID.
         /// </summary>
         public readonly ThriftTypeId TypeId;
 
@@ -126,7 +126,7 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal struct ThriftMessageHeader
     {
-        // N.B. Thrift# does not implement message sequence IDs, as they aren't useful in languages with async/await
+        // N.B. Thrift# does not implement message sequence IDs, as it does not need them
 
         /// <summary>
         /// Gets the message's name.

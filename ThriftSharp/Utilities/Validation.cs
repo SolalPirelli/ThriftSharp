@@ -23,7 +23,7 @@ namespace ThriftSharp.Utilities
         }
 
         /// <summary>
-        /// Ensures the specified string is not null, empty or only composed of whitespace.
+        /// Ensures the specified string is not null, empty or entirely composed of whitespace.
         /// </summary>
         public static void IsNeitherNullNorWhitespace( string s, string parameterName )
         {

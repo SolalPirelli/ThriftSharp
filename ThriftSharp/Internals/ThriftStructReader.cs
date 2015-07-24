@@ -20,7 +20,7 @@ namespace ThriftSharp.Internals
 
 
         /// <summary>
-        /// Creates an expression that checks whether the specified IDs are equal, and throws if they aren't.
+        /// Creates an expression checking whether the specified IDs are equal, and throwing if they aren't.
         /// </summary>
         private static Expression CreateTypeIdAssert( ThriftTypeId expected, Expression actual )
         {
@@ -245,7 +245,7 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Creates a reader for the specified type.
+        /// Creates an expression reading for the specified type.
         /// </summary>
         private static Expression CreateReaderForType( ParameterExpression protocolParam, ThriftType thriftType )
         {
@@ -313,7 +313,7 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Creates a reader for the specified struct.
+        /// Creates an expression reading the specified struct type.
         /// </summary>
         private static LambdaExpression CreateReaderForStruct( ThriftStruct thriftStruct )
         {
@@ -345,12 +345,12 @@ namespace ThriftSharp.Internals
 
 
         /// <summary>
-        /// Creates an expression reading the specified fields, given with their setter expressions.
+        /// Creates an expression reading the specified fields.
         /// </summary>
         public static Expression CreateReaderForFields( ParameterExpression protocolParam, List<ThriftWireField> wireFields )
         {
             var fieldHeaderVar = Expression.Variable( typeof( ThriftFieldHeader ) );
-            var isSetVars = wireFields.Where( f => f.UnderlyingType.GetTypeInfo().IsValueType && ( f.State == ThriftWireFieldState.Required || f.DefaultValue != null ) )
+            var isSetVars = wireFields.Where( f => f.UnderlyingType.GetTypeInfo().IsValueType && ( f.State == ThriftFieldPresenseState.Required || f.DefaultValue != null ) )
                                       .ToDictionary( f => f, _ => Expression.Variable( typeof( bool ) ) );
 
             var endOfLoop = Expression.Label();
@@ -478,7 +478,7 @@ namespace ThriftSharp.Internals
                 // - isn't required (to provide the proper ThriftProtocolException instead of a generic "unset field")
                 // - might be a value type
                 // thus it could pick the "== null" branch and crash
-                if ( field.DefaultValue != null || field.State == ThriftWireFieldState.Required )
+                if ( field.DefaultValue != null || field.State == ThriftFieldPresenseState.Required )
                 {
                     var check = isSetVars.ContainsKey( field )
                       ? (Expression) Expression.IsFalse( isSetVars[field] )

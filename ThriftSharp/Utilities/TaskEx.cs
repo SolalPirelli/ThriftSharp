@@ -45,6 +45,9 @@ namespace ThriftSharp.Utilities
             return resultSource.Task;
         }
 
+        /// <summary>
+        /// Marshals the results of the specified task to the specified task source.
+        /// </summary>
         private static void MarshalTaskResults<TResult>( Task<TResult> source, TaskCompletionSource<TResult> proxy )
         {
             switch ( source.Status )

@@ -80,57 +80,6 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Creates an expression writing the specified list or set type.
-        /// </summary>
-        private static Expression CreateWriterForListOrSet( ParameterExpression protocolParam, ThriftType thriftType, Expression value )
-        {
-            // same remark as in CreateWriterForMap
-            var getEnumeratorMethod = thriftType.TypeInfo.AsType().GetRuntimeMethod( "GetEnumerator", Types.None );
-
-            var enumeratorVar = Expression.Variable( getEnumeratorMethod.ReturnType );
-
-            var endOfLoop = Expression.Label();
-
-            return Expression.Block(
-                new[] { enumeratorVar },
-
-                Expression.Call(
-                    protocolParam,
-                    thriftType.Id == ThriftTypeId.List ? Methods.IThriftProtocol_WriteListHeader : Methods.IThriftProtocol_WriteSetHeader,
-                    Expression.New(
-                        Constructors.ThriftCollectionHeader,
-                          Expression.Property( value, "Count" ),
-                          Expression.Constant( thriftType.ElementType.Id )
-                    )
-                ),
-
-                Expression.Assign(
-                    enumeratorVar,
-                    Expression.Call( value, getEnumeratorMethod )
-                ),
-
-                Expression.Loop(
-                    Expression.IfThenElse(
-                        Expression.IsTrue(
-                            Expression.Call( enumeratorVar, "MoveNext", Types.None )
-                        ),
-                        CreateWriterForType(
-                            protocolParam, thriftType.ElementType,
-                            Expression.Property( enumeratorVar, "Current" )
-                        ),
-                        Expression.Break( endOfLoop )
-                    ),
-                    endOfLoop
-                ),
-
-                Expression.Call(
-                    protocolParam,
-                    thriftType.Id == ThriftTypeId.List ? Methods.IThriftProtocol_WriteListEnd : Methods.IThriftProtocol_WriteSetEnd
-                )
-           );
-        }
-
-        /// <summary>
         /// Creates an expression writing the specified array type.
         /// </summary>
         private static Expression CreateWriterForArray( ParameterExpression protocolParam, ThriftType thriftType, Expression value )
@@ -183,7 +132,58 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Creates a writer for the specified type, with the specified protocol and value.
+        /// Creates an expression writing the specified list or set type.
+        /// </summary>
+        private static Expression CreateWriterForListOrSet( ParameterExpression protocolParam, ThriftType thriftType, Expression value )
+        {
+            // same remark as in CreateWriterForMap
+            var getEnumeratorMethod = thriftType.TypeInfo.AsType().GetRuntimeMethod( "GetEnumerator", Types.None );
+
+            var enumeratorVar = Expression.Variable( getEnumeratorMethod.ReturnType );
+
+            var endOfLoop = Expression.Label();
+
+            return Expression.Block(
+                new[] { enumeratorVar },
+
+                Expression.Call(
+                    protocolParam,
+                    thriftType.Id == ThriftTypeId.List ? Methods.IThriftProtocol_WriteListHeader : Methods.IThriftProtocol_WriteSetHeader,
+                    Expression.New(
+                        Constructors.ThriftCollectionHeader,
+                          Expression.Property( value, "Count" ),
+                          Expression.Constant( thriftType.ElementType.Id )
+                    )
+                ),
+
+                Expression.Assign(
+                    enumeratorVar,
+                    Expression.Call( value, getEnumeratorMethod )
+                ),
+
+                Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.IsTrue(
+                            Expression.Call( enumeratorVar, "MoveNext", Types.None )
+                        ),
+                        CreateWriterForType(
+                            protocolParam, thriftType.ElementType,
+                            Expression.Property( enumeratorVar, "Current" )
+                        ),
+                        Expression.Break( endOfLoop )
+                    ),
+                    endOfLoop
+                ),
+
+                Expression.Call(
+                    protocolParam,
+                    thriftType.Id == ThriftTypeId.List ? Methods.IThriftProtocol_WriteListEnd : Methods.IThriftProtocol_WriteSetEnd
+                )
+           );
+        }
+
+        /// <summary>
+        /// Creates an expression writing the specified type.
         /// </summary>
         private static Expression CreateWriterForType( ParameterExpression protocolParam, ThriftType thriftType, Expression value )
         {
@@ -245,7 +245,7 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Creates a writer for the specified struct.
+        /// Creates an expression writing the specified struct type.
         /// </summary>
         private static LambdaExpression CreateWriterForStruct( ThriftStruct thriftStruct )
         {
@@ -277,7 +277,7 @@ namespace ThriftSharp.Internals
 
 
         /// <summary>
-        /// Creates a writer expression for the specified field with the specified getter, using the specified protocol expression.
+        /// Creates an expression writing the specified field.
         /// </summary>
         public static Expression CreateWriterForField( ParameterExpression protocolParam, ThriftWireField field )
         {
@@ -328,12 +328,12 @@ namespace ThriftSharp.Internals
                 Expression.Call( protocolParam, Methods.IThriftProtocol_WriteFieldEnd )
             );
 
-            if ( field.State == ThriftWireFieldState.AlwaysPresent )
+            if ( field.State == ThriftFieldPresenseState.AlwaysPresent )
             {
                 return writingExpr;
             }
 
-            if ( field.State == ThriftWireFieldState.Required )
+            if ( field.State == ThriftFieldPresenseState.Required )
             {
                 if ( field.WireType.TypeInfo.IsClass || field.WireType.NullableType != null )
                 {
@@ -365,7 +365,7 @@ namespace ThriftSharp.Internals
 
 
         /// <summary>
-        /// Writes the specified value (with the struct also specified) to the specified protocol.
+        /// Writes the specified value to the specified protocol.
         /// </summary>
         /// <remarks>
         /// This method is only called from compiled expressions.

@@ -53,8 +53,7 @@ namespace ThriftSharp
         }
 
         /// <summary>
-        /// Initializes a new instance of the ThriftCommunication class 
-        /// as a second part of the build step with the specified transport factory.
+        /// Initializes a new instance of the ThriftCommunication class as a second part of the build step with the specified transport factory.
         /// </summary>
         private ThriftCommunication( ThriftCommunication comm, Func<CancellationToken, IThriftTransport> transportFactory )
         {
@@ -73,10 +72,6 @@ namespace ThriftSharp
         /// <summary>
         /// Communicate over HTTP at the specified URL.
         /// </summary>
-        /// <param name="url">The URL, including the port.</param>
-        /// <param name="timeout">Optional. The timeout in milliseconds. The default is 5 seconds; use -1 for an infinite timeout.</param>
-        /// <param name="headers">Optional. The headers to use with the requests. No additional headers by default.</param>
-        /// <returns>A finished ThriftCommunication object.</returns>
         ThriftCommunication IThriftTransportPicker.OverHttp( string url, IReadOnlyDictionary<string, string> headers, TimeSpan? timeout )
         {
             Validation.IsNeitherNullNorWhitespace( url, nameof( url ) );
@@ -97,7 +92,8 @@ namespace ThriftSharp
 
         #region Static object methods hiding
         /// <summary>
-        /// Redeclaration that hides the <see cref="object.Equals(object, object)" /> method from IntelliSense.
+        /// Redeclaration hiding the <see cref="object.Equals(object, object)" /> method from IntelliSense.
+        /// Do not use this method.
         /// </summary>
         [EditorBrowsable( EditorBrowsableState.Never )]
         public static new object Equals( object objA, object objB )
@@ -106,7 +102,8 @@ namespace ThriftSharp
         }
 
         /// <summary>
-        /// Redeclaration that hides the <see cref="object.ReferenceEquals" /> method from IntelliSense.
+        /// Redeclaration hiding the <see cref="object.ReferenceEquals" /> method from IntelliSense.
+        /// Do not use this method.
         /// </summary>
         [EditorBrowsable( EditorBrowsableState.Never )]
         public static new object ReferenceEquals( object objA, object objB )

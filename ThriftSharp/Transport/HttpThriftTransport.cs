@@ -29,7 +29,7 @@ namespace ThriftSharp.Transport
 
 
         /// <summary>
-        /// Initializes a new instance of the ThriftHttpClientTransport class using the specified  URL.
+        /// Initializes a new instance of the HttpThriftTransport class using the specified values.
         /// </summary>
         /// <param name="url">The URL, including the port if necessary.</param>
         /// <param name="token">The cancellation token that will cancel asynchronous tasks.</param>
@@ -47,6 +47,15 @@ namespace ThriftSharp.Transport
 
 
         /// <summary>
+        /// Writes the specified array of unsigned bytes.
+        /// </summary>
+        /// <param name="bytes">The array.</param>
+        public void WriteBytes( byte[] bytes )
+        {
+            _outputStream.Write( bytes, 0, bytes.Length );
+        }
+
+        /// <summary>
         /// Reads unsigned bytes, and puts them in the specified array.
         /// </summary>
         /// <param name="output">The array in which to read bytes. It will be overwritten completely.</param>
@@ -56,17 +65,7 @@ namespace ThriftSharp.Transport
         }
 
         /// <summary>
-        /// Writes the specified array of unsigned bytes.
-        /// </summary>
-        /// <param name="bytes">The array of unsigned bytes.</param>
-        public void WriteBytes( byte[] bytes )
-        {
-            _outputStream.Write( bytes, 0, bytes.Length );
-        }
-
-
-        /// <summary>
-        /// Asynchronously flushes the written bytes, and reads all input bytes in advance.
+        /// Asynchronously flushes the written bytes and reads all input.
         /// </summary>
         public async Task FlushAndReadAsync()
         {
@@ -107,7 +106,7 @@ namespace ThriftSharp.Transport
 
         #region IDisposable implementation
         /// <summary>
-        /// Finalizes this instance.
+        /// Finalizes the HttpThriftTransport.
         /// </summary>
         ~HttpThriftTransport()
         {
@@ -115,7 +114,7 @@ namespace ThriftSharp.Transport
         }
 
         /// <summary>
-        /// Disposes of this instance.
+        /// Disposes of the HttpThriftTransport.
         /// </summary>
         public void Dispose()
         {
@@ -124,7 +123,7 @@ namespace ThriftSharp.Transport
         }
 
         /// <summary>
-        /// Disposes of this instance.
+        /// Disposes of the HttpThriftTransport's internals.
         /// </summary>
         private void DisposePrivate()
         {

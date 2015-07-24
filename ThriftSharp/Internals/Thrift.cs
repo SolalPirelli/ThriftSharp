@@ -4,7 +4,6 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ThriftSharp.Protocols;
 
 namespace ThriftSharp.Internals
 {
@@ -14,31 +13,14 @@ namespace ThriftSharp.Internals
     internal static class Thrift
     {
         /// <summary>
-        /// Sends a Thrift message representing the specified method call with the specified arguments on the specified protocol, and gets the result.
-        /// </summary>
-        private static async Task<T> SendMessageAsync<T>( IThriftProtocol protocol, ThriftMethod method, params object[] args )
-        {
-            ThriftClientMessageWriter.Write( method, args, protocol );
-            await protocol.FlushAndReadAsync();
-
-            if ( method.IsOneWay )
-            {
-                return default( T );
-            }
-
-            return ThriftClientMessageReader.Read<T>( method, protocol );
-        }
-
-
-        /// <summary>
-        /// Calls a Thrift method specified by its underlying name with the specified arguments using the specified means of communication.
+        /// Calls the specified method with the specified arguments using the specified means of communication.
         /// </summary>
         /// <param name="communication">The means of communication with the server.</param>
         /// <param name="service">The Thrift service containing the method.</param>
         /// <param name="methodName">The .NET method name.</param>
         /// <param name="args">The method arguments.</param>
         /// <returns>The method result.</returns>
-        public static Task<T> CallMethodAsync<T>( ThriftCommunication communication, ThriftService service, string methodName, params object[] args )
+        public static async Task<T> CallMethodAsync<T>( ThriftCommunication communication, ThriftService service, string methodName, params object[] args )
         {
             // The attributes parser guarantees that there are 0 or 1 tokens per method
             var token = args.OfType<CancellationToken>().FirstOrDefault();
@@ -54,7 +36,17 @@ namespace ThriftSharp.Internals
                 }
             }
 
-            return SendMessageAsync<T>( protocol, method, methodArgs );
+            ThriftClientMessageWriter.Write( method, args, protocol );
+
+            await protocol.FlushAndReadAsync();
+
+            if ( method.IsOneWay )
+            {
+                protocol.Dispose();
+                return default( T );
+            }
+
+            return ThriftClientMessageReader.Read<T>( method, protocol );
         }
     }
 }

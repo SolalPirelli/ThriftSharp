@@ -7,7 +7,7 @@ using System.ComponentModel;
 namespace ThriftSharp.Utilities
 {
     /// <summary>
-    /// Interface that is used to build fluent interfaces by hiding methods declared by <see cref="Object"/> from IntelliSense.
+    /// Interface used to build fluent APIs by hiding methods declared by <see cref="Object"/> from IntelliSense.
     /// </summary>
     /// <remarks>
     /// See http://bit.ly/ifluentinterface for more information.

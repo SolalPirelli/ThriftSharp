@@ -68,6 +68,9 @@ namespace ThriftSharp.Internals
         public ThriftStruct Struct { get; private set; }
 
 
+        /// <summary>
+        /// Initializes a new instance of the ThriftType class from the specified .NET type.
+        /// </summary>
         private ThriftType( Type type )
         {
             Id = ThriftTypeId.Empty;
@@ -199,6 +202,12 @@ namespace ThriftSharp.Internals
             return _knownTypes[type];
         }
 
+        /// <summary>
+        /// Gets an instantiable version of the specified type, for the specified interface type,
+        /// with the specified concrete type if needed, throwing the specified exception if the type 
+        /// does implement the interface but cannot be instantiated.
+        /// Returns null if the type does not implement the interface.
+        /// </summary>
         private static Tuple<TypeInfo, Type[]> GetInstantiableVersion( TypeInfo typeInfo, Type interfaceType, Type concreteType, Func<TypeInfo, Exception> errorProvider )
         {
             if ( typeInfo.IsInterface )

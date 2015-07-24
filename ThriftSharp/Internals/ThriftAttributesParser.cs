@@ -69,7 +69,7 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Attempts to parse a Thrift struct from the specified TypeInfo.
+        /// Parses a Thrift struct from the specified TypeInfo.
         /// </summary>
         public static ThriftStruct ParseStruct( TypeInfo typeInfo )
         {
@@ -103,7 +103,7 @@ namespace ThriftSharp.Internals
 
 
         /// <summary>
-        /// Attempts to parse a Thrift method parameter from the specified ParameterInfo.
+        /// Parses a Thrift method parameter from the specified ParameterInfo.
         /// </summary>
         private static ThriftParameter ParseMethodParameter( ParameterInfo parameterInfo )
         {
@@ -117,7 +117,7 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Attempts to parse all "throws" clauses on the specified MethodInfo.
+        /// Parses all Thrift "throws" clauses on the specified MethodInfo.
         /// </summary>
         private static ThriftThrowsClause[] ParseThrowsClauses( MethodInfo methodInfo )
         {
@@ -175,7 +175,7 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Attempts to parse a Thrift service from the specified TypeInfo.
+        /// Parses a Thrift service from the specified TypeInfo.
         /// </summary>
         public static ThriftService ParseService( TypeInfo typeInfo )
         {

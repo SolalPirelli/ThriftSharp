@@ -12,7 +12,7 @@ namespace ThriftSharp.Internals
     internal abstract class ThriftConvertibleValue
     {
         /// <summary>
-        /// Gets the field's type.
+        /// Gets the field's type used when serializing to the wire.
         /// </summary>
         public readonly ThriftType WireType;
 
@@ -22,6 +22,9 @@ namespace ThriftSharp.Internals
         public readonly ThriftConverter Converter;
 
 
+        /// <summary>
+        /// Initializes a new instance of the ThriftConvertibleValue class with the specified underlying type and converter.
+        /// </summary>
         protected ThriftConvertibleValue( TypeInfo typeInfo, ThriftConverter converter )
         {
             WireType = ThriftType.Get( converter?.FromType ?? typeInfo.AsType() );
@@ -60,6 +63,9 @@ namespace ThriftSharp.Internals
         public readonly PropertyInfo BackingProperty;
 
 
+        /// <summary>
+        /// Initializes a new instance of the ThriftField class with the specified values.
+        /// </summary>
         public ThriftField( short id, string name, bool isRequired, object defaultValue, ThriftConverter converter, PropertyInfo backingProperty )
             : base( backingProperty.PropertyType.GetTypeInfo(), converter )
         {
@@ -93,7 +99,7 @@ namespace ThriftSharp.Internals
 
 
         /// <summary>
-        /// Initializes a new instance of the ThriftStructHeader class with the specified values.
+        /// Initializes a new instance of the ThriftStruct class with the specified values.
         /// </summary>
         public ThriftStruct( ThriftStructHeader header, IReadOnlyList<ThriftField> fields, TypeInfo typeInfo )
         {
@@ -119,7 +125,7 @@ namespace ThriftSharp.Internals
         public readonly string Name;
 
         /// <summary>
-        /// Gets the field's type.
+        /// Gets the clause's TypeInfo as declared in code.
         /// </summary>
         public readonly TypeInfo UnderlyingTypeInfo;
 
@@ -152,13 +158,13 @@ namespace ThriftSharp.Internals
         public readonly string Name;
 
         /// <summary>
-        /// Gets the parameter's underlying TypeInfo.
+        /// Gets the parameter's TypeInfo as declared in code.
         /// </summary>
         public readonly TypeInfo UnderlyingTypeInfo;
 
 
         /// <summary>
-        /// Initializes a new instance of the ThriftMethodParameter class with the specified values.
+        /// Initializes a new instance of the ThriftParameter class with the specified values.
         /// </summary>
         public ThriftParameter( short id, string name, TypeInfo typeInfo, ThriftConverter converter )
             : base( typeInfo, converter )
@@ -175,13 +181,13 @@ namespace ThriftSharp.Internals
     internal sealed class ThriftReturnValue : ThriftConvertibleValue
     {
         /// <summary>
-        /// Gets the parameter's underlying TypeInfo.
+        /// Gets the value's TypeInfo as declared in code.
         /// </summary>
         public readonly TypeInfo UnderlyingTypeInfo;
 
 
         /// <summary>
-        /// Initializes a new instance of the ThriftMethodReturnValue class with the specified values.
+        /// Initializes a new instance of the ThriftReturnValue class with the specified values.
         /// </summary>
         public ThriftReturnValue( TypeInfo typeInfo, ThriftConverter converter )
             : base( typeInfo, converter )
@@ -203,9 +209,6 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets a value indicating whether the method is one-way.
         /// </summary>
-        /// <remarks>
-        /// If it is, no reply should be read.
-        /// </remarks>
         public readonly bool IsOneWay;
 
         /// <summary>
@@ -251,7 +254,7 @@ namespace ThriftSharp.Internals
         public readonly string Name;
 
         /// <summary>
-        /// Gets the service's Thrift methods, mapped by their .NET name.
+        /// Gets the service's Thrift methods, mapped by their underlying name.
         /// </summary>
         public readonly IReadOnlyDictionary<string, ThriftMethod> Methods;
 

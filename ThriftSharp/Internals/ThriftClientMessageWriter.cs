@@ -64,7 +64,7 @@ namespace ThriftSharp.Internals
         }
 
         /// <summary>
-        /// Writes the specified ThriftMethod call on the specified protocol.
+        /// Writes the specified method call on the specified protocol.
         /// </summary>
         public static void Write( ThriftMethod method, object[] args, IThriftProtocol protocol )
         {

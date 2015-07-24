@@ -4,10 +4,24 @@ using System.Reflection;
 
 namespace ThriftSharp.Internals
 {
-    internal enum ThriftWireFieldState
+    /// <summary>
+    /// Possible statuses for a wire field.
+    /// </summary>
+    internal enum ThriftFieldPresenseState
     {
+        /// <summary>
+        /// The field is guaranteed to always be present.
+        /// </summary>
         AlwaysPresent,
+
+        /// <summary>
+        /// The field is required, but its presence must be validated.
+        /// </summary>
         Required,
+
+        /// <summary>
+        /// The field is not required to be present.
+        /// </summary>
         Optional
     }
 
@@ -16,27 +30,58 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal sealed class ThriftWireField
     {
+        /// <summary>
+        /// Gets the field's ID.
+        /// </summary>
         public readonly short Id;
 
+        /// <summary>
+        /// Gets the field's name.
+        /// </summary>
         public readonly string Name;
 
+        /// <summary>
+        /// Gets the field's type as used when serializing it to the wire.
+        /// </summary>
         public readonly ThriftType WireType;
 
+        /// <summary>
+        /// Gets the field's type as specified in code.
+        /// </summary>
         public readonly Type UnderlyingType;
 
-        public readonly ThriftWireFieldState State;
+        /// <summary>
+        /// Gets the field's presence state.
+        /// </summary>
+        public readonly ThriftFieldPresenseState State;
 
+        /// <summary>
+        /// Gets the field's default value, if any.
+        /// </summary>
         public readonly object DefaultValue;
 
+        /// <summary>
+        /// Gets the field's converter, if any.
+        /// </summary>
         public readonly ThriftConverter Converter;
 
+        /// <summary>
+        /// Gets an expression reading the field, if any.
+        /// </summary>
         public readonly Expression Getter;
 
+        /// <summary>
+        /// Gets an expression writing its argument to the field, if any.
+        /// </summary>
         public readonly Func<Expression, Expression> Setter;
 
+
+        /// <summary>
+        /// Initializes a new instance of the ThriftWireField class with the specified values.
+        /// </summary>
         private ThriftWireField( short id, string name,
                                  ThriftType wireType, TypeInfo underlyingTypeInfo,
-                                 ThriftWireFieldState state, object defaultValue,
+                                 ThriftFieldPresenseState state, object defaultValue,
                                  ThriftConverter converter,
                                  Expression getter, Func<Expression, Expression> setter )
         {
@@ -52,16 +97,22 @@ namespace ThriftSharp.Internals
         }
 
 
+        /// <summary>
+        /// Creates a wire field representing a struct field.
+        /// </summary>
         public static ThriftWireField Field( ThriftField field, Expression structVar )
         {
             var propExpr = Expression.Property( structVar, field.BackingProperty );
             return new ThriftWireField( field.Id, field.Name,
                                         field.WireType, field.BackingProperty.PropertyType.GetTypeInfo(),
-                                        field.IsRequired ? ThriftWireFieldState.Required : ThriftWireFieldState.Optional, field.DefaultValue,
+                                        field.IsRequired ? ThriftFieldPresenseState.Required : ThriftFieldPresenseState.Optional, field.DefaultValue,
                                         field.Converter,
                                         propExpr, e => Expression.Assign( propExpr, e ) );
         }
 
+        /// <summary>
+        /// Creates a virtual wire field representing a method parameter.
+        /// </summary>
         public static ThriftWireField Parameter( ThriftParameter param, Expression parametersVar, int index )
         {
             var getterExpr = Expression.Convert(
@@ -70,20 +121,26 @@ namespace ThriftSharp.Internals
             );
             return new ThriftWireField( param.Id, param.Name,
                                         param.WireType, param.UnderlyingTypeInfo,
-                                        ThriftWireFieldState.AlwaysPresent, null,
+                                        ThriftFieldPresenseState.AlwaysPresent, null,
                                         param.Converter,
                                         getterExpr, null );
         }
 
+        /// <summary>
+        /// Creates a virtual wire field representing a method "throws" clause.
+        /// </summary>
         public static ThriftWireField ThrowsClause( ThriftThrowsClause clause )
         {
             return new ThriftWireField( clause.Id, clause.Name,
                                         clause.WireType, clause.UnderlyingTypeInfo,
-                                        ThriftWireFieldState.Optional, null,
+                                        ThriftFieldPresenseState.Optional, null,
                                         clause.Converter,
                                         null, Expression.Throw );
         }
 
+        /// <summary>
+        /// Creates a virtual wire field representing a return value.
+        /// </summary>
         public static ThriftWireField ReturnValue( ThriftReturnValue value, Expression returnValueVar, Expression hasReturnValueVar )
         {
             Func<Expression, Expression> setter = e => Expression.Block(
@@ -92,7 +149,7 @@ namespace ThriftSharp.Internals
             );
             return new ThriftWireField( 0, null,
                                         value.WireType, value.UnderlyingTypeInfo,
-                                        ThriftWireFieldState.Optional, null,
+                                        ThriftFieldPresenseState.Optional, null,
                                         value.Converter,
                                         returnValueVar, setter );
         }

@@ -10,13 +10,14 @@ using ThriftSharp.Transport;
 namespace ThriftSharp.Protocols
 {
     /// <summary>
-    /// Thrift's "binary" protocol. A compact but simple way to represent Thrift data.
+    /// Thrift's binary protocol. 
+    /// A compact but simple way to represent Thrift data.
     /// </summary>
     internal sealed class ThriftBinaryProtocol : IThriftProtocol
     {
-        // The current Thrift protocol version.
+        // Current Thrift protocol version
         private const uint Version1 = 0x80010000;
-        // A mask used to store more information in the message size field.
+        // Mask used to store more information in the message size field
         private const uint VersionMask = 0xffff0000;
 
         // PERF: Cached buffer for common values
@@ -28,7 +29,7 @@ namespace ThriftSharp.Protocols
         private readonly IThriftTransport _transport;
 
         /// <summary>
-        /// Initializes a new instance of the ThriftBinaryProtocol class using the specified binary transport.
+        /// Initializes a new instance of the ThriftBinaryProtocol class using the specified transport.
         /// </summary>
         /// <param name="transport">The transport used to transmit data.</param>
         public ThriftBinaryProtocol( IThriftTransport transport )
@@ -95,7 +96,8 @@ namespace ThriftSharp.Protocols
         public void ReadStructEnd() { }
 
         /// <summary>
-        /// Reads a field header, or returns null if an end-of-field token was encountered.
+        /// Reads a field header.
+        /// Returns a header with the empty type ID if there are no more fields in the struct currently being read.
         /// </summary>
         public ThriftFieldHeader ReadFieldHeader()
         {
@@ -220,7 +222,7 @@ namespace ThriftSharp.Protocols
         }
 
         /// <summary>
-        /// Reads an UTF-8 string, whose length is a leading 32-bit integer.
+        /// Reads an UTF-8 string whose length is a leading 32-bit integer.
         /// </summary>
         public string ReadString()
         {
@@ -231,7 +233,7 @@ namespace ThriftSharp.Protocols
         }
 
         /// <summary>
-        /// Reads an array of signed bytes, whose length is a leading 32-bit integer.
+        /// Reads an array of signed bytes whose length is a leading 32-bit integer.
         /// </summary>
         public sbyte[] ReadBinary()
         {
@@ -329,7 +331,7 @@ namespace ThriftSharp.Protocols
         public void WriteSetEnd() { }
 
         /// <summary>
-        /// Writes the specified map's header.
+        /// Writes the specified map header.
         /// </summary>
         public void WriteMapHeader( ThriftMapHeader header )
         {
@@ -346,7 +348,7 @@ namespace ThriftSharp.Protocols
         public void WriteMapEnd() { }
 
         /// <summary>
-        /// Writes the specified boolean value as a byte, 1 for true and 0 for false.
+        /// Writes the specified boolean as a byte, 1 for true and 0 for false.
         /// </summary>
         public void WriteBoolean( bool value )
         {
@@ -430,7 +432,7 @@ namespace ThriftSharp.Protocols
         }
 
         /// <summary>
-        /// Asynchronously flushes the written data, and reads all input in advance.
+        /// Asynchronously flushes the written data and reads all input.
         /// </summary>
         public Task FlushAndReadAsync()
         {
@@ -438,17 +440,26 @@ namespace ThriftSharp.Protocols
         }
 
         #region IDisposable implementation
+        /// <summary>
+        /// Finalizes the ThriftBinaryProtocol.
+        /// </summary>
         ~ThriftBinaryProtocol()
         {
             DisposePrivate();
         }
 
+        /// <summary>
+        /// Disposes of the ThriftBinaryProtocol.
+        /// </summary>
         public void Dispose()
         {
             DisposePrivate();
             GC.SuppressFinalize( this );
         }
 
+        /// <summary>
+        /// Disposes of the ThriftBinaryProtocol's internals.
+        /// </summary>
         private void DisposePrivate()
         {
             _transport.Dispose();
