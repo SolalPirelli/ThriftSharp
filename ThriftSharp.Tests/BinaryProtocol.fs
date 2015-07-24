@@ -5,7 +5,7 @@ module ThriftSharp.Tests.``Binary protocol``
 
 open Xunit
 open ThriftSharp
-open ThriftSharp.Internals
+open ThriftSharp.Models
 open ThriftSharp.Protocols
 
 let (--) a b = a, b

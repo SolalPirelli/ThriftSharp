@@ -4,10 +4,11 @@
 namespace ThriftSharp.Tests
 
 open System.Collections.Generic
+open System.Threading
 open System.Threading.Tasks
 open ThriftSharp.Transport
 
-type MemoryTransport(toRead: byte list) =
+type MemoryTransport(toRead: byte list, ?token: CancellationToken) =
     let mutable writtenVals = []
     let mutable hasRead = false
     let mutable isDisposed = false
@@ -43,9 +44,10 @@ type MemoryTransport(toRead: byte list) =
             if isDisposed then
                 failwith "Already disposed."
 
-            hasRead <- true
-
-            Task.CompletedTask
+            match token with
+            | Some t when t.IsCancellationRequested -> Task.FromCanceled(t)
+            | _ -> hasRead <- true
+                   Task.CompletedTask
 
         member x.Dispose() =
             isDisposed <- true

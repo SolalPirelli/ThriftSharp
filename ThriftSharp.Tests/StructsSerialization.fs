@@ -7,6 +7,7 @@ open System.Collections.Generic
 open System.Reflection
 open Xunit
 open ThriftSharp
+open ThriftSharp.Models
 open ThriftSharp.Internals
 
 

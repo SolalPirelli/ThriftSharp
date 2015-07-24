@@ -14,7 +14,7 @@ namespace ThriftSharp.Transport
     /// <summary>
     /// Transports binary data over HTTP POST requests.
     /// </summary>
-    internal sealed class HttpThriftTransport : IThriftTransport
+    public sealed class HttpThriftTransport : IThriftTransport
     {
         private const string ThriftContentType = "application/x-thrift";
         private const string ThriftHttpMethod = "POST";

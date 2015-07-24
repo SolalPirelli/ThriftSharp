@@ -25,6 +25,13 @@ namespace ThriftSharp
         /// <param name="timeout">Optional. The timeout in milliseconds. The default is 5 seconds.</param>
         /// <returns>A finished ThriftCommunication object.</returns>
         ThriftCommunication OverHttp( string url, IReadOnlyDictionary<string, string> headers = null, TimeSpan? timeout = null );
+
+        /// <summary>
+        /// Communicates using the specified transport.
+        /// </summary>
+        /// <param name="transportCreator">A function taking a cancellation token and creating a transport from it.</param>
+        /// <returns>A finished ThriftCommunication object.</returns>
+        ThriftCommunication UsingCustomTransport( Func<CancellationToken, IThriftTransport> transportCreator );
     }
 
     /// <summary>
@@ -35,14 +42,8 @@ namespace ThriftSharp
         private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds( 5 );
 
         private readonly Func<IThriftTransport, IThriftProtocol> _protocolCreator;
-        private readonly Func<CancellationToken, IThriftTransport> _transportFactory;
+        private readonly Func<CancellationToken, IThriftTransport> _transportCreator;
 
-
-        /// <summary>
-        /// Internal constructor to let unit tests extend this class.
-        /// </summary>
-        [Obsolete( "Use this only for unit tests." )]
-        internal ThriftCommunication() { }
 
         /// <summary>
         /// Initializes a new instance of the ThriftCommunication class with the specified protocol creator.
@@ -55,19 +56,34 @@ namespace ThriftSharp
         /// <summary>
         /// Initializes a new instance of the ThriftCommunication class as a second part of the build step with the specified transport factory.
         /// </summary>
-        private ThriftCommunication( ThriftCommunication comm, Func<CancellationToken, IThriftTransport> transportFactory )
+        private ThriftCommunication( ThriftCommunication comm, Func<CancellationToken, IThriftTransport> transportCreator )
         {
             _protocolCreator = comm._protocolCreator;
-            _transportFactory = transportFactory;
+            _transportCreator = transportCreator;
         }
+
 
         /// <summary>
         /// Transmit data in binary format.
         /// </summary>
+        /// <returns>A builder object to select the means of transport.</returns>
         public static IThriftTransportPicker Binary()
         {
             return new ThriftCommunication( t => new ThriftBinaryProtocol( t ) );
         }
+
+        /// <summary>
+        /// Communicates using the specified protocol.
+        /// </summary>
+        /// <param name="transportCreator">A function taking a transport and creating a protocol from it.</param>
+        /// <returns>A builder object to select the means of transport.</returns>
+        public static IThriftTransportPicker UsingCustomProtocol( Func<IThriftTransport, IThriftProtocol> protocolCreator )
+        {
+            Validation.IsNotNull( protocolCreator, nameof( protocolCreator ) );
+
+            return new ThriftCommunication( protocolCreator );
+        }
+
 
         /// <summary>
         /// Communicate over HTTP at the specified URL.
@@ -83,11 +99,22 @@ namespace ThriftSharp
         }
 
         /// <summary>
+        /// Communicates using the specified transport.
+        /// </summary>
+        ThriftCommunication IThriftTransportPicker.UsingCustomTransport( Func<CancellationToken, IThriftTransport> transportCreator )
+        {
+            Validation.IsNotNull( transportCreator, nameof( transportCreator ) );
+
+            return new ThriftCommunication( this, transportCreator );
+        }
+
+
+        /// <summary>
         /// Creates a single-use IThriftProtocol object.
         /// </summary>
         internal virtual IThriftProtocol CreateProtocol( CancellationToken token )
         {
-            return _protocolCreator( _transportFactory( token ) );
+            return _protocolCreator( _transportCreator( token ) );
         }
 
         #region Static object methods hiding

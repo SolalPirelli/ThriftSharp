@@ -8,8 +8,9 @@ open System.Threading
 open System.Threading.Tasks
 open Xunit
 open ThriftSharp
-open ThriftSharp.Internals
+open ThriftSharp.Models
 open ThriftSharp.Protocols
+open ThriftSharp.Transport
 
 [<ThriftStruct("CustomException")>]
 type CustomException() =
@@ -91,7 +92,7 @@ type IService =
 
 [<AbstractClass>]
 type Tests() =
-    abstract GetService: (CancellationToken -> IThriftProtocol) -> IService
+    abstract GetService: (IThriftTransport -> IThriftProtocol) -> IService
 
     member x.Test call expectedWrite expectedRead expectedResult = asTask <| async {
         let mutable prot: IThriftProtocol = null
@@ -603,7 +604,8 @@ type Tests() =
       
 open System
 type ServiceImpl(prot) =
-    inherit ThriftServiceImplementation<IService>({ new ThriftCommunication() with member __.CreateProtocol(t) = prot t })
+    inherit ThriftServiceImplementation<IService>(ThriftCommunication.UsingCustomProtocol(Func<IThriftTransport, IThriftProtocol>(prot))
+                                                                     .UsingCustomTransport(fun t -> MemoryTransport([], t) :> IThriftTransport))
 
     // Mimics the C# expression `x => x.Method`
     // Not very pretty, but it works.
@@ -643,4 +645,5 @@ type Proxy() =
     inherit Tests()
 
     override __.GetService prot =
-        ThriftProxy.Create<IService>({ new ThriftCommunication() with member __.CreateProtocol(t) = prot t })
+        ThriftProxy.Create<IService>(ThriftCommunication.UsingCustomProtocol(Func<IThriftTransport, IThriftProtocol>(prot))
+                                                        .UsingCustomTransport(fun t -> MemoryTransport([], t) :> IThriftTransport))

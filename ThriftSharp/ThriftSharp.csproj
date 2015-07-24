@@ -45,14 +45,14 @@
     <Compile Include="Internals\ThriftConverter.cs" />
     <Compile Include="Internals\ThriftWireField.cs" />
     <Compile Include="Internals\ThriftStructReader.cs" />
-    <Compile Include="Internals\ThriftTypeId.cs" />
+    <Compile Include="Models\ThriftTypeId.cs" />
     <Compile Include="Internals\ThriftStructWriter.cs" />
     <Compile Include="ThriftCommunication.cs" />
     <Compile Include="ThriftDateConverters.cs" />
     <Compile Include="ThriftValueConverter.cs" />
     <Compile Include="Utilities\IFluent.cs" />
-    <Compile Include="Internals\ThriftHeaders.cs" />
-    <Compile Include="Internals\ThriftMessageType.cs" />
+    <Compile Include="Models\ThriftHeaders.cs" />
+    <Compile Include="Models\ThriftMessageType.cs" />
     <Compile Include="Internals\ThriftModels.cs" />
     <Compile Include="ThriftProtocolException.cs" />
     <Compile Include="ThriftProtocolExceptionType.cs" />

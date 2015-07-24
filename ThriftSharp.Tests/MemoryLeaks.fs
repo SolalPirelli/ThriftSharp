@@ -6,6 +6,7 @@ module ThriftSharp.Tests.``Memory leak tests``
 open System.Reflection
 open Xunit
 open ThriftSharp
+open ThriftSharp.Models
 open ThriftSharp.Internals
 
 [<ThriftStruct("Simple")>]

@@ -9,7 +9,10 @@ namespace ThriftSharp.Transport
     /// <summary>
     /// Transports data at the byte level.
     /// </summary>
-    internal interface IThriftTransport : IDisposable
+    /// <remarks>
+    /// Implementations of this interface will never be passed null arguments.
+    /// </remarks>
+    public interface IThriftTransport : IDisposable
     {
         /// <summary>
         /// Writes the specified array of unsigned bytes.

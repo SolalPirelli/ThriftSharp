@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using ThriftSharp.Internals;
+using ThriftSharp.Models;
 using ThriftSharp.Protocols;
 
 namespace ThriftSharp.Utilities

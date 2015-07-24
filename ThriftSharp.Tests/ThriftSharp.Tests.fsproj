@@ -69,7 +69,6 @@
   </Target>
   <ItemGroup>
     <Compile Include="Internals\MemoryProtocol.fs" />
-    <Compile Include="Internals\CircularTransport.fs" />
     <Compile Include="Internals\MemoryTransport.fs" />
     <Compile Include="Internals\Utils.fs" />
     <Content Include="app.config" />

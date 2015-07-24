@@ -5,10 +5,10 @@ namespace ThriftSharp.Tests
 
 open System.Collections.Generic
 open System.Text
-open System.Threading
 open System.Threading.Tasks
 open ThriftSharp.Protocols
-open ThriftSharp.Internals
+open ThriftSharp.Transport
+open ThriftSharp.Models
 
 [<NoComparison>]
 type ThriftProtocolValue =
@@ -37,7 +37,7 @@ type ThriftProtocolValue =
 module ThriftProtocolValueExtensions =
     let String (str: string) = Binary(Encoding.UTF8.GetBytes(str) |> Array.map sbyte)
 
-type MemoryProtocol(toRead: ThriftProtocolValue list, ?token: CancellationToken) =
+type MemoryProtocol(toRead: ThriftProtocolValue list, ?transport: IThriftTransport) =
     let mutable writtenVals = []
     let toRead = Queue(toRead)
 
@@ -115,9 +115,9 @@ type MemoryProtocol(toRead: ThriftProtocolValue list, ?token: CancellationToken)
 
 
         member __.FlushAndReadAsync() =
-            match token with
-            | Some t when t.IsCancellationRequested -> Task.FromCanceled(t)
-            | _ -> Task.CompletedTask
+            match transport with
+            | Some t -> t.FlushAndReadAsync()
+            | None -> Task.CompletedTask
 
 
         member __.ReadMessageHeader() =

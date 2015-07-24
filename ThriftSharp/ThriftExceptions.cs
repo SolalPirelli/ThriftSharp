@@ -3,7 +3,7 @@
 
 using System;
 using System.Reflection;
-using ThriftSharp.Internals;
+using ThriftSharp.Models;
 
 namespace ThriftSharp
 {

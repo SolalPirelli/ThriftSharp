@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Reflection;
+using ThriftSharp.Models;
 
 namespace ThriftSharp.Internals
 {

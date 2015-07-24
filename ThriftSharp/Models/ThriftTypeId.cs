@@ -1,12 +1,12 @@
 ﻿// Copyright (c) 2014-15 Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details).
 
-namespace ThriftSharp.Internals
+namespace ThriftSharp.Models
 {
     /// <summary>
     /// Thrift type IDs.
     /// </summary>
-    internal enum ThriftTypeId : byte
+    public enum ThriftTypeId : byte
     {
         /// <summary>
         /// Marks the lack of a field.

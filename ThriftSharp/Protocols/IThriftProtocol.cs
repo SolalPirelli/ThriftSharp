@@ -3,14 +3,17 @@
 
 using System;
 using System.Threading.Tasks;
-using ThriftSharp.Internals;
+using ThriftSharp.Models;
 
 namespace ThriftSharp.Protocols
 {
     /// <summary>
     /// Protocol that can send and receive Thrift types and messages.
     /// </summary>
-    internal interface IThriftProtocol : IDisposable
+    /// <remarks>
+    /// Implementations of this interface will never be passed null arguments.
+    /// </remarks>
+    public interface IThriftProtocol : IDisposable
     {
         /// <summary>
         /// Reads a message header.

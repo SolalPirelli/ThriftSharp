@@ -11,6 +11,7 @@ open System.Threading
 open System.Threading.Tasks
 open Xunit
 open ThriftSharp
+open ThriftSharp.Models
 open ThriftSharp.Internals
 open ThriftSharp.Utilities
 open ThriftSharp.Tests

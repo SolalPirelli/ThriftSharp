@@ -51,11 +51,19 @@ let ``ThriftMethodAttribute: name``(value) =
 let ``ThriftServiceAttribute: name``(value) =
     fails (fun () -> ThriftServiceAttribute(value))
 
+    
+[<Fact>]
+let ``ThriftCommunication#UsingCustomProtocol: protocolCreator``() =
+    fails (fun () -> ThriftCommunication.UsingCustomProtocol(null))
 
 [<Theory;
   MemberData("StringData")>]
 let ``ThriftCommunication#OverHttp: url``(value) =
     fails (fun () -> ThriftCommunication.Binary().OverHttp(value))
+    
+[<Fact>]
+let ``ThriftCommunication#UsingCustomTransport: transportCreator``() =
+    fails (fun () -> ThriftCommunication.Binary().UsingCustomTransport(null))
 
 
 [<ThriftService("CustomService")>]
@@ -78,7 +86,7 @@ let ``ThriftServiceImplementation: communication``() =
 
 
 type CustomService(value: string) =
-    inherit ThriftServiceImplementation<ICustomService>({ new ThriftCommunication() with member x.CreateProtocol(_) = null })
+    inherit ThriftServiceImplementation<ICustomService>(ThriftCommunication.UsingCustomProtocol(fun _ -> null).UsingCustomTransport(fun _ -> null))
 
     interface ICustomService with
         member x.NoReturn() =
@@ -99,7 +107,7 @@ let ``ThriftServiceImplementation#CallAsync<T>: name``(value) =
 
 
 type CustomServiceNullArgs() =
-    inherit ThriftServiceImplementation<ICustomService>({ new ThriftCommunication() with member x.CreateProtocol(_) = null })
+    inherit ThriftServiceImplementation<ICustomService>(ThriftCommunication.UsingCustomProtocol(fun _ -> null).UsingCustomTransport(fun _ -> null))
 
     interface ICustomService with
         member x.NoReturn() =
@@ -160,7 +168,7 @@ type ICustomService2 =
                       * [<ThriftParameter(4s, "arg4")>] arg4: string -> Task<int>
 
 type CustomService2() =
-    inherit ThriftServiceImplementation<ICustomService2>({ new ThriftCommunication() with member x.CreateProtocol(_) = null })
+    inherit ThriftServiceImplementation<ICustomService2>(ThriftCommunication.UsingCustomProtocol(fun _ -> null).UsingCustomTransport(fun _ -> null))
 
     member x.E<'e>() =
         Unchecked.defaultof<Expression<Func<ICustomService2, 'e>>>

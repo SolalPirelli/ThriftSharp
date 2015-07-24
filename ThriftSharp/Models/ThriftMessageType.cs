@@ -1,12 +1,12 @@
 ﻿// Copyright (c) 2014-15 Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details).
 
-namespace ThriftSharp.Internals
+namespace ThriftSharp.Models
 {
     /// <summary>
     /// Thrift message types.
     /// </summary>
-    internal enum ThriftMessageType
+    public enum ThriftMessageType
     {
         /// <summary>
         /// Client to server.
