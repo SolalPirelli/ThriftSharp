@@ -4,7 +4,6 @@ open System
 open System.Collections.Generic
 open System.Net
 open System.Threading
-open System.Threading.Tasks
 open Xunit
 open ThriftSharp.Transport
 
@@ -12,12 +11,8 @@ type TestParams(request: int list, response: int list) =
     let toArray =
         List.map (fun i -> i % 256) >> List.map byte >> List.toArray
 
-    let tokenSource = CancellationTokenSource()
-
     member val Timeout = Timeout.InfiniteTimeSpan with get, set
     member val Headers = Dictionary<string, string>() with get, set
-    member __.TokenSource with get() = tokenSource
-
     member __.Request with get() = toArray request
     member __.Response with get() = toArray response
 
@@ -25,7 +20,7 @@ let mutable PortCounter = 4000
 
 let test (ps: TestParams) = async {
     let url = sprintf "http://localhost:%d/" (Interlocked.Increment(&PortCounter))
-    let transport = HttpThriftTransport(url, ps.TokenSource.Token, ps.Headers, ps.Timeout)
+    let transport = HttpThriftTransport(url, CancellationToken.None, ps.Headers, ps.Timeout)
 
     let listener = HttpListener()
     listener.Prefixes.Add(url)
@@ -105,11 +100,8 @@ let ``Server takes too long to respond``() = asTask <| async {
 
 [<Fact>]
 let ``Client's token is canceled before even sending data``() = asTask <| async {
-    let source = CancellationTokenSource()
-    source.Cancel()
-
     let url = sprintf "http://localhost:%d/" (Interlocked.Increment(&PortCounter))
-    let transport = HttpThriftTransport(url, source.Token, dict [], Timeout.InfiniteTimeSpan)
+    let transport = HttpThriftTransport(url, CancellationToken(true), dict [], Timeout.InfiniteTimeSpan)
 
     let listener = HttpListener()
     listener.Prefixes.Add(url)

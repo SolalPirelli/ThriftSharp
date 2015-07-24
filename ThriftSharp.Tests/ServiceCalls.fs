@@ -243,10 +243,8 @@ type Tests() =
 
     [<Fact>] 
     member x.``No return value, 4 args + cancellation token (cancelled)``() =
-        let tokenSource = CancellationTokenSource()
-        tokenSource.Cancel()
         x.TestException<System.OperationCanceledException>
-               (fun s -> s.NoReturn5(true, 1, 1.0, "abc", tokenSource.Token) |> asUnit)
+               (fun s -> s.NoReturn5(true, 1, 1.0, "abc", CancellationToken(true)) |> asUnit)
                [MessageHeader ("NoReturn5", ThriftMessageType.Call)
                 StructHeader ""
                 FieldHeader (1s, "arg1", ThriftTypeId.Boolean)
@@ -480,10 +478,8 @@ type Tests() =
 
     [<Fact>] 
     member x.``Return value, 4 args + cancellation token (cancelled)``() =
-        let tokenSource = CancellationTokenSource()
-        tokenSource.Cancel()
         x.TestException<System.OperationCanceledException>
-               (fun s -> s.Return5(true, 1, 1.0, "abc", tokenSource.Token) |> asUnit)
+               (fun s -> s.Return5(true, 1, 1.0, "abc", CancellationToken(true)) |> asUnit)
                [MessageHeader ("Return5", ThriftMessageType.Call)
                 StructHeader ""
                 FieldHeader (1s, "arg1", ThriftTypeId.Boolean)

@@ -16,7 +16,7 @@ let getField obj name: 'a =
 let ``Binary().OverHttp() returns a binary transport over HTTP.``() =
     let headers = dict ["a", "b"]
     let timeout = TimeSpan.FromSeconds(2.1)
-    let token = CancellationTokenSource().Token
+    let token = CancellationToken(false)
     let comm = ThriftCommunication.Binary().OverHttp("http://example.org", headers, nullable timeout)
     let prot = comm.CreateProtocol(token)
     let trans: IThriftTransport = getField prot "_transport"
@@ -28,9 +28,8 @@ let ``Binary().OverHttp() returns a binary transport over HTTP.``() =
 
 [<Fact>]
 let ``OverHttp() handles null parameters correctly.``() =
-    let token = CancellationTokenSource().Token
     let comm = ThriftCommunication.Binary().OverHttp("http://example.org")
-    let prot = comm.CreateProtocol(token)
+    let prot = comm.CreateProtocol(CancellationToken(false))
     let trans: IThriftTransport = getField prot "_transport"
     
     getField trans "_headers" <=> Dictionary<string, string>()

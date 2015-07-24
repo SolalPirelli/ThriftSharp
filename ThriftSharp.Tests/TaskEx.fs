@@ -6,7 +6,7 @@ open System.Threading.Tasks
 open Xunit
 open ThriftSharp.Utilities
 
-let MaxTimeout = TimeSpan.FromMilliseconds(20.0)
+let MaxTimeout = TimeSpan.FromMilliseconds(40.0)
 
 [<Fact>]
 let ``Already-completed task``() = asTask <| async {
@@ -23,10 +23,8 @@ let ``Already-faulted task``() = asTask <| async {
 
 [<Fact>]
 let ``Already-canceled task``() = asTask <| async {
-    let source = CancellationTokenSource()
-    source.Cancel()
     do! Assert.ThrowsAnyAsync<OperationCanceledException>(fun () ->
-            TaskEx.TimeoutAfter(Task.FromCanceled<int>(source.Token), MaxTimeout) :> Task) |> Async.AwaitTask |> Async.Ignore
+            TaskEx.TimeoutAfter(Task.FromCanceled<int>(CancellationToken(true)), MaxTimeout) :> Task) |> Async.AwaitTask |> Async.Ignore
 }
 
 [<Fact>]
@@ -50,9 +48,7 @@ let ``Quickly faulted task``() = asTask <| async {
 [<Fact>]
 let ``Quickly canceled task``() = asTask <| async {
     let source = TaskCompletionSource<int>()
-    let tokenSource = CancellationTokenSource()
-    tokenSource.Cancel()
-    let task = Task.Delay(10).ContinueWith(fun _ -> source.TrySetCanceled(tokenSource.Token))
+    let task = Task.Delay(10).ContinueWith(fun _ -> source.TrySetCanceled(CancellationToken(false)))
     do! Assert.ThrowsAnyAsync<OperationCanceledException>(fun () ->
             TaskEx.TimeoutAfter(source.Task, MaxTimeout) :> Task) |> Async.AwaitTask |> Async.Ignore
     do! task |> Async.AwaitTask |> Async.Ignore
