@@ -28,7 +28,7 @@ namespace ThriftSharp.Benchmarking
                                   "{0,-20} | {1,8:F2} | {2,8:F2} | {3,8:F2} | {4,8:F2}",
                                   Name,
                                   ThriftSharpReadTime.TotalMilliseconds, ThriftSharpWriteTime.TotalMilliseconds,
-                                  ThriftWriteTime.TotalMilliseconds, ThriftReadTime.TotalMilliseconds );
+                                  ThriftReadTime.TotalMilliseconds, ThriftWriteTime.TotalMilliseconds );
         }
 
         public static BenchmarkResult Average( IEnumerable<BenchmarkResult> results )
