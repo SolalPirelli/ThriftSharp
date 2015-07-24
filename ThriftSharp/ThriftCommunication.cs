@@ -37,7 +37,7 @@ namespace ThriftSharp
     /// <summary>
     /// Builds a Thrift communication method.
     /// </summary>
-    public class ThriftCommunication : IThriftTransportPicker
+    public sealed class ThriftCommunication : IThriftTransportPicker
     {
         private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds( 5 );
 
@@ -112,7 +112,7 @@ namespace ThriftSharp
         /// <summary>
         /// Creates a single-use IThriftProtocol object.
         /// </summary>
-        internal virtual IThriftProtocol CreateProtocol( CancellationToken token )
+        internal IThriftProtocol CreateProtocol( CancellationToken token )
         {
             return _protocolCreator( _transportCreator( token ) );
         }

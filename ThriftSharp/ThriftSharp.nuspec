@@ -8,7 +8,7 @@
     <projectUrl>https://github.com/SolalPirelli/ThriftSharp</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <copyright>Copyright $author$ 2014</copyright>
+    <copyright>Copyright $author$ 2014-2015</copyright>
     <tags>thrift</tags>
   </metadata>
 </package>
