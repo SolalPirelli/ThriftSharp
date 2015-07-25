@@ -1,16 +1,22 @@
 ﻿// Copyright (c) 2014-15 Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details).
 
+// Uncomment this line to also bench Apache Thrift
+// #define BENCH_APACHE_THRIFT
+
 using System;
 using BenchmarkDotNet;
+#if BENCH_APACHE_THRIFT
 using Thrift.Transport;
-using ThriftSharp.Benchmarking.Models;
 using T = ThriftSharp.Benchmarking.Models.Thrift;
+#endif
+using ThriftSharp.Benchmarking.Models;
 
 namespace ThriftSharp.Benchmarking
 {
     public class Program
     {
+#if BENCH_APACHE_THRIFT
         private static readonly byte[]
             T_All = TMemoryBuffer.Serialize( (T.AllTypesContainer) AllTypesContainer.Sample ),
             T_Binary = TMemoryBuffer.Serialize( (T.BinaryContainer) BinaryContainer.Sample ),
@@ -29,6 +35,7 @@ namespace ThriftSharp.Benchmarking
             T_String = TMemoryBuffer.Serialize( (T.StringContainer) StringContainer.Sample ),
             T_Struct = TMemoryBuffer.Serialize( (T.StructContainer) StructContainer.Sample ),
             T_TimePeriod = TMemoryBuffer.Serialize( (T.TimePeriod) TimePeriod.Sample );
+#endif
 
         private static readonly byte[]
             TS_All = MemoryBuffer.Serialize( AllTypesContainer.Sample ),
@@ -55,6 +62,7 @@ namespace ThriftSharp.Benchmarking
             Console.Read();
         }
 
+#if BENCH_APACHE_THRIFT
         [Benchmark]
         public byte[] T_W_All()
         {
@@ -156,6 +164,7 @@ namespace ThriftSharp.Benchmarking
         {
             return TMemoryBuffer.Serialize( (T.TimePeriod) TimePeriod.Sample );
         }
+#endif
 
 
         [Benchmark]
@@ -261,6 +270,7 @@ namespace ThriftSharp.Benchmarking
         }
 
 
+#if BENCH_APACHE_THRIFT
         [Benchmark]
         public object T_R_All()
         {
@@ -362,6 +372,7 @@ namespace ThriftSharp.Benchmarking
         {
             return TMemoryBuffer.DeSerialize<T.TimePeriod>( T_TimePeriod );
         }
+#endif
 
 
         [Benchmark]
