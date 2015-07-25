@@ -308,7 +308,7 @@ namespace ThriftSharp.Internals
                         typeof( ThriftStructReader ),
                         "Read",
                         new[] { thriftType.TypeInfo.AsType() },
-                        Expression.Constant( thriftType.Struct ), protocolParam
+                        protocolParam
                     );
             }
         }
@@ -609,8 +609,9 @@ namespace ThriftSharp.Internals
         /// <remarks>
         /// This method is only called from generated expressions.
         /// </remarks>
-        public static T Read<T>( ThriftStruct thriftStruct, IThriftProtocol protocol )
+        public static T Read<T>( IThriftProtocol protocol )
         {
+            var thriftStruct = ThriftAttributesParser.ParseStruct( typeof( T ).GetTypeInfo() );
             if ( !_knownReaders.ContainsKey( thriftStruct ) )
             {
                 _knownReaders.Add( thriftStruct, CreateReaderForStruct( thriftStruct ).Compile() );

@@ -3,7 +3,6 @@
 
 using System;
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
 using ThriftSharp.Internals;
 using ThriftSharp.Protocols;
@@ -18,17 +17,15 @@ namespace ThriftSharp.Benchmarking
 
         public static byte[] Serialize<T>( T obj )
         {
-            var thriftStruct = ThriftAttributesParser.ParseStruct( typeof( T ).GetTypeInfo() );
             var buffer = new MemoryBuffer() { _memory = new MemoryStream() };
-            ThriftStructWriter.Write( thriftStruct, obj, new ThriftBinaryProtocol( buffer ) );
+            ThriftStructWriter.Write( obj, new ThriftBinaryProtocol( buffer ) );
             return buffer._memory.GetBuffer();
         }
 
         public static T Deserialize<T>( byte[] bytes )
         {
-            var thriftStruct = ThriftAttributesParser.ParseStruct( typeof( T ).GetTypeInfo() );
             var buffer = new MemoryBuffer { _memory = new MemoryStream( bytes ) };
-            return ThriftStructReader.Read<T>( thriftStruct, new ThriftBinaryProtocol( buffer ) );
+            return ThriftStructReader.Read<T>( new ThriftBinaryProtocol( buffer ) );
         }
 
 

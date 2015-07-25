@@ -613,8 +613,10 @@ type Reading() =
                     FieldStop
                     StructEnd] 
         let m = MemoryProtocol(data)
-        let thriftStruct = ThriftAttributesParser.ParseStruct(typ.GetTypeInfo())
-        let exn = Assert.Throws<ThriftSerializationException>(fun () -> ThriftStructReader.Read(thriftStruct, m) |> box)
+        let meth = typeof<ThriftStructReader>.GetMethod("Read").MakeGenericMethod([| typ.AsType() |])
+        let exn = Assert.Throws<ThriftSerializationException>(fun () -> 
+            try meth.Invoke(null, [| m |])
+            with :? TargetInvocationException as t -> raise t.InnerException)
         Assert.Contains(expected, exn.Message)
 
 
@@ -630,15 +632,14 @@ type Reading() =
           @ [FieldEnd; FieldStop; StructEnd]
         
         let m = MemoryProtocol(data)
-        let thriftStruct = ThriftAttributesParser.ParseStruct(typ.GetTypeInfo())
-        let structInst = ThriftStructReader.Read(thriftStruct, m)
+        let meth = typeof<ThriftStructReader>.GetMethod("Read").MakeGenericMethod([| typ.AsType() |])
+        let structInst = meth.Invoke(null, [| m |])
         m.IsEmpty <=> true
         (typ.GetProperty("0").GetValue(structInst) :?> 'a) <=> value
 
     override x.TestStruct data (value: 'a) =
         let m = MemoryProtocol(data)
-        let thriftStruct = ThriftAttributesParser.ParseStruct(typeof<'a>.GetTypeInfo())
-        let inst = ThriftStructReader.Read<'a>(thriftStruct, m)
+        let inst = ThriftStructReader.Read<'a>(m)
         m.IsEmpty <=> true
         inst <=> value
 
@@ -650,8 +651,7 @@ type Reading() =
              FieldStop
              StructEnd]
         let m = MemoryProtocol(data)
-        let thriftStruct = ThriftAttributesParser.ParseStruct(typeof<StructWithStructField>.GetTypeInfo())
-        let exn = Assert.Throws<ThriftSerializationException>(fun () -> ThriftStructReader.Read(thriftStruct, m) |> box)
+        let exn = Assert.Throws<ThriftSerializationException>(fun () -> ThriftStructReader.Read<StructWithStructField>(m) |> box)
         Assert.Contains("Field 'Field' is a required field, but was not present", exn.Message)
 
     [<Fact>]
@@ -706,10 +706,9 @@ type Writing() =
     inherit Tests()
 
     let write prot obj =
-        let thriftStruct = ThriftAttributesParser.ParseStruct(obj.GetType().GetTypeInfo())
         let meth = typeof<ThriftStructWriter>.GetMethod("Write").MakeGenericMethod([| obj.GetType() |])
         try
-            meth.Invoke(null, [| thriftStruct; obj; prot |]) |> ignore
+            meth.Invoke(null, [| obj; prot |]) |> ignore
         with
         | :? TargetInvocationException as e -> raise e.InnerException
 
@@ -754,8 +753,7 @@ type Skipping() =
           @ [FieldEnd; FieldStop; StructEnd]
 
         let m = MemoryProtocol(data)
-        let thriftStruct = ThriftAttributesParser.ParseStruct(typeof<StructWithoutFields>.GetTypeInfo())
-        ThriftStructReader.Read<StructWithoutFields>(thriftStruct, m) |> ignore
+        ThriftStructReader.Read<StructWithoutFields>(m) |> ignore
         m.IsEmpty <=> true
 
     override x.TestStruct data (value: 'a) =

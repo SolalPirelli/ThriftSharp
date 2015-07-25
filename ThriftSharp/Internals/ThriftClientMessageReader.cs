@@ -15,7 +15,6 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftClientMessageReader
     {
-        private static readonly ThriftStruct ThriftProtocolExceptionStruct = ThriftAttributesParser.ParseStruct( TypeInfos.ThriftProtocolException );
         private static readonly Dictionary<ThriftMethod, object> _knownReaders = new Dictionary<ThriftMethod, object>();
 
 
@@ -85,7 +84,7 @@ namespace ThriftSharp.Internals
                             typeof( ThriftStructReader ),
                             "Read",
                             new[] { typeof( ThriftProtocolException ) },
-                            Expression.Constant( ThriftProtocolExceptionStruct ), protocolParam
+                            protocolParam
                         )
                     )
                 ),

@@ -240,7 +240,7 @@ namespace ThriftSharp.Internals
                         typeof( ThriftStructWriter ),
                         "Write",
                         new[] { value.Type },
-                        Expression.Constant( thriftType.Struct ), value, protocolParam
+                        value, protocolParam
                     );
             }
         }
@@ -258,7 +258,10 @@ namespace ThriftSharp.Internals
                 Expression.Call(
                     protocolParam,
                     Methods.IThriftProtocol_WriteStructHeader,
-                    Expression.Constant(thriftStruct.Header)
+                    Expression.New(
+                        Constructors.ThriftStructHeader,
+                        Expression.Constant( thriftStruct.Header.Name )
+                    )
                 )
             };
 
@@ -371,8 +374,9 @@ namespace ThriftSharp.Internals
         /// <remarks>
         /// This method is only called from compiled expressions.
         /// </remarks>
-        public static void Write<T>( ThriftStruct thriftStruct, T value, IThriftProtocol protocol )
+        public static void Write<T>( T value, IThriftProtocol protocol )
         {
+            var thriftStruct = ThriftAttributesParser.ParseStruct( typeof( T ).GetTypeInfo() );
             if ( !_knownWriters.ContainsKey( thriftStruct ) )
             {
                 _knownWriters.Add( thriftStruct, CreateWriterForStruct( thriftStruct ).Compile() );
