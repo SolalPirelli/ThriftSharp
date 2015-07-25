@@ -75,7 +75,7 @@ namespace ThriftSharp
         /// <summary>
         /// Communicates using the specified protocol.
         /// </summary>
-        /// <param name="transportCreator">A function taking a transport and creating a protocol from it.</param>
+        /// <param name="protocolCreator">A function taking a transport and creating a protocol from it.</param>
         /// <returns>A builder object to select the means of transport.</returns>
         public static IThriftTransportPicker UsingCustomProtocol( Func<IThriftTransport, IThriftProtocol> protocolCreator )
         {
