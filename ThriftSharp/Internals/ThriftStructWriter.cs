@@ -335,18 +335,15 @@ namespace ThriftSharp.Internals
                     return writingExpr;
 
                 default:
-                    if ( field.DefaultValue == null )
+                    if ( field.DefaultValue == null && ( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable ) )
                     {
-                        if ( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable )
-                        {
-                            return Expression.IfThen(
-                                Expression.NotEqual(
-                                    field.Getter,
-                                    Expression.Constant( null )
-                                ),
-                                writingExpr
-                            );
-                        }
+                        return Expression.IfThen(
+                            Expression.NotEqual(
+                                field.Getter,
+                                Expression.Constant( null )
+                            ),
+                            writingExpr
+                        );
                     }
 
                     var condition = Expression.NotEqual(

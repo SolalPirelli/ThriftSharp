@@ -37,7 +37,7 @@ namespace ThriftSharp.Models
         /// Determines whether the header is equal to the specified header.
         /// </summary>
         /// <param name="other">The header to check for equality.</param>
-        /// <returns>A value indicating whether the two headers are considered equal.</returns>
+        /// <returns>A value indicating whether the two headers are equal.</returns>
         public bool Equals( ThriftCollectionHeader other )
         {
             return Count == other.Count && ElementTypeId == other.ElementTypeId;
@@ -47,7 +47,7 @@ namespace ThriftSharp.Models
         /// Determines whether the header is equal to the specified object.
         /// </summary>
         /// <param name="obj">The object to check for equality.</param>
-        /// <returns>A value indicating whether the two objects are considered equal.</returns>
+        /// <returns>A value indicating whether the two objects are equal.</returns>
         public override bool Equals( object obj )
         {
             return obj is ThriftCollectionHeader && Equals( (ThriftCollectionHeader) obj );
@@ -60,6 +60,28 @@ namespace ThriftSharp.Models
         public override int GetHashCode()
         {
             return Count.GetHashCode() + 31 * ElementTypeId.GetHashCode();
+        }
+
+        /// <summary>
+        /// Checks whether the specified headers are equal.
+        /// </summary>
+        /// <param name="left">The first header.</param>
+        /// <param name="right">The second header.</param>
+        /// <returns>A value indicating whether the headers are equal.</returns>
+        public static bool operator ==( ThriftCollectionHeader left, ThriftCollectionHeader right )
+        {
+            return left.Equals( right );
+        }
+
+        /// <summary>
+        /// Checks whether the specified headers are unequal.
+        /// </summary>
+        /// <param name="left">The first header.</param>
+        /// <param name="right">The second header.</param>
+        /// <returns>A value indicating whether the headers are unequal.</returns>
+        public static bool operator !=( ThriftCollectionHeader left, ThriftCollectionHeader right )
+        {
+            return !left.Equals( right );
         }
     }
 
@@ -102,7 +124,7 @@ namespace ThriftSharp.Models
         /// Determines whether the header is equal to the specified header.
         /// </summary>
         /// <param name="other">The header to check for equality.</param>
-        /// <returns>A value indicating whether the two headers are considered equal.</returns>
+        /// <returns>A value indicating whether the two headers are equal.</returns>
         public bool Equals( ThriftMapHeader other )
         {
             return Count == other.Count && KeyTypeId == other.KeyTypeId && ValueTypeId == other.ValueTypeId;
@@ -112,7 +134,7 @@ namespace ThriftSharp.Models
         /// Determines whether the header is equal to the specified object.
         /// </summary>
         /// <param name="obj">The object to check for equality.</param>
-        /// <returns>A value indicating whether the two objects are considered equal.</returns>
+        /// <returns>A value indicating whether the two objects are equal.</returns>
         public override bool Equals( object obj )
         {
             return obj is ThriftMapHeader && Equals( (ThriftMapHeader) obj );
@@ -127,6 +149,28 @@ namespace ThriftSharp.Models
             int hash = Count.GetHashCode();
             hash = 31 * hash + KeyTypeId.GetHashCode();
             return 31 * hash + ValueTypeId.GetHashCode();
+        }
+
+        /// <summary>
+        /// Checks whether the specified headers are equal.
+        /// </summary>
+        /// <param name="left">The first header.</param>
+        /// <param name="right">The second header.</param>
+        /// <returns>A value indicating whether the headers are equal.</returns>
+        public static bool operator ==( ThriftMapHeader left, ThriftMapHeader right )
+        {
+            return left.Equals( right );
+        }
+
+        /// <summary>
+        /// Checks whether the specified headers are unequal.
+        /// </summary>
+        /// <param name="left">The first header.</param>
+        /// <param name="right">The second header.</param>
+        /// <returns>A value indicating whether the headers are unequal.</returns>
+        public static bool operator !=( ThriftMapHeader left, ThriftMapHeader right )
+        {
+            return !left.Equals( right );
         }
     }
 
@@ -168,7 +212,7 @@ namespace ThriftSharp.Models
         /// Determines whether the header is equal to the specified header.
         /// </summary>
         /// <param name="other">The header to check for equality.</param>
-        /// <returns>A value indicating whether the two headers are considered equal.</returns>
+        /// <returns>A value indicating whether the two headers are equal.</returns>
         public bool Equals( ThriftFieldHeader other )
         {
             return Id == other.Id && Name == other.Name && TypeId == other.TypeId;
@@ -178,7 +222,7 @@ namespace ThriftSharp.Models
         /// Determines whether the header is equal to the specified object.
         /// </summary>
         /// <param name="obj">The object to check for equality.</param>
-        /// <returns>A value indicating whether the two objects are considered equal.</returns>
+        /// <returns>A value indicating whether the two objects are equal.</returns>
         public override bool Equals( object obj )
         {
             return obj is ThriftFieldHeader && Equals( (ThriftFieldHeader) obj );
@@ -193,6 +237,28 @@ namespace ThriftSharp.Models
             int hash = Id.GetHashCode();
             hash = 31 * hash + Name.GetHashCode();
             return 31 * hash + TypeId.GetHashCode();
+        }
+
+        /// <summary>
+        /// Checks whether the specified headers are equal.
+        /// </summary>
+        /// <param name="left">The first header.</param>
+        /// <param name="right">The second header.</param>
+        /// <returns>A value indicating whether the headers are equal.</returns>
+        public static bool operator ==( ThriftFieldHeader left, ThriftFieldHeader right )
+        {
+            return left.Equals( right );
+        }
+
+        /// <summary>
+        /// Checks whether the specified headers are unequal.
+        /// </summary>
+        /// <param name="left">The first header.</param>
+        /// <param name="right">The second header.</param>
+        /// <returns>A value indicating whether the headers are unequal.</returns>
+        public static bool operator !=( ThriftFieldHeader left, ThriftFieldHeader right )
+        {
+            return !left.Equals( right );
         }
     }
 
@@ -221,7 +287,7 @@ namespace ThriftSharp.Models
         /// Determines whether the header is equal to the specified header.
         /// </summary>
         /// <param name="other">The header to check for equality.</param>
-        /// <returns>A value indicating whether the two headers are considered equal.</returns>
+        /// <returns>A value indicating whether the two headers are equal.</returns>
         public bool Equals( ThriftStructHeader other )
         {
             return Name == other.Name;
@@ -231,7 +297,7 @@ namespace ThriftSharp.Models
         /// Determines whether the header is equal to the specified object.
         /// </summary>
         /// <param name="obj">The object to check for equality.</param>
-        /// <returns>A value indicating whether the two objects are considered equal.</returns>
+        /// <returns>A value indicating whether the two objects are equal.</returns>
         public override bool Equals( object obj )
         {
             return obj is ThriftStructHeader && Equals( (ThriftStructHeader) obj );
@@ -244,6 +310,28 @@ namespace ThriftSharp.Models
         public override int GetHashCode()
         {
             return Name.GetHashCode();
+        }
+
+        /// <summary>
+        /// Checks whether the specified headers are equal.
+        /// </summary>
+        /// <param name="left">The first header.</param>
+        /// <param name="right">The second header.</param>
+        /// <returns>A value indicating whether the headers are equal.</returns>
+        public static bool operator ==( ThriftStructHeader left, ThriftStructHeader right )
+        {
+            return left.Equals( right );
+        }
+
+        /// <summary>
+        /// Checks whether the specified headers are unequal.
+        /// </summary>
+        /// <param name="left">The first header.</param>
+        /// <param name="right">The second header.</param>
+        /// <returns>A value indicating whether the headers are unequal.</returns>
+        public static bool operator !=( ThriftStructHeader left, ThriftStructHeader right )
+        {
+            return !left.Equals( right );
         }
     }
 
@@ -281,7 +369,7 @@ namespace ThriftSharp.Models
         /// Determines whether the header is equal to the specified header.
         /// </summary>
         /// <param name="other">The header to check for equality.</param>
-        /// <returns>A value indicating whether the two headers are considered equal.</returns>
+        /// <returns>A value indicating whether the two headers are equal.</returns>
         public bool Equals( ThriftMessageHeader other )
         {
             return Name == other.Name && MessageType == other.MessageType;
@@ -291,7 +379,7 @@ namespace ThriftSharp.Models
         /// Determines whether the header is equal to the specified object.
         /// </summary>
         /// <param name="obj">The object to check for equality.</param>
-        /// <returns>A value indicating whether the two objects are considered equal.</returns>
+        /// <returns>A value indicating whether the two objects are equal.</returns>
         public override bool Equals( object obj )
         {
             return obj is ThriftMessageHeader && Equals( (ThriftMessageHeader) obj );
@@ -304,6 +392,28 @@ namespace ThriftSharp.Models
         public override int GetHashCode()
         {
             return Name.GetHashCode() + 31 * MessageType.GetHashCode();
+        }
+
+        /// <summary>
+        /// Checks whether the specified headers are equal.
+        /// </summary>
+        /// <param name="left">The first header.</param>
+        /// <param name="right">The second header.</param>
+        /// <returns>A value indicating whether the headers are equal.</returns>
+        public static bool operator ==( ThriftMessageHeader left, ThriftMessageHeader right )
+        {
+            return left.Equals( right );
+        }
+
+        /// <summary>
+        /// Checks whether the specified headers are unequal.
+        /// </summary>
+        /// <param name="left">The first header.</param>
+        /// <param name="right">The second header.</param>
+        /// <returns>A value indicating whether the headers are unequal.</returns>
+        public static bool operator !=( ThriftMessageHeader left, ThriftMessageHeader right )
+        {
+            return !left.Equals( right );
         }
     }
 }

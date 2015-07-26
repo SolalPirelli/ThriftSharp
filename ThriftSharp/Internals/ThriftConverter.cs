@@ -11,30 +11,15 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal sealed class ThriftConverter
     {
-        /// <summary>
-        /// Gets the converter type.
-        /// </summary>
-        public Type Type { get; }
-
-        /// <summary>
-        /// Gets a TypeInfo representing the interface implemented by the converter.
-        /// </summary>
-        public TypeInfo InterfaceTypeInfo { get; }
+        private Type _type;
+        private TypeInfo _interfaceTypeInfo;
 
         /// <summary>
         /// Gets the type the converter converts from.
         /// </summary>
         public Type FromType
         {
-            get { return InterfaceTypeInfo.GenericTypeArguments[0]; }
-        }
-
-        /// <summary>
-        /// Gets the type the converter converts to.
-        /// </summary>
-        public Type ToType
-        {
-            get { return InterfaceTypeInfo.GenericTypeArguments[1]; }
+            get { return _interfaceTypeInfo.GenericTypeArguments[0]; }
         }
 
         /// <summary>
@@ -59,17 +44,20 @@ namespace ThriftSharp.Internals
                 throw new ArgumentException( $"The type '{type.Name}' does not have a parameterless constructor." );
             }
 
-            Type = type;
-            InterfaceTypeInfo = ifaces[0];
+            _type = type;
+            _interfaceTypeInfo = ifaces[0];
         }
 
 
-        public Expression CreateCall( string methodName, Expression target )
+        /// <summary>
+        /// Creates an expression calling the specified method on the converter, with the specified argument.
+        /// </summary>
+        public Expression CreateCall( string methodName, Expression arg )
         {
             return Expression.Call(
-                Expression.New( Type ),
-                InterfaceTypeInfo.GetDeclaredMethod( methodName ),
-                target
+                Expression.New( _type ),
+                _interfaceTypeInfo.GetDeclaredMethod( methodName ),
+                arg
             );
         }
     }
