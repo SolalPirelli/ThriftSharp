@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using ThriftSharp.Utilities;
 
@@ -11,9 +12,9 @@ namespace ThriftSharp.Internals
     internal sealed class ThriftConverter
     {
         /// <summary>
-        /// Gets the converter itself.
+        /// Gets the converter type.
         /// </summary>
-        public object Value { get; }
+        public Type Type { get; }
 
         /// <summary>
         /// Gets a TypeInfo representing the interface implemented by the converter.
@@ -58,8 +59,18 @@ namespace ThriftSharp.Internals
                 throw new ArgumentException( $"The type '{type.Name}' does not have a parameterless constructor." );
             }
 
-            Value = ctor.Invoke( null );
+            Type = type;
             InterfaceTypeInfo = ifaces[0];
+        }
+
+
+        public Expression CreateCall( string methodName, Expression target )
+        {
+            return Expression.Call(
+                Expression.New( Type ),
+                InterfaceTypeInfo.GetDeclaredMethod( methodName ),
+                target
+            );
         }
     }
 }

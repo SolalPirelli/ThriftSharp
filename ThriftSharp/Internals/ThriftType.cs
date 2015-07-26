@@ -44,6 +44,11 @@ namespace ThriftSharp.Internals
         public TypeInfo TypeInfo { get; private set; }
 
         /// <summary>
+        /// Gets a value indicating whether the type is an enum.
+        /// </summary>
+        public bool IsEnum { get; private set; }
+
+        /// <summary>
         /// Gets the underlying type, if the type is a nullable type.
         /// </summary>
         public ThriftType NullableType { get; private set; }
@@ -82,6 +87,7 @@ namespace ThriftSharp.Internals
             {
                 NullableType = ThriftType.Get( underlyingNullableType );
                 Id = NullableType.Id;
+                IsEnum = NullableType.IsEnum;
                 return;
             }
 
@@ -103,6 +109,7 @@ namespace ThriftSharp.Internals
                 }
 
                 Id = ThriftTypeId.Int32;
+                IsEnum = true;
                 return;
             }
 

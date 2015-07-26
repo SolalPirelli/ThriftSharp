@@ -351,7 +351,7 @@ namespace ThriftSharp.Internals
         public static Expression CreateReaderForFields( ParameterExpression protocolParam, List<ThriftWireField> wireFields )
         {
             var fieldHeaderVar = Expression.Variable( typeof( ThriftFieldHeader ) );
-            var isSetVars = wireFields.Where( f => f.UnderlyingType.GetTypeInfo().IsValueType && ( f.State == ThriftFieldPresenseState.Required || f.DefaultValue != null ) )
+            var isSetVars = wireFields.Where( f => f.UnderlyingTypeInfo.IsValueType && ( f.State == ThriftFieldPresenseState.Required || f.DefaultValue != null ) )
                                       .ToDictionary( f => f, _ => Expression.Variable( typeof( bool ) ) );
 
             var endOfLoop = Expression.Label();
@@ -362,31 +362,24 @@ namespace ThriftSharp.Internals
                 var setter = field.Setter;
                 if ( field.Converter != null )
                 {
-                    // The GetDeclaredMethod("Convert") calls are required since the converter interface might be implemented explicitly,
-                    // which means Expression.Call(..., "Convert", ...) won't find it.
-                    if ( Nullable.GetUnderlyingType( field.UnderlyingType ) == null )
+                    if ( Nullable.GetUnderlyingType( field.UnderlyingTypeInfo.AsType() ) == null )
                     {
                         setter = expr => field.Setter(
-                            Expression.Call(
-                                Expression.Constant( field.Converter.Value ),
-                                field.Converter.InterfaceTypeInfo.GetDeclaredMethod( "Convert" ),
-                                expr
-                            )
+                            field.Converter.CreateCall( "Convert", expr )
                         );
                     }
                     else
                     {
                         setter = expr => field.Setter(
                             Expression.Convert(
-                                Expression.Call(
-                                    Expression.Constant( field.Converter.Value ),
-                                    field.Converter.InterfaceTypeInfo.GetDeclaredMethod( "Convert" ),
+                                field.Converter.CreateCall(
+                                    "Convert",
                                     Expression.Convert(
                                         expr,
                                         field.WireType.TypeInfo.AsType()
                                     )
                                 ),
-                                field.UnderlyingType
+                                field.UnderlyingTypeInfo.AsType()
                             )
                         );
                     }
@@ -501,12 +494,18 @@ namespace ThriftSharp.Internals
                     }
                     else
                     {
+                        Expression defaultValueExpr = Expression.Constant( field.DefaultValue );
+                        if ( field.Converter != null )
+                        {
+                            defaultValueExpr = field.Converter.CreateCall(
+                                "Convert",
+                                defaultValueExpr
+                            );
+                        }
                         statements.Add(
                             Expression.IfThen(
                                 check,
-                                field.Setter(
-                                    Expression.Constant( field.DefaultValue )
-                                )
+                                field.Setter( defaultValueExpr )
                             )
                         );
                     }

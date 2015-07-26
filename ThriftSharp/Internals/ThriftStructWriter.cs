@@ -188,11 +188,6 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static Expression CreateWriterForType( ParameterExpression protocolParam, ThriftType thriftType, Expression value )
         {
-            if ( thriftType.NullableType != null )
-            {
-                return CreateWriterForType( protocolParam, thriftType.NullableType, Expression.Property( value, "Value" ) );
-            }
-
             switch ( thriftType.Id )
             {
                 case ThriftTypeId.Boolean:
@@ -208,7 +203,7 @@ namespace ThriftSharp.Internals
                     return Expression.Call( protocolParam, Methods.IThriftProtocol_WriteInt16, value );
 
                 case ThriftTypeId.Int32:
-                    if ( thriftType.TypeInfo.IsEnum )
+                    if ( thriftType.IsEnum )
                     {
                         value = Expression.Convert( value, typeof( int ) );
                     }
@@ -286,31 +281,14 @@ namespace ThriftSharp.Internals
         public static Expression CreateWriterForField( ParameterExpression protocolParam, ThriftWireField field )
         {
             Expression getter = field.Getter;
+            bool isUnderlyingNullable = Nullable.GetUnderlyingType( field.UnderlyingTypeInfo.AsType() ) != null;
+            if ( isUnderlyingNullable )
+            {
+                getter = Expression.Property( getter, "Value" );
+            }
             if ( field.Converter != null )
             {
-                // Same comments as in ThriftStructReader: explicit methods needed because of explicit implementations
-                if ( Nullable.GetUnderlyingType( field.UnderlyingType ) == null )
-                {
-                    getter = Expression.Call(
-                        Expression.Constant( field.Converter.Value ),
-                        field.Converter.InterfaceTypeInfo.GetDeclaredMethod( "ConvertBack" ),
-                        getter
-                    );
-                }
-                else
-                {
-                    getter = Expression.Convert(
-                        Expression.Call(
-                            Expression.Constant( field.Converter.Value ),
-                            field.Converter.InterfaceTypeInfo.GetDeclaredMethod( "ConvertBack" ),
-                            Expression.Convert(
-                                getter,
-                                Nullable.GetUnderlyingType( field.UnderlyingType )
-                            )
-                        ),
-                        field.WireType.TypeInfo.AsType()
-                    );
-                }
+                getter = field.Converter.CreateCall( "ConvertBack", getter );
             }
 
             var writingExpr = Expression.Block(
@@ -332,39 +310,63 @@ namespace ThriftSharp.Internals
                 Expression.Call( protocolParam, Methods.IThriftProtocol_WriteFieldEnd )
             );
 
-            if ( field.State == ThriftFieldPresenseState.AlwaysPresent )
+            switch ( field.State )
             {
-                return writingExpr;
-            }
+                case ThriftFieldPresenseState.AlwaysPresent:
+                    return writingExpr;
 
-            if ( field.State == ThriftFieldPresenseState.Required )
-            {
-                if ( field.WireType.TypeInfo.IsClass || field.WireType.NullableType != null )
-                {
-                    return Expression.IfThenElse(
-                        Expression.Equal(
-                            getter,
-                            Expression.Constant( null )
-                        ),
-                        Expression.Throw(
-                            Expression.Call(
-                                Methods.ThriftSerializationException_RequiredFieldIsNull,
-                                Expression.Constant( field.Name )
-                            )
-                        ),
-                        writingExpr
+                case ThriftFieldPresenseState.Required:
+                    if ( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable )
+                    {
+                        return Expression.IfThenElse(
+                            Expression.Equal(
+                                field.Getter,
+                                Expression.Constant( null )
+                            ),
+                            Expression.Throw(
+                                Expression.Call(
+                                    Methods.ThriftSerializationException_RequiredFieldIsNull,
+                                    Expression.Constant( field.Name )
+                                )
+                            ),
+                            writingExpr
+                        );
+                    }
+                    return writingExpr;
+
+                default:
+                    if ( field.DefaultValue == null )
+                    {
+                        if ( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable )
+                        {
+                            return Expression.IfThen(
+                                Expression.NotEqual(
+                                    field.Getter,
+                                    Expression.Constant( null )
+                                ),
+                                writingExpr
+                            );
+                        }
+                    }
+
+                    var condition = Expression.NotEqual(
+                        getter,
+                        Expression.Constant( field.DefaultValue )
                     );
-                }
-                return writingExpr;
-            }
 
-            return Expression.IfThen(
-                Expression.NotEqual(
-                    field.Getter,
-                    Expression.Constant( field.DefaultValue )
-                ),
-                writingExpr
-            );
+                    if ( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable )
+                    {
+                        condition = Expression.AndAlso(
+                            Expression.NotEqual(
+                                field.Getter,
+                                Expression.Constant( null )
+                            ),
+                            condition
+                        );
+                    }
+
+                    return Expression.IfThen( condition, writingExpr );
+            }
         }
 
 

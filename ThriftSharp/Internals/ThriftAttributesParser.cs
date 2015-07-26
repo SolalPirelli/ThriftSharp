@@ -31,25 +31,34 @@ namespace ThriftSharp.Internals
             }
 
             var propertyTypeInfo = propertyInfo.PropertyType.GetTypeInfo();
-            if ( !attr.IsRequired && attr.DefaultValue == null && propertyTypeInfo.IsValueType && Nullable.GetUnderlyingType( propertyInfo.PropertyType ) == null )
+            var nullableType = Nullable.GetUnderlyingType( propertyInfo.PropertyType );
+            if ( attr.IsRequired )
             {
-                throw ThriftParsingException.OptionalValueField( propertyInfo );
+                if ( attr.DefaultValue != null )
+                {
+                    throw ThriftParsingException.DefaultValueOnRequiredField( propertyInfo );
+                }
+                if ( nullableType != null )
+                {
+                    throw ThriftParsingException.RequiredNullableField( propertyInfo );
+                }
             }
-            if ( attr.IsRequired && Nullable.GetUnderlyingType( propertyInfo.PropertyType ) != null )
+            else
             {
-                throw ThriftParsingException.RequiredNullableField( propertyInfo );
+                if ( attr.DefaultValue == null && propertyTypeInfo.IsValueType && nullableType == null )
+                {
+                    throw ThriftParsingException.OptionalValueField( propertyInfo );
+                }
             }
 
-            object defaultValue = null;
             if ( attr.DefaultValue != null )
             {
                 if ( attr.Converter == null )
                 {
-                    if ( attr.DefaultValue.GetType() != propertyInfo.PropertyType )
+                    if ( attr.DefaultValue.GetType() != ( nullableType ?? propertyInfo.PropertyType ) )
                     {
                         throw ThriftParsingException.DefaultValueOfWrongType( propertyInfo );
                     }
-                    defaultValue = attr.DefaultValue;
                 }
                 else
                 {
@@ -57,16 +66,10 @@ namespace ThriftSharp.Internals
                     {
                         throw ThriftParsingException.DefaultValueOfWrongType( propertyInfo );
                     }
-
-                    // Converting the value now simplifies the serialization code
-                    defaultValue = attr.ThriftConverter
-                                       .InterfaceTypeInfo
-                                       .GetDeclaredMethod( "Convert" )
-                                       .Invoke( attr.ThriftConverter.Value, new object[] { attr.DefaultValue } );
                 }
             }
 
-            return new ThriftField( attr.Id, attr.Name, attr.IsRequired, defaultValue, attr.ThriftConverter, propertyInfo );
+            return new ThriftField( attr.Id, attr.Name, attr.IsRequired, attr.DefaultValue, attr.ThriftConverter, propertyInfo );
         }
 
         /// <summary>

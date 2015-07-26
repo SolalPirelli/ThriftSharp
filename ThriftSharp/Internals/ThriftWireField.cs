@@ -48,7 +48,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the field's type as specified in code.
         /// </summary>
-        public readonly Type UnderlyingType;
+        public readonly TypeInfo UnderlyingTypeInfo;
 
         /// <summary>
         /// Gets the field's presence state.
@@ -88,7 +88,7 @@ namespace ThriftSharp.Internals
             Id = id;
             Name = name;
             WireType = wireType;
-            UnderlyingType = underlyingTypeInfo.AsType();
+            UnderlyingTypeInfo = underlyingTypeInfo;
             State = state;
             DefaultValue = defaultValue;
             Converter = converter;

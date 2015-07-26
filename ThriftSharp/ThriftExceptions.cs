@@ -61,6 +61,13 @@ namespace ThriftSharp
                                              + "This is not supported. Please use Nullable<T> for optional value fields." );
         }
 
+        internal static ThriftParsingException DefaultValueOnRequiredField( PropertyInfo propertyInfo )
+        {
+            return new ThriftParsingException( $"The Thrift field '{propertyInfo.Name}' (in type '{propertyInfo.DeclaringType.Name}') has a default value, but it is required."
+                                             + Environment.NewLine
+                                             + "This is nut supported. If you want to give a required field a default value, set that field in the struct's parameterless constructor." );
+        }
+
         internal static ThriftParsingException DefaultValueOfWrongType( PropertyInfo propertyInfo )
         {
             return new ThriftParsingException( $"The default value of the Thrift field '{propertyInfo.Name}' (in type '{propertyInfo.DeclaringType.Name}') does not have the correct type."
