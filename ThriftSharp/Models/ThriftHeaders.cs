@@ -1,12 +1,14 @@
 ﻿// Copyright (c) 2014-15 Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details).
 
+using System;
+
 namespace ThriftSharp.Models
 {
     /// <summary>
     /// Header of Thrift collections (List and Set).
     /// </summary>
-    public sealed class ThriftCollectionHeader
+    public struct ThriftCollectionHeader : IEquatable<ThriftCollectionHeader>
     {
         /// <summary>
         /// Gets the number of elements in the collection.
@@ -29,12 +31,42 @@ namespace ThriftSharp.Models
             Count = count;
             ElementTypeId = elementTypeId;
         }
+
+
+        /// <summary>
+        /// Determines whether the header is equal to the specified header.
+        /// </summary>
+        /// <param name="other">The header to check for equality.</param>
+        /// <returns>A value indicating whether the two headers are considered equal.</returns>
+        public bool Equals( ThriftCollectionHeader other )
+        {
+            return Count == other.Count && ElementTypeId == other.ElementTypeId;
+        }
+
+        /// <summary>
+        /// Determines whether the header is equal to the specified object.
+        /// </summary>
+        /// <param name="obj">The object to check for equality.</param>
+        /// <returns>A value indicating whether the two objects are considered equal.</returns>
+        public override bool Equals( object obj )
+        {
+            return obj is ThriftCollectionHeader && Equals( (ThriftCollectionHeader) obj );
+        }
+
+        /// <summary>
+        /// Computes a hash of the header.
+        /// </summary>
+        /// <returns>The hash.</returns>
+        public override int GetHashCode()
+        {
+            return Count.GetHashCode() + 31 * ElementTypeId.GetHashCode();
+        }
     }
 
     /// <summary>
     /// Header of Thrift maps.
     /// </summary>
-    public sealed class ThriftMapHeader
+    public struct ThriftMapHeader : IEquatable<ThriftMapHeader>
     {
         /// <summary>
         /// Gets the number of elements in the map.
@@ -64,12 +96,44 @@ namespace ThriftSharp.Models
             KeyTypeId = keyTypeId;
             ValueTypeId = valueTypeId;
         }
+
+
+        /// <summary>
+        /// Determines whether the header is equal to the specified header.
+        /// </summary>
+        /// <param name="other">The header to check for equality.</param>
+        /// <returns>A value indicating whether the two headers are considered equal.</returns>
+        public bool Equals( ThriftMapHeader other )
+        {
+            return Count == other.Count && KeyTypeId == other.KeyTypeId && ValueTypeId == other.ValueTypeId;
+        }
+
+        /// <summary>
+        /// Determines whether the header is equal to the specified object.
+        /// </summary>
+        /// <param name="obj">The object to check for equality.</param>
+        /// <returns>A value indicating whether the two objects are considered equal.</returns>
+        public override bool Equals( object obj )
+        {
+            return obj is ThriftMapHeader && Equals( (ThriftMapHeader) obj );
+        }
+
+        /// <summary>
+        /// Computes a hash of the header.
+        /// </summary>
+        /// <returns>The hash.</returns>
+        public override int GetHashCode()
+        {
+            int hash = Count.GetHashCode();
+            hash = 31 * hash + KeyTypeId.GetHashCode();
+            return 31 * hash + ValueTypeId.GetHashCode();
+        }
     }
 
     /// <summary>
     /// Header of Thrift fields.
     /// </summary>
-    public sealed class ThriftFieldHeader
+    public struct ThriftFieldHeader : IEquatable<ThriftFieldHeader>
     {
         /// <summary>
         /// Gets the field's ID.
@@ -98,12 +162,44 @@ namespace ThriftSharp.Models
             Name = name;
             TypeId = typeId;
         }
+
+
+        /// <summary>
+        /// Determines whether the header is equal to the specified header.
+        /// </summary>
+        /// <param name="other">The header to check for equality.</param>
+        /// <returns>A value indicating whether the two headers are considered equal.</returns>
+        public bool Equals( ThriftFieldHeader other )
+        {
+            return Id == other.Id && Name == other.Name && TypeId == other.TypeId;
+        }
+
+        /// <summary>
+        /// Determines whether the header is equal to the specified object.
+        /// </summary>
+        /// <param name="obj">The object to check for equality.</param>
+        /// <returns>A value indicating whether the two objects are considered equal.</returns>
+        public override bool Equals( object obj )
+        {
+            return obj is ThriftFieldHeader && Equals( (ThriftFieldHeader) obj );
+        }
+
+        /// <summary>
+        /// Computes a hash of the header.
+        /// </summary>
+        /// <returns>The hash.</returns>
+        public override int GetHashCode()
+        {
+            int hash = Id.GetHashCode();
+            hash = 31 * hash + Name.GetHashCode();
+            return 31 * hash + TypeId.GetHashCode();
+        }
     }
 
     /// <summary>
     /// Header of Thrift structs.
     /// </summary>
-    public sealed class ThriftStructHeader
+    public struct ThriftStructHeader : IEquatable<ThriftStructHeader>
     {
         /// <summary>
         /// Gets the struct's name.
@@ -119,12 +215,42 @@ namespace ThriftSharp.Models
         {
             Name = name;
         }
+
+
+        /// <summary>
+        /// Determines whether the header is equal to the specified header.
+        /// </summary>
+        /// <param name="other">The header to check for equality.</param>
+        /// <returns>A value indicating whether the two headers are considered equal.</returns>
+        public bool Equals( ThriftStructHeader other )
+        {
+            return Name == other.Name;
+        }
+
+        /// <summary>
+        /// Determines whether the header is equal to the specified object.
+        /// </summary>
+        /// <param name="obj">The object to check for equality.</param>
+        /// <returns>A value indicating whether the two objects are considered equal.</returns>
+        public override bool Equals( object obj )
+        {
+            return obj is ThriftStructHeader && Equals( (ThriftStructHeader) obj );
+        }
+
+        /// <summary>
+        /// Computes a hash of the header.
+        /// </summary>
+        /// <returns>The hash.</returns>
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
+        }
     }
 
     /// <summary>
     /// Header of Thrift messages.
     /// </summary>
-    public sealed class ThriftMessageHeader
+    public struct ThriftMessageHeader : IEquatable<ThriftMessageHeader>
     {
         // N.B. Thrift# does not implement message sequence IDs, as it does not need them
 
@@ -148,6 +274,36 @@ namespace ThriftSharp.Models
         {
             Name = name;
             MessageType = messageType;
+        }
+
+
+        /// <summary>
+        /// Determines whether the header is equal to the specified header.
+        /// </summary>
+        /// <param name="other">The header to check for equality.</param>
+        /// <returns>A value indicating whether the two headers are considered equal.</returns>
+        public bool Equals( ThriftMessageHeader other )
+        {
+            return Name == other.Name && MessageType == other.MessageType;
+        }
+
+        /// <summary>
+        /// Determines whether the header is equal to the specified object.
+        /// </summary>
+        /// <param name="obj">The object to check for equality.</param>
+        /// <returns>A value indicating whether the two objects are considered equal.</returns>
+        public override bool Equals( object obj )
+        {
+            return obj is ThriftMessageHeader && Equals( (ThriftMessageHeader) obj );
+        }
+
+        /// <summary>
+        /// Computes a hash of the header.
+        /// </summary>
+        /// <returns>The hash.</returns>
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode() + 31 * MessageType.GetHashCode();
         }
     }
 }

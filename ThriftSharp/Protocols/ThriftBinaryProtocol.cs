@@ -105,7 +105,7 @@ namespace ThriftSharp.Protocols
             var tid = (ThriftTypeId) _buffer1[0];
             if ( tid == ThriftTypeId.Empty )
             {
-                return null;
+                return new ThriftFieldHeader( 0, null, ThriftTypeId.Empty );
             }
 
             short id = ReadInt16();

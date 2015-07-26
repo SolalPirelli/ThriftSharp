@@ -425,7 +425,7 @@ type Reading() =
     [<Fact>]
     let ``FieldStop``() =
         let trans = MemoryTransport([0uy])
-        ThriftBinaryProtocol(trans).ReadFieldHeader() <=> null
+        ThriftBinaryProtocol(trans).ReadFieldHeader().TypeId <=> ThriftTypeId.Empty
         trans.IsEmpty <=> true
 
     override x.Test (bin, rw, inst) =

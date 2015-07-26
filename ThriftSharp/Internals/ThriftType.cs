@@ -63,11 +63,6 @@ namespace ThriftSharp.Internals
         /// </summary>
         public ThriftType ValueType { get; private set; }
 
-        /// <summary>
-        /// Gets the Thrift type of the struct, if it is a struct.
-        /// </summary>
-        public ThriftStruct Struct { get; private set; }
-
 
         /// <summary>
         /// Initializes a new instance of the ThriftType class from the specified .NET type.
@@ -192,10 +187,6 @@ namespace ThriftSharp.Internals
                         {
                             thriftType.ElementType = ThriftType.Get( thriftType._collectionGenericArgs[0] );
                         }
-                        break;
-
-                    case ThriftTypeId.Struct:
-                        thriftType.Struct = ThriftAttributesParser.ParseStruct( thriftType.TypeInfo );
                         break;
                 }
             }

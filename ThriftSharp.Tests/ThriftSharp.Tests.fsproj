@@ -74,6 +74,7 @@
     <Content Include="app.config" />
     <Content Include="packages.config" />
     <Compile Include="Converters.fs" />
+    <Compile Include="ModelsEqualsHash.fs" />
     <Compile Include="BinaryProtocol.fs" />
     <Compile Include="HttpTransport.fs" />
     <Compile Include="AttributesParser.fs" />
