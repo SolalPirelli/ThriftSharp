@@ -124,7 +124,7 @@ namespace ThriftSharp.Internals
                 return;
             }
 
-            var mapInterfaceAndArgs = GetInstantiableVersion( TypeInfo, typeof( IDictionary<,> ), typeof( Dictionary<,> ), ThriftParsingException.UnsupportedMap );
+            var mapInterfaceAndArgs = GetInstantiableVersion( TypeInfo, typeof( IDictionary<,> ), typeof( Dictionary<,> ), p => ThriftParsingException.UnsupportedMap( p ) );
             if ( mapInterfaceAndArgs != null )
             {
                 Id = ThriftTypeId.Map;
@@ -132,7 +132,7 @@ namespace ThriftSharp.Internals
                 _collectionGenericArgs = mapInterfaceAndArgs.Item2;
             }
 
-            var setInterfaceAndArgs = GetInstantiableVersion( TypeInfo, typeof( ISet<> ), typeof( HashSet<> ), ThriftParsingException.UnsupportedSet );
+            var setInterfaceAndArgs = GetInstantiableVersion( TypeInfo, typeof( ISet<> ), typeof( HashSet<> ), p => ThriftParsingException.UnsupportedSet( p ) );
             if ( setInterfaceAndArgs != null )
             {
                 if ( mapInterfaceAndArgs != null )
@@ -145,7 +145,7 @@ namespace ThriftSharp.Internals
                 _collectionGenericArgs = setInterfaceAndArgs.Item2;
             }
 
-            var listInterfaceAndArgs = GetInstantiableVersion( TypeInfo, typeof( IList<> ), typeof( List<> ), ThriftParsingException.UnsupportedList );
+            var listInterfaceAndArgs = GetInstantiableVersion( TypeInfo, typeof( IList<> ), typeof( List<> ), p => ThriftParsingException.UnsupportedList( p ) );
             if ( listInterfaceAndArgs != null )
             {
                 if ( mapInterfaceAndArgs != null || setInterfaceAndArgs != null )

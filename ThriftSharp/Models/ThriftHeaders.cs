@@ -59,7 +59,7 @@ namespace ThriftSharp.Models
         /// <returns>The hash.</returns>
         public override int GetHashCode()
         {
-            return Count.GetHashCode() + 31 * ElementTypeId.GetHashCode();
+            return Count.GetHashCode() + 31 * (byte) ElementTypeId;
         }
 
         /// <summary>
@@ -147,8 +147,8 @@ namespace ThriftSharp.Models
         public override int GetHashCode()
         {
             int hash = Count.GetHashCode();
-            hash = 31 * hash + KeyTypeId.GetHashCode();
-            return 31 * hash + ValueTypeId.GetHashCode();
+            hash = 31 * hash + (byte) KeyTypeId;
+            return 31 * hash + (byte) ValueTypeId;
         }
 
         /// <summary>
@@ -236,7 +236,7 @@ namespace ThriftSharp.Models
         {
             int hash = Id.GetHashCode();
             hash = 31 * hash + Name.GetHashCode();
-            return 31 * hash + TypeId.GetHashCode();
+            return 31 * hash + (byte) TypeId;
         }
 
         /// <summary>
@@ -391,7 +391,7 @@ namespace ThriftSharp.Models
         /// <returns>The hash.</returns>
         public override int GetHashCode()
         {
-            return Name.GetHashCode() + 31 * MessageType.GetHashCode();
+            return Name.GetHashCode() + 31 * (byte) MessageType;
         }
 
         /// <summary>

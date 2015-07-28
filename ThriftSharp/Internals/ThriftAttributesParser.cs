@@ -91,7 +91,7 @@ namespace ThriftSharp.Internals
                 }
 
                 var fields = typeInfo.DeclaredProperties
-                                     .Select( ParseField )
+                                     .Select( f => ParseField( f ) )
                                      .Where( f => f != null )
                                      .ToArray();
 
@@ -168,7 +168,7 @@ namespace ThriftSharp.Internals
 
             var methodParameters = methodInfo.GetParameters();
             var parameters = methodParameters.Where( p => p.ParameterType != typeof( CancellationToken ) )
-                                             .Select( ParseMethodParameter )
+                                             .Select( p => ParseMethodParameter( p ) )
                                              .ToArray();
             if ( methodParameters.Length - parameters.Length > 1 )
             {
@@ -194,7 +194,7 @@ namespace ThriftSharp.Internals
                 throw ThriftParsingException.ServiceWithoutAttribute( typeInfo );
             }
 
-            var methods = typeInfo.DeclaredMethods.ToDictionary( m => m.Name, ParseMethod );
+            var methods = typeInfo.DeclaredMethods.ToDictionary( m => m.Name, m => ParseMethod( m ) );
             if ( methods.Count == 0 )
             {
                 throw ThriftParsingException.NoMethods( typeInfo );
