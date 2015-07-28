@@ -36,7 +36,7 @@ namespace ThriftSharp.Internals
                 }
             }
 
-            ThriftClientMessageWriter.Write( method, args, protocol );
+            ThriftClientMessageWriter.Write( method, methodArgs, protocol );
 
             await protocol.FlushAndReadAsync();
 

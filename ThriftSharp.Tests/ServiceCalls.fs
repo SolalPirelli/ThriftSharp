@@ -42,11 +42,11 @@ type IService =
                       * [<ThriftParameter(4s, "arg4")>] arg4: string -> Task
 
     [<ThriftMethod("NoReturn5")>]
-    abstract NoReturn5: [<ThriftParameter(1s, "arg1")>] arg1: bool 
+    abstract NoReturn5: arg0: CancellationToken
+                      * [<ThriftParameter(1s, "arg1")>] arg1: bool 
                       * [<ThriftParameter(2s, "arg2")>] arg2: int
                       * [<ThriftParameter(3s, "arg3")>] arg3: double
-                      * [<ThriftParameter(4s, "arg4")>] arg4: string
-                      * arg5: CancellationToken -> Task
+                      * [<ThriftParameter(4s, "arg4")>] arg4: string -> Task
                       
     [<ThriftMethod("NoReturnException")>]
     [<ThriftThrows(1s, "exn", typeof<CustomException>)>]
@@ -73,11 +73,11 @@ type IService =
                       * [<ThriftParameter(4s, "arg4")>] arg4: string -> Task<int>
 
     [<ThriftMethod("Return5")>]
-    abstract Return5: [<ThriftParameter(1s, "arg1")>] arg1: bool 
+    abstract Return5: arg0: CancellationToken
+                      * [<ThriftParameter(1s, "arg1")>] arg1: bool 
                       * [<ThriftParameter(2s, "arg2")>] arg2: int
                       * [<ThriftParameter(3s, "arg3")>] arg3: double
-                      * [<ThriftParameter(4s, "arg4")>] arg4: string
-                      * arg5: CancellationToken -> Task<int>
+                      * [<ThriftParameter(4s, "arg4")>] arg4: string -> Task<int>
 
     [<ThriftMethod("ReturnException")>]
     [<ThriftThrows(1s, "exn", typeof<CustomException>)>]
@@ -217,7 +217,7 @@ type Tests() =
 
     [<Fact>] 
     member x.``No return value, 4 args + cancellation token (not cancelled)``() =
-        x.Test (fun s -> s.NoReturn5(true, 1, 1.0, "abc", CancellationToken.None) |> asUnit)
+        x.Test (fun s -> s.NoReturn5(CancellationToken.None, true, 1, 1.0, "abc") |> asUnit)
                [MessageHeader ("NoReturn5", ThriftMessageType.Call)
                 StructHeader ""
                 FieldHeader (1s, "arg1", ThriftTypeId.Boolean)
@@ -245,7 +245,7 @@ type Tests() =
     [<Fact>] 
     member x.``No return value, 4 args + cancellation token (cancelled)``() =
         x.TestException<System.OperationCanceledException>
-               (fun s -> s.NoReturn5(true, 1, 1.0, "abc", CancellationToken(true)) |> asUnit)
+               (fun s -> s.NoReturn5(CancellationToken(true), true, 1, 1.0, "abc") |> asUnit)
                [MessageHeader ("NoReturn5", ThriftMessageType.Call)
                 StructHeader ""
                 FieldHeader (1s, "arg1", ThriftTypeId.Boolean)
@@ -449,7 +449,7 @@ type Tests() =
 
     [<Fact>] 
     member x.``Return value, 4 args + cancellation token (not cancelled)``() =
-        x.Test (fun s -> s.Return5(true, 1, 1.0, "abc", CancellationToken.None))
+        x.Test (fun s -> s.Return5(CancellationToken.None, true, 1, 1.0, "abc"))
                [MessageHeader ("Return5", ThriftMessageType.Call)
                 StructHeader ""
                 FieldHeader (1s, "arg1", ThriftTypeId.Boolean)
@@ -480,7 +480,7 @@ type Tests() =
     [<Fact>] 
     member x.``Return value, 4 args + cancellation token (cancelled)``() =
         x.TestException<System.OperationCanceledException>
-               (fun s -> s.Return5(true, 1, 1.0, "abc", CancellationToken(true)) |> asUnit)
+               (fun s -> s.Return5(CancellationToken(true), true, 1, 1.0, "abc") |> asUnit)
                [MessageHeader ("Return5", ThriftMessageType.Call)
                 StructHeader ""
                 FieldHeader (1s, "arg1", ThriftTypeId.Boolean)
