@@ -118,6 +118,12 @@ namespace ThriftSharp.Protocols
 
 
         /// <summary>
+        /// Asynchronously flushes the written data and reads all input.
+        /// </summary>
+        Task FlushAndReadAsync();
+
+
+        /// <summary>
         /// Writes the specified message header.
         /// </summary>
         void WriteMessageHeader( ThriftMessageHeader header );
@@ -221,10 +227,5 @@ namespace ThriftSharp.Protocols
         /// Writes the specified array of signed bytes.
         /// </summary>
         void WriteBinary( sbyte[] value );
-
-        /// <summary>
-        /// Asynchronously flushes the written data and reads all input.
-        /// </summary>
-        Task FlushAndReadAsync();
     }
 }

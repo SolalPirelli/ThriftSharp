@@ -62,6 +62,7 @@ namespace ThriftSharp.Models
             return Count.GetHashCode() + 31 * (byte) ElementTypeId;
         }
 
+
         /// <summary>
         /// Checks whether the specified headers are equal.
         /// </summary>
@@ -151,6 +152,7 @@ namespace ThriftSharp.Models
             return 31 * hash + (byte) ValueTypeId;
         }
 
+
         /// <summary>
         /// Checks whether the specified headers are equal.
         /// </summary>
@@ -193,6 +195,7 @@ namespace ThriftSharp.Models
         /// Gets the field's type ID.
         /// </summary>
         public readonly ThriftTypeId TypeId;
+
 
         /// <summary>
         /// Initializes a new instance of the ThriftFieldHeader class with the specified values.
@@ -238,6 +241,7 @@ namespace ThriftSharp.Models
             hash = 31 * hash + Name.GetHashCode();
             return 31 * hash + (byte) TypeId;
         }
+
 
         /// <summary>
         /// Checks whether the specified headers are equal.
@@ -311,6 +315,7 @@ namespace ThriftSharp.Models
         {
             return Name.GetHashCode();
         }
+
 
         /// <summary>
         /// Checks whether the specified headers are equal.
@@ -393,6 +398,7 @@ namespace ThriftSharp.Models
         {
             return Name.GetHashCode() + 31 * (byte) MessageType;
         }
+
 
         /// <summary>
         /// Checks whether the specified headers are equal.

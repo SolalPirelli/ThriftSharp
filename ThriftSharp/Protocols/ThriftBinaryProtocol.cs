@@ -69,7 +69,6 @@ namespace ThriftSharp.Protocols
                 type = (ThriftMessageType) _buffer1[0];
             }
 
-
             ReadInt32(); // Message sequence ID
             return new ThriftMessageHeader( name, type );
         }
@@ -249,6 +248,15 @@ namespace ThriftSharp.Protocols
             sbyte[] sbytes = new sbyte[length];
             Buffer.BlockCopy( bytes, 0, sbytes, 0, length );
             return sbytes;
+        }
+
+
+        /// <summary>
+        /// Asynchronously flushes the written data and reads all input.
+        /// </summary>
+        public Task FlushAndReadAsync()
+        {
+            return _transport.FlushAndReadAsync();
         }
 
 
@@ -434,14 +442,6 @@ namespace ThriftSharp.Protocols
             byte[] bytes = new byte[value.Length];
             Buffer.BlockCopy( value, 0, bytes, 0, value.Length );
             _transport.WriteBytes( bytes );
-        }
-
-        /// <summary>
-        /// Asynchronously flushes the written data and reads all input.
-        /// </summary>
-        public Task FlushAndReadAsync()
-        {
-            return _transport.FlushAndReadAsync();
         }
 
         #region IDisposable implementation

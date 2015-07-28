@@ -204,6 +204,7 @@ namespace ThriftSharp
         /// </summary>
         private ThriftSerializationException( string message ) : base( message ) { }
 
+
         internal static ThriftSerializationException RequiredFieldIsNull( string fieldName )
         {
             return new ThriftSerializationException( $"Field '{fieldName}' is a required field but was null." );

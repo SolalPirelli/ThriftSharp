@@ -11,11 +11,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCompany( "Solal Pirelli" )]
 [assembly: AssemblyCopyright( "Copyright © 2014-15 Solal Pirelli" )]
 [assembly: NeutralResourcesLanguage( "en" )]
-
 [assembly: ComVisible( false )]
-
 [assembly: AssemblyVersion( "3.0.0" )]
-
 [assembly: InternalsVisibleTo( "ThriftSharp.Benchmarking" )]
 [assembly: InternalsVisibleTo( "ThriftSharp.Extensions" )]
 [assembly: InternalsVisibleTo( "ThriftSharp.Tests" )]
