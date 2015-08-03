@@ -59,7 +59,11 @@ namespace ThriftSharp.Internals
                     Expression.IsFalse(
                         Expression.Call(
                             Methods.Enum_IsDefined,
-                            Expression.Constant( typeof( ThriftMessageType ) ),
+                            // The second argument is absolutely crucial here.
+                            // System.Type is an abstract class, implemented by an internal framework class System.RuntimeType
+                            // Not specifying the argument leads to the expression's type being typeof(System.RuntimeType),
+                            // which crashes on frameworks that restrict access to non-public framework types, such as Windows Phone 8.1
+                            Expression.Constant( typeof( ThriftMessageType ), typeof( Type ) ),
                             Expression.Convert(
                                 Expression.Field( headerVariable, Fields.ThriftMessageHeader_MessageType ),
                                 typeof( object )
