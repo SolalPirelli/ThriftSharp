@@ -1,4 +1,6 @@
-![](https://img.shields.io/appveyor/ci/SolalPirelli/ThriftSharp.svg) ![](https://img.shields.io/nuget/v/ThriftSharp.svg)
+[![Build](https://img.shields.io/appveyor/ci/SolalPirelli/ThriftSharp.svg?style=flat-square)](https://ci.appveyor.com/project/SolalPirelli/ThriftSharp)
+[![NuGet Package](https://img.shields.io/nuget/v/ThriftSharp.svg?style=flat-square&label=ThriftSharp)](https://www.nuget.org/packages/ThriftSharp/)
+[![NuGet Package](https://img.shields.io/nuget/v/ThriftSharp.Extensions.svg?style=flat-square&label=ThriftSharp.Extensions)](https://www.nuget.org/packages/ThriftSharp.Extensions/)
 
 **Thrift#** is an implementation of the Thrift protocol for .NET.
 
@@ -9,4 +11,4 @@ Read the [documentation](https://github.com/SolalPirelli/ThriftSharp/wiki) to ge
 
 Pull requests, bug reports and suggestions are welcome.
 
-**!** Version 3.0.0 has breaking changes. Read its [release notes](https://github.com/SolalPirelli/ThriftSharp/releases/tag/v3.0.0) for details.
+:warning: Version 3.0.0 has breaking changes. Read its [release notes](https://github.com/SolalPirelli/ThriftSharp/releases/tag/v3.0.0) for details.
