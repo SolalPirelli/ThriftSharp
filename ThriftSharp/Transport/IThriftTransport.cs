@@ -18,7 +18,9 @@ namespace ThriftSharp.Transport
         /// Writes the specified array of unsigned bytes.
         /// </summary>
         /// <param name="bytes">The array.</param>
-        void WriteBytes( byte[] bytes );
+        /// <param name="offset">The offset at which to start.</param>
+        /// <param name="count">The number of bytes to write.</param>
+        void WriteBytes( byte[] bytes, int offset, int count );
 
         /// <summary>
         /// Asynchronously flushes the written bytes and reads all input bytes.
@@ -28,7 +30,9 @@ namespace ThriftSharp.Transport
         /// <summary>
         /// Reads unsigned bytes, and puts them in the specified array.
         /// </summary>
-        /// <param name="output">The array in which to read bytes. It will be overwritten completely.</param>
-        void ReadBytes( byte[] output );
+        /// <param name="output">The array in which to write read bytes.</param>
+        /// <param name="offset">The offset at which to start writing in the array.</param>
+        /// <param name="count">The number of bytes to read.</param>
+        void ReadBytes( byte[] output, int offset, int count );
     }
 }

@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright( "Copyright © 2014-15 Solal Pirelli" )]
 [assembly: NeutralResourcesLanguage( "en" )]
 [assembly: ComVisible( false )]
-[assembly: AssemblyVersion( "3.0.1" )]
+[assembly: AssemblyVersion( "4.0.0" )]
 [assembly: InternalsVisibleTo( "ThriftSharp.Benchmarking" )]
 [assembly: InternalsVisibleTo( "ThriftSharp.Extensions" )]
 [assembly: InternalsVisibleTo( "ThriftSharp.Tests" )]

@@ -22,22 +22,22 @@ type MemoryTransport(toRead: byte list, ?token: CancellationToken) =
     new() = MemoryTransport([])
 
     interface IThriftTransport with
-        member x.WriteBytes(bs) =
+        member x.WriteBytes(bs, off, count) =
             if isDisposed then
                 failwith "Already disposed."
 
             if hasRead then 
                 failwith "Cannot write after a read. Close the transport first."
 
-            writtenVals <- writtenVals @ (Array.toList bs)
+            writtenVals <- writtenVals @ (bs |> Array.skip off |> Array.take count |> Array.toList)
 
-        member x.ReadBytes(out) =
+        member x.ReadBytes(out, off, count) =
             if isDisposed then
                 failwith "Already disposed."
 
             hasRead <- true
-            for x = 0 to out.Length - 1 do
-                if toRead.Count > 0 then out.[x] <- toRead.Dequeue()
+            for x = 0 to count - 1 do
+                if toRead.Count > 0 then out.[off+x] <- toRead.Dequeue()
                 else failwith "Not enough bytes were read."
 
         member x.FlushAndReadAsync() =

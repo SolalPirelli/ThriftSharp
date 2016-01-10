@@ -26,7 +26,7 @@ let test (ps: TestParams) = async {
     listener.Prefixes.Add(url)
     listener.Start()
 
-    transport.WriteBytes(ps.Request)
+    transport.WriteBytes(ps.Request, 0, ps.Request.Length)
     let flushTask = transport.FlushAndReadAsync()
 
     let! context = listener.GetContextAsync() |> Async.AwaitTask
@@ -50,7 +50,7 @@ let test (ps: TestParams) = async {
     do! flushTask |> Async.AwaitTask
 
     let clientReceived = Array.zeroCreate ps.Response.Length
-    transport.ReadBytes(clientReceived)
+    transport.ReadBytes(clientReceived, 0, clientReceived.Length)
     clientReceived <=> ps.Response
 }
 
@@ -85,7 +85,7 @@ let ``Server takes too long to respond``() = asTask <| async {
     listener.Prefixes.Add(url)
     listener.Start()
 
-    transport.WriteBytes([| |])
+    transport.WriteBytes([| |], 0, 0)
     let flushTask = transport.FlushAndReadAsync()
 
     let! context = listener.GetContextAsync() |> Async.AwaitTask
@@ -125,7 +125,7 @@ let ``Client's token is canceled after sending data but before receiving it``() 
     listener.Prefixes.Add(url)
     listener.Start()
 
-    transport.WriteBytes([| 42uy |])
+    transport.WriteBytes([| 42uy |], 0, 1)
     let flushTask = transport.FlushAndReadAsync()
 
     source.Cancel()
@@ -151,7 +151,7 @@ let ``Client's token is canceled after receiving data``() = asTask <| async {
     listener.Prefixes.Add(url)
     listener.Start()
 
-    transport.WriteBytes([| |])
+    transport.WriteBytes([| |], 0, 0)
     let flushTask = transport.FlushAndReadAsync()
 
     let! context = listener.GetContextAsync() |> Async.AwaitTask

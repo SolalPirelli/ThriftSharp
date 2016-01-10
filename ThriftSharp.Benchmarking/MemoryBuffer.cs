@@ -29,14 +29,14 @@ namespace ThriftSharp.Benchmarking
         }
 
 
-        public void ReadBytes( byte[] output )
+        public void ReadBytes( byte[] output, int offset, int count )
         {
-            _memory.Read( output, 0, output.Length );
+            _memory.Read( output, offset, count );
         }
 
-        public void WriteBytes( byte[] bytes )
+        public void WriteBytes( byte[] bytes, int offset, int count )
         {
-            _memory.Write( bytes, 0, bytes.Length );
+            _memory.Write( bytes, offset, count );
         }
 
         public Task FlushAndReadAsync()
