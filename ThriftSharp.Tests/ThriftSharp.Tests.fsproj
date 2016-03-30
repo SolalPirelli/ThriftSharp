@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>ThriftSharp.Tests</RootNamespace>
     <AssemblyName>ThriftSharp.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Name>ThriftSharp.Tests</Name>
