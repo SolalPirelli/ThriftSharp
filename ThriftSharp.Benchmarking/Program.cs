@@ -5,7 +5,8 @@
 // #define BENCH_APACHE_THRIFT
 
 using System;
-using BenchmarkDotNet;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
 #if BENCH_APACHE_THRIFT
 using Thrift.Transport;
 using T = ThriftSharp.Benchmarking.Models.Thrift;
@@ -36,7 +37,7 @@ namespace ThriftSharp.Benchmarking
             T_Struct = TMemoryBuffer.Serialize( (T.StructContainer) StructContainer.Sample ),
             T_TimePeriod = TMemoryBuffer.Serialize( (T.TimePeriod) TimePeriod.Sample );
 #endif
-
+        
         private static readonly byte[]
             TS_All = MemoryBuffer.Serialize( AllTypesContainer.Sample ),
             TS_Binary = MemoryBuffer.Serialize( BinaryContainer.Sample ),
@@ -55,12 +56,13 @@ namespace ThriftSharp.Benchmarking
             TS_String = MemoryBuffer.Serialize( StringContainer.Sample ),
             TS_Struct = MemoryBuffer.Serialize( StructContainer.Sample ),
             TS_TimePeriod = MemoryBuffer.Serialize( TimePeriod.Sample );
-
+        
         public static void Main( string[] args )
         {
-            new BenchmarkRunner().RunCompetition( new Program() );
+            BenchmarkRunner.Run<Program>();
             Console.Read();
         }
+
 
 #if BENCH_APACHE_THRIFT
         [Benchmark]
