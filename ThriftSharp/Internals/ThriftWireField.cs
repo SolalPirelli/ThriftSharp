@@ -1,30 +1,12 @@
-﻿using System;
+﻿// Copyright (c) 2014-16 Solal Pirelli
+// This code is licensed under the MIT License (see Licence.txt for details).
+
+using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace ThriftSharp.Internals
 {
-    /// <summary>
-    /// Possible statuses for a wire field.
-    /// </summary>
-    internal enum ThriftFieldPresenseState
-    {
-        /// <summary>
-        /// The field is guaranteed to always be present.
-        /// </summary>
-        AlwaysPresent,
-
-        /// <summary>
-        /// The field is required, but its presence must be validated.
-        /// </summary>
-        Required,
-
-        /// <summary>
-        /// The field is not required to be present.
-        /// </summary>
-        Optional
-    }
-
     /// <summary>
     /// Component of a Thrift struct; can represent either a real field, or a virtual one.
     /// </summary>
@@ -53,7 +35,7 @@ namespace ThriftSharp.Internals
         /// <summary>
         /// Gets the field's presence state.
         /// </summary>
-        public readonly ThriftFieldPresenseState State;
+        public readonly ThriftWireFieldState Kind;
 
         /// <summary>
         /// Gets the field's default value, if any.
@@ -81,7 +63,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         private ThriftWireField( short id, string name,
                                  ThriftType wireType, TypeInfo underlyingTypeInfo,
-                                 ThriftFieldPresenseState state, object defaultValue,
+                                 ThriftWireFieldState state, object defaultValue,
                                  ThriftConverter converter,
                                  Expression getter, Func<Expression, Expression> setter )
         {
@@ -89,7 +71,7 @@ namespace ThriftSharp.Internals
             Name = name;
             WireType = wireType;
             UnderlyingTypeInfo = underlyingTypeInfo;
-            State = state;
+            Kind = state;
             DefaultValue = defaultValue;
             Converter = converter;
             Getter = getter;
@@ -105,7 +87,7 @@ namespace ThriftSharp.Internals
             var propExpr = Expression.Property( structVar, field.BackingProperty );
             return new ThriftWireField( field.Id, field.Name,
                                         field.WireType, field.BackingProperty.PropertyType.GetTypeInfo(),
-                                        field.IsRequired ? ThriftFieldPresenseState.Required : ThriftFieldPresenseState.Optional, field.DefaultValue,
+                                        field.IsRequired ? ThriftWireFieldState.Required : ThriftWireFieldState.Optional, field.DefaultValue,
                                         field.Converter,
                                         propExpr, e => Expression.Assign( propExpr, e ) );
         }
@@ -121,7 +103,7 @@ namespace ThriftSharp.Internals
             );
             return new ThriftWireField( param.Id, param.Name,
                                         param.WireType, param.UnderlyingTypeInfo,
-                                        ThriftFieldPresenseState.AlwaysPresent, null,
+                                        ThriftWireFieldState.AlwaysPresent, null,
                                         param.Converter,
                                         getterExpr, null );
         }
@@ -133,7 +115,7 @@ namespace ThriftSharp.Internals
         {
             return new ThriftWireField( clause.Id, clause.Name,
                                         clause.WireType, clause.UnderlyingTypeInfo,
-                                        ThriftFieldPresenseState.Optional, null,
+                                        ThriftWireFieldState.Optional, null,
                                         clause.Converter,
                                         null, Expression.Throw );
         }
@@ -149,7 +131,7 @@ namespace ThriftSharp.Internals
             );
             return new ThriftWireField( 0, null,
                                         value.WireType, value.UnderlyingTypeInfo,
-                                        ThriftFieldPresenseState.Optional, null,
+                                        ThriftWireFieldState.Optional, null,
                                         value.Converter,
                                         returnValueVar, setter );
         }

@@ -351,7 +351,7 @@ namespace ThriftSharp.Internals
         public static Expression CreateReaderForFields( ParameterExpression protocolParam, List<ThriftWireField> wireFields )
         {
             var fieldHeaderVar = Expression.Variable( typeof( ThriftFieldHeader ) );
-            var isSetVars = wireFields.Where( f => f.UnderlyingTypeInfo.IsValueType && ( f.State == ThriftFieldPresenseState.Required || f.DefaultValue != null ) )
+            var isSetVars = wireFields.Where( f => f.UnderlyingTypeInfo.IsValueType && ( f.Kind == ThriftWireFieldState.Required || f.DefaultValue != null ) )
                                       .ToDictionary( f => f, _ => Expression.Variable( typeof( bool ) ) );
 
             var endOfLoop = Expression.Label();
@@ -472,7 +472,7 @@ namespace ThriftSharp.Internals
                 // - isn't required (to provide the proper ThriftProtocolException instead of a generic "unset field")
                 // - might be a value type
                 // thus it could pick the "== null" branch and crash
-                if ( field.DefaultValue != null || field.State == ThriftFieldPresenseState.Required )
+                if ( field.DefaultValue != null || field.Kind == ThriftWireFieldState.Required )
                 {
                     var check = isSetVars.ContainsKey( field )
                       ? (Expression) Expression.IsFalse( isSetVars[field] )

@@ -45,6 +45,7 @@
     <Compile Include="Internals\ThriftConverter.cs" />
     <Compile Include="Internals\ThriftWireField.cs" />
     <Compile Include="Internals\ThriftStructReader.cs" />
+    <Compile Include="Internals\ThriftWireFieldKind.cs" />
     <Compile Include="Models\ThriftTypeId.cs" />
     <Compile Include="Internals\ThriftStructWriter.cs" />
     <Compile Include="ThriftCommunication.cs" />

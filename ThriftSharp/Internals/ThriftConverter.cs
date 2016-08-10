@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) 2014-15 Solal Pirelli
+// This code is licensed under the MIT License (see Licence.txt for details).
+
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;

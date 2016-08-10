@@ -310,12 +310,12 @@ namespace ThriftSharp.Internals
                 Expression.Call( protocolParam, Methods.IThriftProtocol_WriteFieldEnd )
             );
 
-            switch ( field.State )
+            switch ( field.Kind )
             {
-                case ThriftFieldPresenseState.AlwaysPresent:
+                case ThriftWireFieldState.AlwaysPresent:
                     return writingExpr;
 
-                case ThriftFieldPresenseState.Required:
+                case ThriftWireFieldState.Required:
                     if ( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable )
                     {
                         return Expression.IfThenElse(
