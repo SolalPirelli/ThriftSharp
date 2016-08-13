@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2014-15 Solal Pirelli
-// This code is licensed under the MIT License (see Licence.txt for details).
+﻿// Copyright (c) 2014-16 Solal Pirelli
+// This code is licensed under the MIT License (see Licence.txt for details)
 
 // Uncomment this line to also bench Apache Thrift
 // #define BENCH_APACHE_THRIFT

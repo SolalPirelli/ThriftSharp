@@ -1,5 +1,5 @@
 ﻿// Copyright (c) 2014-16 Solal Pirelli
-// This code is licensed under the MIT License (see Licence.txt for details).
+// This code is licensed under the MIT License (see Licence.txt for details)
 
 namespace ThriftSharp.Internals
 {
