@@ -28,9 +28,9 @@ namespace ThriftSharp.Internals
             var method = service.Methods[methodName];
             var methodArgs = args.Where( a => !( a is CancellationToken ) ).ToArray();
 
-            for ( int n = 0; n < methodArgs.Length; n++ )
+            for( int n = 0; n < methodArgs.Length; n++ )
             {
-                if ( methodArgs[n] == null )
+                if( methodArgs[n] == null )
                 {
                     throw ThriftSerializationException.NullParameter( method.Parameters[n].Name );
                 }
@@ -40,7 +40,7 @@ namespace ThriftSharp.Internals
 
             await protocol.FlushAndReadAsync();
 
-            if ( method.IsOneWay )
+            if( method.IsOneWay )
             {
                 protocol.Dispose();
                 return default( T );

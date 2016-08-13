@@ -29,18 +29,18 @@ namespace ThriftSharp.Internals
             ParameterExpression hasReturnVariable = null;
             ParameterExpression returnVariable = null;
 
-            if ( method.ReturnValue.UnderlyingTypeInfo != TypeInfos.Void )
+            if( method.ReturnValue.UnderlyingTypeInfo != TypeInfos.Void )
             {
                 hasReturnVariable = Expression.Variable( typeof( bool ) );
                 returnVariable = Expression.Variable( method.ReturnValue.UnderlyingTypeInfo.AsType() );
             }
 
             var wireFields = new List<ThriftWireField>();
-            if ( returnVariable != null )
+            if( returnVariable != null )
             {
                 wireFields.Add( ThriftWireField.ReturnValue( method.ReturnValue, returnVariable, hasReturnVariable ) );
             }
-            foreach ( var exception in method.Exceptions )
+            foreach( var exception in method.Exceptions )
             {
                 wireFields.Add( ThriftWireField.ThrowsClause( exception ) );
             }
@@ -56,7 +56,8 @@ namespace ThriftSharp.Internals
                 ),
 
                 Expression.IfThen(
-                    Expression.IsFalse(
+                    // Do not use IsFalse, not supported by UWP's expression interpreter
+                    Expression.Equal(
                         Expression.Call(
                             Methods.Enum_IsDefined,
                             // The second argument is absolutely crucial here.
@@ -68,7 +69,8 @@ namespace ThriftSharp.Internals
                                 Expression.Field( headerVariable, Fields.ThriftMessageHeader_MessageType ),
                                 typeof( object )
                             )
-                        )
+                        ),
+                        Expression.Constant(false)
                     ),
                     Expression.Throw(
                         Expression.New(
@@ -100,7 +102,7 @@ namespace ThriftSharp.Internals
                 Expression.Call( protocolParam, Methods.IDisposable_Dispose )
             };
 
-            if ( returnVariable != null )
+            if( returnVariable != null )
             {
                 statements.Add(
                     Expression.IfThen(
@@ -118,7 +120,7 @@ namespace ThriftSharp.Internals
                 );
             }
 
-            if ( returnVariable == null )
+            if( returnVariable == null )
             {
                 statements.Add( Expression.Constant( null ) );
             }
@@ -142,7 +144,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static T Read<T>( ThriftMethod method, IThriftProtocol protocol )
         {
-            if ( !_knownReaders.ContainsKey( method ) )
+            if( !_knownReaders.ContainsKey( method ) )
             {
                 _knownReaders.Add( method, CreateReaderForMethod( method ).Compile() );
             }

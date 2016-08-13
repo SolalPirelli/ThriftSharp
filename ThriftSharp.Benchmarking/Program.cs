@@ -19,7 +19,7 @@ namespace ThriftSharp.Benchmarking
     {
 #if BENCH_APACHE_THRIFT
         private static readonly byte[]
-            T_All = TMemoryBuffer.Serialize( (T.AllTypesContainer) AllTypesContainer.Sample ),r
+            T_All = TMemoryBuffer.Serialize( (T.AllTypesContainer) AllTypesContainer.Sample ),
             T_Binary = TMemoryBuffer.Serialize( (T.BinaryContainer) BinaryContainer.Sample ),
             T_Bool = TMemoryBuffer.Serialize( (T.BoolContainer) BoolContainer.Sample ),
             T_Byte = TMemoryBuffer.Serialize( (T.ByteContainer) ByteContainer.Sample ),
@@ -37,7 +37,7 @@ namespace ThriftSharp.Benchmarking
             T_Struct = TMemoryBuffer.Serialize( (T.StructContainer) StructContainer.Sample ),
             T_TimePeriod = TMemoryBuffer.Serialize( (T.TimePeriod) TimePeriod.Sample );
 #endif
-        
+
         private static readonly byte[]
             TS_All = MemoryBuffer.Serialize( AllTypesContainer.Sample ),
             TS_Binary = MemoryBuffer.Serialize( BinaryContainer.Sample ),
@@ -56,7 +56,7 @@ namespace ThriftSharp.Benchmarking
             TS_String = MemoryBuffer.Serialize( StringContainer.Sample ),
             TS_Struct = MemoryBuffer.Serialize( StructContainer.Sample ),
             TS_TimePeriod = MemoryBuffer.Serialize( TimePeriod.Sample );
-        
+
         public static void Main( string[] args )
         {
             BenchmarkRunner.Run<Program>();

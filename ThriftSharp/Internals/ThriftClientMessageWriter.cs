@@ -48,7 +48,7 @@ namespace ThriftSharp.Internals
                 )
             };
 
-            for ( int n = 0; n < method.Parameters.Count; n++ )
+            for( int n = 0; n < method.Parameters.Count; n++ )
             {
                 var wireField = ThriftWireField.Parameter( method.Parameters[n], argsParam, n );
                 methodContents.Add( ThriftStructWriter.CreateWriterForField( protocolParam, wireField ) );
@@ -69,7 +69,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static void Write( ThriftMethod method, object[] args, IThriftProtocol protocol )
         {
-            if ( !_knownWriters.ContainsKey( method ) )
+            if( !_knownWriters.ContainsKey( method ) )
             {
                 _knownWriters.Add( method, CreateWriterForMethod( method ).Compile() );
             }

@@ -25,44 +25,44 @@ namespace ThriftSharp.Internals
         private static ThriftField ParseField( PropertyInfo propertyInfo )
         {
             var attr = propertyInfo.GetCustomAttribute<ThriftFieldAttribute>();
-            if ( attr == null )
+            if( attr == null )
             {
                 return null;
             }
 
             var propertyTypeInfo = propertyInfo.PropertyType.GetTypeInfo();
             var nullableType = Nullable.GetUnderlyingType( propertyInfo.PropertyType );
-            if ( attr.IsRequired )
+            if( attr.IsRequired )
             {
-                if ( attr.DefaultValue != null )
+                if( attr.DefaultValue != null )
                 {
                     throw ThriftParsingException.DefaultValueOnRequiredField( propertyInfo );
                 }
-                if ( nullableType != null )
+                if( nullableType != null )
                 {
                     throw ThriftParsingException.RequiredNullableField( propertyInfo );
                 }
             }
             else
             {
-                if ( attr.DefaultValue == null && propertyTypeInfo.IsValueType && nullableType == null )
+                if( attr.DefaultValue == null && propertyTypeInfo.IsValueType && nullableType == null )
                 {
                     throw ThriftParsingException.OptionalValueField( propertyInfo );
                 }
             }
 
-            if ( attr.DefaultValue != null )
+            if( attr.DefaultValue != null )
             {
-                if ( attr.Converter == null )
+                if( attr.Converter == null )
                 {
-                    if ( attr.DefaultValue.GetType() != ( nullableType ?? propertyInfo.PropertyType ) )
+                    if( attr.DefaultValue.GetType() != ( nullableType ?? propertyInfo.PropertyType ) )
                     {
                         throw ThriftParsingException.DefaultValueOfWrongType( propertyInfo );
                     }
                 }
                 else
                 {
-                    if ( attr.DefaultValue.GetType() != attr.ThriftConverter.FromType )
+                    if( attr.DefaultValue.GetType() != attr.ThriftConverter.FromType )
                     {
                         throw ThriftParsingException.DefaultValueOfWrongType( propertyInfo );
                     }
@@ -77,15 +77,15 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static ThriftStruct ParseStruct( TypeInfo typeInfo )
         {
-            if ( !_knownStructs.ContainsKey( typeInfo ) )
+            if( !_knownStructs.ContainsKey( typeInfo ) )
             {
-                if ( typeInfo.IsInterface || typeInfo.IsAbstract )
+                if( typeInfo.IsInterface || typeInfo.IsAbstract )
                 {
                     throw ThriftParsingException.NotAConcreteType( typeInfo );
                 }
 
                 var attr = typeInfo.GetCustomAttribute<ThriftStructAttribute>();
-                if ( attr == null )
+                if( attr == null )
                 {
                     throw ThriftParsingException.StructWithoutAttribute( typeInfo );
                 }
@@ -96,7 +96,7 @@ namespace ThriftSharp.Internals
                                      .ToArray();
 
                 // The type may have been added during fields parsing
-                if ( !_knownStructs.ContainsKey( typeInfo ) )
+                if( !_knownStructs.ContainsKey( typeInfo ) )
                 {
                     _knownStructs.Add( typeInfo, new ThriftStruct( new ThriftStructHeader( attr.Name ), fields, typeInfo ) );
                 }
@@ -112,7 +112,7 @@ namespace ThriftSharp.Internals
         private static ThriftParameter ParseMethodParameter( ParameterInfo parameterInfo )
         {
             var attr = parameterInfo.GetCustomAttribute<ThriftParameterAttribute>();
-            if ( attr == null )
+            if( attr == null )
             {
                 throw ThriftParsingException.ParameterWithoutAttribute( parameterInfo );
             }
@@ -130,7 +130,7 @@ namespace ThriftSharp.Internals
                                     .ToArray();
 
             var wrongClause = clauses.FirstOrDefault( c => !c.UnderlyingTypeInfo.Extends( typeof( Exception ) ) );
-            if ( wrongClause != null )
+            if( wrongClause != null )
             {
                 throw ThriftParsingException.NotAnException( wrongClause.UnderlyingTypeInfo, methodInfo );
             }
@@ -145,23 +145,23 @@ namespace ThriftSharp.Internals
         private static ThriftMethod ParseMethod( MethodInfo methodInfo )
         {
             var attr = methodInfo.GetCustomAttribute<ThriftMethodAttribute>();
-            if ( attr == null )
+            if( attr == null )
             {
                 throw ThriftParsingException.MethodWithoutAttribute( methodInfo );
             }
 
             var throwsClauses = ParseThrowsClauses( methodInfo );
-            if ( attr.IsOneWay && throwsClauses.Length != 0 )
+            if( attr.IsOneWay && throwsClauses.Length != 0 )
             {
                 throw ThriftParsingException.OneWayMethodWithExceptions( methodInfo );
             }
 
             var unwrapped = methodInfo.ReturnType.UnwrapTask();
-            if ( unwrapped == null )
+            if( unwrapped == null )
             {
                 throw ThriftParsingException.SynchronousMethod( methodInfo );
             }
-            if ( attr.IsOneWay && unwrapped != typeof( void ) )
+            if( attr.IsOneWay && unwrapped != typeof( void ) )
             {
                 throw ThriftParsingException.OneWayMethodWithResult( methodInfo );
             }
@@ -170,7 +170,7 @@ namespace ThriftSharp.Internals
             var parameters = methodParameters.Where( p => p.ParameterType != typeof( CancellationToken ) )
                                              .Select( p => ParseMethodParameter( p ) )
                                              .ToArray();
-            if ( methodParameters.Length - parameters.Length > 1 )
+            if( methodParameters.Length - parameters.Length > 1 )
             {
                 throw ThriftParsingException.MoreThanOneCancellationToken( methodInfo );
             }
@@ -183,19 +183,19 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static ThriftService ParseService( TypeInfo typeInfo )
         {
-            if ( !typeInfo.IsInterface )
+            if( !typeInfo.IsInterface )
             {
                 throw ThriftParsingException.NotAService( typeInfo );
             }
 
             var attr = typeInfo.GetCustomAttribute<ThriftServiceAttribute>();
-            if ( attr == null )
+            if( attr == null )
             {
                 throw ThriftParsingException.ServiceWithoutAttribute( typeInfo );
             }
 
             var methods = typeInfo.DeclaredMethods.ToDictionary( m => m.Name, m => ParseMethod( m ) );
-            if ( methods.Count == 0 )
+            if( methods.Count == 0 )
             {
                 throw ThriftParsingException.NoMethods( typeInfo );
             }

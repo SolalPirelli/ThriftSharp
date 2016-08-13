@@ -19,7 +19,7 @@ namespace ThriftSharp.Benchmarking.Models
         public static explicit operator Thrift.SetContainer( SetContainer c )
         {
             var tset = new THashSet<int>();
-            foreach ( var item in c.Value )
+            foreach( var item in c.Value )
             {
                 tset.Add( item );
             }

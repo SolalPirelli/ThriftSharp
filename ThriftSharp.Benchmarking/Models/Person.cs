@@ -31,15 +31,15 @@ namespace ThriftSharp.Benchmarking.Models
                 return new Person
                 {
                     FirstName = "Pablo",
-                    MiddleNames = new List<string> 
-                    { 
-                        "Diego", 
+                    MiddleNames = new List<string>
+                    {
+                        "Diego",
                         "José",
                         "Francisco de Paula",
                         "Juan",
-                        "Nepomuceno", 
+                        "Nepomuceno",
                         "María de los Remedios",
-                        "Cipriano de la Santísima Trinidad" 
+                        "Cipriano de la Santísima Trinidad"
                     },
                     LastName = "Ruiz y Picasso",
                     Email = "pablo.picasso@example.org",
@@ -55,11 +55,11 @@ namespace ThriftSharp.Benchmarking.Models
         public static explicit operator Thrift.Person( Person p )
         {
             var tp = new Thrift.Person( p.FirstName, p.MiddleNames, p.Email, p.Websites );
-            if ( p.LastName != null )
+            if( p.LastName != null )
             {
                 tp.LastName = p.LastName;
             }
-            if ( p.Age.HasValue )
+            if( p.Age.HasValue )
             {
                 tp.Age = p.Age.Value;
             }

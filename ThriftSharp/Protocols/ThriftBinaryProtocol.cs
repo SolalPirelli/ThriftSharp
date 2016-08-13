@@ -209,8 +209,8 @@ namespace ThriftSharp.Protocols
         public int ReadInt32()
         {
             _transport.ReadBytes( _buffer, 0, 4 );
-            return ( _buffer[0] << 24 ) | 
-                   ( _buffer[1] << 16 ) | 
+            return ( _buffer[0] << 24 ) |
+                   ( _buffer[1] << 16 ) |
                    ( _buffer[2] << 8 ) |
                    _buffer[3];
         }
@@ -228,7 +228,7 @@ namespace ThriftSharp.Protocols
                    ( (long) _buffer[4] << 24 ) |
                    ( (long) _buffer[5] << 16 ) |
                    ( (long) _buffer[6] << 8 ) |
-                   (long) _buffer[7] ;
+                   (long) _buffer[7];
         }
 
         /// <summary>

@@ -32,17 +32,17 @@ namespace ThriftSharp.Internals
         {
             var typeInfo = type.GetTypeInfo();
             var ifaces = typeInfo.GetGenericInterfaces( typeof( IThriftValueConverter<,> ) );
-            if ( ifaces.Length == 0 )
+            if( ifaces.Length == 0 )
             {
                 throw new ArgumentException( $"The type '{type.Name}' does not IThriftValueConverter<TFrom, TTo>." );
             }
-            if ( ifaces.Length > 1 )
+            if( ifaces.Length > 1 )
             {
                 throw new ArgumentException( $"The type '{type.Name}' implements IThriftValueConverter<TFrom, TTo> more than once." );
             }
 
             var ctor = typeInfo.DeclaredConstructors.FirstOrDefault( c => c.GetParameters().Length == 0 );
-            if ( ctor == null )
+            if( ctor == null )
             {
                 throw new ArgumentException( $"The type '{type.Name}' does not have a parameterless constructor." );
             }

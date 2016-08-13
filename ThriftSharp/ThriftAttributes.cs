@@ -26,13 +26,13 @@ namespace ThriftSharp
             get { return _converter; }
             set
             {
-                if ( value == null )
+                if( value == null )
                 {
                     _converter = null;
                     return;
                 }
 
-                if ( !_knownConverters.ContainsKey( value ) )
+                if( !_knownConverters.ContainsKey( value ) )
                 {
                     _knownConverters.Add( value, new ThriftConverter( value ) );
                 }

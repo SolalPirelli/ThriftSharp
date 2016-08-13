@@ -39,9 +39,9 @@ namespace ThriftSharp.Utilities
         public static Type UnwrapTask( this Type type )
         {
             var typeInfo = type.GetTypeInfo();
-            if ( typeInfo.Extends( typeof( Task ) ) )
+            if( typeInfo.Extends( typeof( Task ) ) )
             {
-                if ( typeInfo.IsGenericType )
+                if( typeInfo.IsGenericType )
                 {
                     return typeInfo.GenericTypeArguments[0];
                 }

@@ -77,13 +77,13 @@ namespace ThriftSharp.Internals
             Id = ThriftTypeId.Empty;
             TypeInfo = type.GetTypeInfo();
 
-            if ( type == typeof( void ) )
+            if( type == typeof( void ) )
             {
                 return;
             }
 
             var underlyingNullableType = Nullable.GetUnderlyingType( type );
-            if ( underlyingNullableType != null )
+            if( underlyingNullableType != null )
             {
                 NullableType = ThriftType.Get( underlyingNullableType );
                 Id = NullableType.Id;
@@ -91,19 +91,19 @@ namespace ThriftSharp.Internals
                 return;
             }
 
-            if ( PrimitiveIds.ContainsKey( type ) )
+            if( PrimitiveIds.ContainsKey( type ) )
             {
                 Id = PrimitiveIds[type];
                 return;
             }
 
-            if ( TypeInfo.IsEnum )
+            if( TypeInfo.IsEnum )
             {
-                if ( TypeInfo.GetCustomAttribute<ThriftEnumAttribute>() == null )
+                if( TypeInfo.GetCustomAttribute<ThriftEnumAttribute>() == null )
                 {
                     throw ThriftParsingException.EnumWithoutAttribute( TypeInfo );
                 }
-                if ( Enum.GetUnderlyingType( type ) != typeof( int ) )
+                if( Enum.GetUnderlyingType( type ) != typeof( int ) )
                 {
                     throw ThriftParsingException.NonInt32Enum( TypeInfo );
                 }
@@ -113,19 +113,19 @@ namespace ThriftSharp.Internals
                 return;
             }
 
-            if ( TypeInfo.IsValueType )
+            if( TypeInfo.IsValueType )
             {
                 throw ThriftParsingException.UnknownValueType( TypeInfo );
             }
 
-            if ( TypeInfo.IsArray )
+            if( TypeInfo.IsArray )
             {
                 Id = ThriftTypeId.List;
                 return;
             }
 
             var mapInterfaceAndArgs = GetInstantiableVersion( TypeInfo, typeof( IDictionary<,> ), typeof( Dictionary<,> ), p => ThriftParsingException.UnsupportedMap( p ) );
-            if ( mapInterfaceAndArgs != null )
+            if( mapInterfaceAndArgs != null )
             {
                 Id = ThriftTypeId.Map;
                 TypeInfo = mapInterfaceAndArgs.Item1;
@@ -133,9 +133,9 @@ namespace ThriftSharp.Internals
             }
 
             var setInterfaceAndArgs = GetInstantiableVersion( TypeInfo, typeof( ISet<> ), typeof( HashSet<> ), p => ThriftParsingException.UnsupportedSet( p ) );
-            if ( setInterfaceAndArgs != null )
+            if( setInterfaceAndArgs != null )
             {
-                if ( mapInterfaceAndArgs != null )
+                if( mapInterfaceAndArgs != null )
                 {
                     throw ThriftParsingException.CollectionWithOrthogonalInterfaces( TypeInfo );
                 }
@@ -146,9 +146,9 @@ namespace ThriftSharp.Internals
             }
 
             var listInterfaceAndArgs = GetInstantiableVersion( TypeInfo, typeof( IList<> ), typeof( List<> ), p => ThriftParsingException.UnsupportedList( p ) );
-            if ( listInterfaceAndArgs != null )
+            if( listInterfaceAndArgs != null )
             {
-                if ( mapInterfaceAndArgs != null || setInterfaceAndArgs != null )
+                if( mapInterfaceAndArgs != null || setInterfaceAndArgs != null )
                 {
                     throw ThriftParsingException.CollectionWithOrthogonalInterfaces( TypeInfo );
                 }
@@ -158,7 +158,7 @@ namespace ThriftSharp.Internals
                 _collectionGenericArgs = listInterfaceAndArgs.Item2;
             }
 
-            if ( Id == ThriftTypeId.Empty )
+            if( Id == ThriftTypeId.Empty )
             {
                 Id = ThriftTypeId.Struct;
             }
@@ -169,7 +169,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static ThriftType Get( Type type )
         {
-            if ( !_knownTypes.ContainsKey( type ) )
+            if( !_knownTypes.ContainsKey( type ) )
             {
                 var thriftType = new ThriftType( type );
 
@@ -177,7 +177,7 @@ namespace ThriftSharp.Internals
 
                 // This has to be done this way because otherwise self-referencing types will loop 
                 // since they'd call ThriftType.Get before they were themselves added to _knownTypes
-                switch ( thriftType.Id )
+                switch( thriftType.Id )
                 {
                     case ThriftTypeId.Map:
                         thriftType.KeyType = ThriftType.Get( thriftType._collectionGenericArgs[0] );
@@ -186,7 +186,7 @@ namespace ThriftSharp.Internals
 
                     case ThriftTypeId.List:
                     case ThriftTypeId.Set:
-                        if ( thriftType.TypeInfo.IsArray )
+                        if( thriftType.TypeInfo.IsArray )
                         {
                             thriftType.ElementType = ThriftType.Get( thriftType.TypeInfo.GetElementType() );
                         }
@@ -209,12 +209,12 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static Tuple<TypeInfo, Type[]> GetInstantiableVersion( TypeInfo typeInfo, Type interfaceType, Type concreteType, Func<TypeInfo, Exception> errorProvider )
         {
-            if ( typeInfo.IsInterface )
+            if( typeInfo.IsInterface )
             {
-                if ( typeInfo.GenericTypeArguments.Length > 0 )
+                if( typeInfo.GenericTypeArguments.Length > 0 )
                 {
                     var unbound = typeInfo.GetGenericTypeDefinition();
-                    if ( unbound == interfaceType )
+                    if( unbound == interfaceType )
                     {
                         return Tuple.Create(
                             concreteType.MakeGenericType( typeInfo.GenericTypeArguments ).GetTypeInfo(),
@@ -225,17 +225,17 @@ namespace ThriftSharp.Internals
             }
 
             Tuple<TypeInfo, Type[]> instantiableVersion = null;
-            foreach ( var iface in typeInfo.ImplementedInterfaces.Where( i => i.GenericTypeArguments.Length > 0 ) )
+            foreach( var iface in typeInfo.ImplementedInterfaces.Where( i => i.GenericTypeArguments.Length > 0 ) )
             {
                 var unboundIface = iface.GetGenericTypeDefinition();
-                if ( unboundIface == interfaceType )
+                if( unboundIface == interfaceType )
                 {
-                    if ( typeInfo.IsAbstract || !typeInfo.DeclaredConstructors.Any( c => c.GetParameters().Length == 0 ) )
+                    if( typeInfo.IsAbstract || !typeInfo.DeclaredConstructors.Any( c => c.GetParameters().Length == 0 ) )
                     {
                         throw errorProvider( typeInfo );
                     }
 
-                    if ( instantiableVersion != null )
+                    if( instantiableVersion != null )
                     {
                         throw ThriftParsingException.CollectionWithMultipleGenericImplementations( typeInfo );
                     }

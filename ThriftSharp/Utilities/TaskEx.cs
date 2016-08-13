@@ -22,7 +22,7 @@ namespace ThriftSharp.Utilities
         /// </summary>
         public static Task<TResult> TimeoutAfter<TResult>( this Task<TResult> task, TimeSpan timeout )
         {
-            if ( task.IsCompleted || timeout == Timeout.InfiniteTimeSpan )
+            if( task.IsCompleted || timeout == Timeout.InfiniteTimeSpan )
             {
                 return task;
             }
@@ -50,7 +50,7 @@ namespace ThriftSharp.Utilities
         /// </summary>
         private static void MarshalTaskResults<TResult>( Task<TResult> source, TaskCompletionSource<TResult> proxy )
         {
-            switch ( source.Status )
+            switch( source.Status )
             {
                 case TaskStatus.Faulted:
                     proxy.TrySetException( source.Exception.InnerException );

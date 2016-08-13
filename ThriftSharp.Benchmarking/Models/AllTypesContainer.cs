@@ -74,7 +74,7 @@ namespace ThriftSharp.Benchmarking.Models
             Buffer.BlockCopy( c.Value7, 0, value7, 0, value7.Length );
 
             var value11 = new THashSet<int>();
-            foreach ( var item in c.Value11 )
+            foreach( var item in c.Value11 )
             {
                 value11.Add( item );
             }

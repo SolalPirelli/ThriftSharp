@@ -250,7 +250,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static Expression CreateReaderForType( ParameterExpression protocolParam, ThriftType thriftType )
         {
-            if ( thriftType.NullableType != null )
+            if( thriftType.NullableType != null )
             {
                 return Expression.Convert(
                     CreateReaderForType( protocolParam, thriftType.NullableType ),
@@ -258,7 +258,7 @@ namespace ThriftSharp.Internals
                 );
             }
 
-            switch ( thriftType.Id )
+            switch( thriftType.Id )
             {
                 case ThriftTypeId.Boolean:
                     return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadBoolean );
@@ -273,7 +273,7 @@ namespace ThriftSharp.Internals
                     return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadInt16 );
 
                 case ThriftTypeId.Int32:
-                    if ( thriftType.TypeInfo.IsEnum )
+                    if( thriftType.TypeInfo.IsEnum )
                     {
                         return Expression.Convert(
                             Expression.Call( protocolParam, Methods.IThriftProtocol_ReadInt32 ),
@@ -286,7 +286,7 @@ namespace ThriftSharp.Internals
                     return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadInt64 );
 
                 case ThriftTypeId.Binary:
-                    if ( thriftType.TypeInfo == TypeInfos.String )
+                    if( thriftType.TypeInfo == TypeInfos.String )
                     {
                         return Expression.Call( protocolParam, Methods.IThriftProtocol_ReadString );
                     }
@@ -297,7 +297,7 @@ namespace ThriftSharp.Internals
 
                 case ThriftTypeId.Set:
                 case ThriftTypeId.List:
-                    if ( thriftType.TypeInfo.IsArray )
+                    if( thriftType.TypeInfo.IsArray )
                     {
                         return CreateReaderForArray( protocolParam, thriftType );
                     }
@@ -357,12 +357,12 @@ namespace ThriftSharp.Internals
             var endOfLoop = Expression.Label();
 
             var fieldCases = new List<SwitchCase>();
-            foreach ( var field in wireFields )
+            foreach( var field in wireFields )
             {
                 var setter = field.Setter;
-                if ( field.Converter != null )
+                if( field.Converter != null )
                 {
-                    if ( Nullable.GetUnderlyingType( field.UnderlyingTypeInfo.AsType() ) == null )
+                    if( Nullable.GetUnderlyingType( field.UnderlyingTypeInfo.AsType() ) == null )
                     {
                         setter = expr => field.Setter(
                             field.Converter.CreateCall( "Convert", expr )
@@ -396,7 +396,7 @@ namespace ThriftSharp.Internals
                     )
                 };
 
-                if ( isSetVars.ContainsKey( field ) )
+                if( isSetVars.ContainsKey( field ) )
                 {
                     caseStatements.Add(
                         Expression.Assign(
@@ -423,7 +423,7 @@ namespace ThriftSharp.Internals
             );
 
             Expression fieldAssignment;
-            if ( fieldCases.Count > 0 )
+            if( fieldCases.Count > 0 )
             {
                 // Switch doesn't support 0 cases
                 fieldAssignment = Expression.Switch(
@@ -465,20 +465,21 @@ namespace ThriftSharp.Internals
             };
 
             // now check for default values
-            foreach ( var field in wireFields )
+            foreach( var field in wireFields )
             {
                 // The 'check' declaration needs to be inside this test, since the return value of a method:
                 // - isn't in isSetVars
                 // - isn't required (to provide the proper ThriftProtocolException instead of a generic "unset field")
                 // - might be a value type
                 // thus it could pick the "== null" branch and crash
-                if ( field.DefaultValue != null || field.Kind == ThriftWireFieldState.Required )
+                if( field.DefaultValue != null || field.Kind == ThriftWireFieldState.Required )
                 {
                     var check = isSetVars.ContainsKey( field )
-                      ? (Expression) Expression.IsFalse( isSetVars[field] )
+                      // Do not use IsFalse, not supported by UWP's expression interpreter
+                      ? (Expression) Expression.Equal( isSetVars[field], Expression.Constant( false ) )
                       : Expression.Equal( field.Getter, Expression.Constant( null ) );
 
-                    if ( field.DefaultValue == null )
+                    if( field.DefaultValue == null )
                     {
                         statements.Add(
                             Expression.IfThen(
@@ -495,7 +496,7 @@ namespace ThriftSharp.Internals
                     else
                     {
                         Expression defaultValueExpr = Expression.Constant( field.DefaultValue );
-                        if ( field.Converter != null )
+                        if( field.Converter != null )
                         {
                             defaultValueExpr = field.Converter.CreateCall(
                                 "Convert",
@@ -527,7 +528,7 @@ namespace ThriftSharp.Internals
         /// </remarks>
         public static void Skip( ThriftTypeId thriftTypeId, IThriftProtocol protocol )
         {
-            switch ( thriftTypeId )
+            switch( thriftTypeId )
             {
                 case ThriftTypeId.Boolean:
                     protocol.ReadBoolean();
@@ -559,7 +560,7 @@ namespace ThriftSharp.Internals
 
                 case ThriftTypeId.List:
                     var listHeader = protocol.ReadListHeader();
-                    for ( int n = 0; n < listHeader.Count; n++ )
+                    for( int n = 0; n < listHeader.Count; n++ )
                     {
                         Skip( listHeader.ElementTypeId, protocol );
                     }
@@ -568,7 +569,7 @@ namespace ThriftSharp.Internals
 
                 case ThriftTypeId.Set:
                     var setHeader = protocol.ReadSetHeader();
-                    for ( int n = 0; n < setHeader.Count; n++ )
+                    for( int n = 0; n < setHeader.Count; n++ )
                     {
                         Skip( setHeader.ElementTypeId, protocol );
                     }
@@ -577,7 +578,7 @@ namespace ThriftSharp.Internals
 
                 case ThriftTypeId.Map:
                     var mapHeader = protocol.ReadMapHeader();
-                    for ( int n = 0; n < mapHeader.Count; n++ )
+                    for( int n = 0; n < mapHeader.Count; n++ )
                     {
                         Skip( mapHeader.KeyTypeId, protocol );
                         Skip( mapHeader.ValueTypeId, protocol );
@@ -587,10 +588,10 @@ namespace ThriftSharp.Internals
 
                 default:
                     protocol.ReadStructHeader();
-                    while ( true )
+                    while( true )
                     {
                         var fieldHeader = protocol.ReadFieldHeader();
-                        if ( fieldHeader.TypeId == ThriftTypeId.Empty )
+                        if( fieldHeader.TypeId == ThriftTypeId.Empty )
                         {
                             break;
                         }
@@ -611,7 +612,7 @@ namespace ThriftSharp.Internals
         public static T Read<T>( IThriftProtocol protocol )
         {
             var thriftStruct = ThriftAttributesParser.ParseStruct( typeof( T ).GetTypeInfo() );
-            if ( !_knownReaders.ContainsKey( thriftStruct ) )
+            if( !_knownReaders.ContainsKey( thriftStruct ) )
             {
                 _knownReaders.Add( thriftStruct, CreateReaderForStruct( thriftStruct ).Compile() );
             }

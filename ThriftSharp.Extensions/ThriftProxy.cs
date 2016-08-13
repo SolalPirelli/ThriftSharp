@@ -50,7 +50,7 @@ namespace ThriftSharp
             var serviceField = typeBuilder.DefineField( "service", typeof( object ), FieldAttributes.Public );
 
             // Generate the methods
-            foreach ( var m in typeof( T ).GetMethods( BindingFlags.Public | BindingFlags.Instance ) )
+            foreach( var m in typeof( T ).GetMethods( BindingFlags.Public | BindingFlags.Instance ) )
             {
                 // Define the method parameter types
                 var methodParamTypes = m.GetParameters().Select( p => p.ParameterType ).ToArray();
@@ -72,7 +72,7 @@ namespace ThriftSharp
                 gen.Emit( OpCodes.Stloc, paramsLocal );
 
                 // For each parameter:
-                for ( int n = 0; n < parameters.Length; n++ )
+                for( int n = 0; n < parameters.Length; n++ )
                 {
                     // Load the array
                     gen.Emit( OpCodes.Ldloc, paramsLocal );
@@ -81,7 +81,7 @@ namespace ThriftSharp
                     // Load the parameter, +1 because it's an instance method thus arg 0 is the instance
                     gen.Emit( OpCodes.Ldarg, n + 1 );
                     // Box it if needed
-                    if ( parameters[n].ParameterType.IsValueType )
+                    if( parameters[n].ParameterType.IsValueType )
                     {
                         gen.Emit( OpCodes.Box, parameters[n].ParameterType );
                     }
@@ -91,7 +91,7 @@ namespace ThriftSharp
 
                 // Get the return type for the CallMethodAsync method, i.e. the unwrapped return type...
                 var unwrappedReturnType = m.ReturnType.UnwrapTask();
-                if ( unwrappedReturnType == typeof( void ) )
+                if( unwrappedReturnType == typeof( void ) )
                 {
                     // ... or object if there is none
                     unwrappedReturnType = typeof( object );

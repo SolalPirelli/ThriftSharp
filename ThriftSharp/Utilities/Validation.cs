@@ -16,7 +16,7 @@ namespace ThriftSharp.Utilities
         public static void IsNotNull<T>( T obj, string parameterName )
             where T : class
         {
-            if ( obj == null )
+            if( obj == null )
             {
                 throw new ArgumentNullException( $"Parameter {parameterName} must not be null." );
             }
@@ -27,7 +27,7 @@ namespace ThriftSharp.Utilities
         /// </summary>
         public static void IsNeitherNullNorWhitespace( string s, string parameterName )
         {
-            if ( string.IsNullOrWhiteSpace( s ) )
+            if( string.IsNullOrWhiteSpace( s ) )
             {
                 throw new ArgumentException( $"Parameter {parameterName} must not be null, empty or contain only whitespace. It was '{s ?? "null"}'." );
             }

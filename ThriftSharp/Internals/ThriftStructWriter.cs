@@ -52,8 +52,10 @@ namespace ThriftSharp.Internals
 
                 Expression.Loop(
                     Expression.IfThenElse(
-                        Expression.IsTrue(
-                            Expression.Call( enumeratorVar, "MoveNext", Types.None )
+                        // Do not use IsTrue, not supported by UWP's expression interpreter
+                        Expression.Equal(
+                            Expression.Call( enumeratorVar, "MoveNext", Types.None ),
+                            Expression.Constant( true )
                         ),
                         Expression.Block(
                             CreateWriterForType(
@@ -164,8 +166,10 @@ namespace ThriftSharp.Internals
 
                 Expression.Loop(
                     Expression.IfThenElse(
-                        Expression.IsTrue(
-                            Expression.Call( enumeratorVar, "MoveNext", Types.None )
+                        // Do not use IsTrue, not supported by UWP's expression interpreter
+                        Expression.Equal(
+                            Expression.Call( enumeratorVar, "MoveNext", Types.None ),
+                            Expression.Constant( true )
                         ),
                         CreateWriterForType(
                             protocolParam, thriftType.ElementType,
@@ -188,7 +192,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         private static Expression CreateWriterForType( ParameterExpression protocolParam, ThriftType thriftType, Expression value )
         {
-            switch ( thriftType.Id )
+            switch( thriftType.Id )
             {
                 case ThriftTypeId.Boolean:
                     return Expression.Call( protocolParam, Methods.IThriftProtocol_WriteBoolean, value );
@@ -203,7 +207,7 @@ namespace ThriftSharp.Internals
                     return Expression.Call( protocolParam, Methods.IThriftProtocol_WriteInt16, value );
 
                 case ThriftTypeId.Int32:
-                    if ( thriftType.IsEnum )
+                    if( thriftType.IsEnum )
                     {
                         value = Expression.Convert( value, typeof( int ) );
                     }
@@ -213,7 +217,7 @@ namespace ThriftSharp.Internals
                     return Expression.Call( protocolParam, Methods.IThriftProtocol_WriteInt64, value );
 
                 case ThriftTypeId.Binary:
-                    if ( thriftType.TypeInfo == TypeInfos.String )
+                    if( thriftType.TypeInfo == TypeInfos.String )
                     {
                         return Expression.Call( protocolParam, Methods.IThriftProtocol_WriteString, value );
                     }
@@ -224,7 +228,7 @@ namespace ThriftSharp.Internals
 
                 case ThriftTypeId.Set:
                 case ThriftTypeId.List:
-                    if ( thriftType.TypeInfo.IsArray )
+                    if( thriftType.TypeInfo.IsArray )
                     {
                         return CreateWriterForArray( protocolParam, thriftType, value );
                     }
@@ -260,7 +264,7 @@ namespace ThriftSharp.Internals
                 )
             };
 
-            foreach ( var field in thriftStruct.Fields )
+            foreach( var field in thriftStruct.Fields )
             {
                 methodContents.Add( CreateWriterForField( protocolParam, ThriftWireField.Field( field, valueParam ) ) );
             }
@@ -282,11 +286,11 @@ namespace ThriftSharp.Internals
         {
             Expression getter = field.Getter;
             bool isUnderlyingNullable = Nullable.GetUnderlyingType( field.UnderlyingTypeInfo.AsType() ) != null;
-            if ( isUnderlyingNullable )
+            if( isUnderlyingNullable )
             {
                 getter = Expression.Property( getter, "Value" );
             }
-            if ( field.Converter != null )
+            if( field.Converter != null )
             {
                 getter = field.Converter.CreateCall( "ConvertBack", getter );
             }
@@ -310,13 +314,13 @@ namespace ThriftSharp.Internals
                 Expression.Call( protocolParam, Methods.IThriftProtocol_WriteFieldEnd )
             );
 
-            switch ( field.Kind )
+            switch( field.Kind )
             {
                 case ThriftWireFieldState.AlwaysPresent:
                     return writingExpr;
 
                 case ThriftWireFieldState.Required:
-                    if ( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable )
+                    if( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable )
                     {
                         return Expression.IfThenElse(
                             Expression.Equal(
@@ -335,7 +339,7 @@ namespace ThriftSharp.Internals
                     return writingExpr;
 
                 default:
-                    if ( field.DefaultValue == null && ( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable ) )
+                    if( field.DefaultValue == null && ( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable ) )
                     {
                         return Expression.IfThen(
                             Expression.NotEqual(
@@ -351,7 +355,7 @@ namespace ThriftSharp.Internals
                         Expression.Constant( field.DefaultValue )
                     );
 
-                    if ( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable )
+                    if( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable )
                     {
                         condition = Expression.AndAlso(
                             Expression.NotEqual(
@@ -376,7 +380,7 @@ namespace ThriftSharp.Internals
         public static void Write<T>( T value, IThriftProtocol protocol )
         {
             var thriftStruct = ThriftAttributesParser.ParseStruct( typeof( T ).GetTypeInfo() );
-            if ( !_knownWriters.ContainsKey( thriftStruct ) )
+            if( !_knownWriters.ContainsKey( thriftStruct ) )
             {
                 _knownWriters.Add( thriftStruct, CreateWriterForStruct( thriftStruct ).Compile() );
             }
