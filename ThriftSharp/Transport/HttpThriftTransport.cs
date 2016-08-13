@@ -4,10 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using ThriftSharp.Utilities;
 
 namespace ThriftSharp.Transport
 {
@@ -16,20 +16,17 @@ namespace ThriftSharp.Transport
     /// </summary>
     public sealed class HttpThriftTransport : IThriftTransport
     {
-        private const string ThriftContentType = "application/x-thrift";
-        private const string ThriftHttpMethod = "POST";
-
         private readonly string _url;
         private readonly CancellationToken _token;
         private readonly IReadOnlyDictionary<string, string> _headers;
-        private readonly TimeSpan _timeout;
+        private readonly HttpClient _client;
 
         private MemoryStream _outputStream;
-        private MemoryStream _inputStream;
+        private Stream _inputStream;
 
 
         /// <summary>
-        /// Initializes a new instance of the HttpThriftTransport class using the specified values.
+        /// Initializes a new instance of the <see cref="HttpThriftTransport" /> class using the specified values.
         /// </summary>
         /// <param name="url">The URL, including the port if necessary.</param>
         /// <param name="token">The cancellation token that will cancel asynchronous tasks.</param>
@@ -40,7 +37,8 @@ namespace ThriftSharp.Transport
             _url = url;
             _token = token;
             _headers = headers;
-            _timeout = timeout;
+
+            _client = new HttpClient { Timeout = timeout };
 
             _outputStream = new MemoryStream();
         }
@@ -75,42 +73,28 @@ namespace ThriftSharp.Transport
         {
             _token.ThrowIfCancellationRequested();
 
-            var request = WebRequest.CreateHttp( _url );
-            request.ContentType = request.Accept = ThriftContentType;
-            request.Method = ThriftHttpMethod;
+            _outputStream.Seek( 0, SeekOrigin.Begin );
+
+            var request = new HttpRequestMessage( HttpMethod.Post, _url );
+            request.Content = new StreamContent( _outputStream );
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue( "application/x-thrift" );
+            request.Headers.Accept.Add( new MediaTypeWithQualityHeaderValue( "application/x-thrift" ) );
 
             foreach( var header in _headers )
             {
-                request.Headers[header.Key] = header.Value;
+                request.Headers.TryAddWithoutValidation( header.Key, header.Value );
             }
 
-            // N.B.: GetRequestStreamAsync doesn't make any HTTP calls, only GetResponseAsync does.
-            using( var requestStream = await request.GetRequestStreamAsync() )
-            {
-                _outputStream.WriteTo( requestStream );
-                _outputStream.Dispose();
-                requestStream.Flush();
-            }
+            var response = await _client.SendAsync( request, HttpCompletionOption.ResponseHeadersRead, _token );
 
-            // Don't keep the output stream for longer than what's needed,
-            // and don't create the input stream before it's needed either.
+            _inputStream = await response.Content.ReadAsStreamAsync();
             _outputStream.Dispose();
             _outputStream = null;
-            _inputStream = new MemoryStream();
-
-            var response = await request.GetResponseAsync().TimeoutAfter( _timeout );
-
-            _token.ThrowIfCancellationRequested();
-
-            await response.GetResponseStream().CopyToAsync( _inputStream );
-            _inputStream.Seek( 0, SeekOrigin.Begin );
-
-            _token.ThrowIfCancellationRequested();
         }
 
         #region IDisposable implementation
         /// <summary>
-        /// Finalizes the HttpThriftTransport.
+        /// Finalizes the <see cref="HttpThriftTransport" />.
         /// </summary>
         ~HttpThriftTransport()
         {
@@ -118,7 +102,7 @@ namespace ThriftSharp.Transport
         }
 
         /// <summary>
-        /// Disposes of the HttpThriftTransport.
+        /// Disposes of the <see cref="HttpThriftTransport" />.
         /// </summary>
         public void Dispose()
         {
@@ -127,7 +111,7 @@ namespace ThriftSharp.Transport
         }
 
         /// <summary>
-        /// Disposes of the HttpThriftTransport's internals.
+        /// Disposes of the <see cref="HttpThriftTransport" />'s internals.
         /// </summary>
         private void DisposePrivate()
         {

@@ -12,6 +12,9 @@ open ThriftSharp.Transport
 let getField obj name: 'a =
     obj.GetType().GetField(name, BindingFlags.NonPublic ||| BindingFlags.Instance).GetValue(obj) :?> 'a
 
+let getProp obj name: 'a =
+    obj.GetType().GetProperty(name, BindingFlags.Public ||| BindingFlags.Instance).GetValue(obj) :?> 'a
+
 [<Fact>]
 let ``Binary().OverHttp() returns a binary transport over HTTP.``() =
     let headers = dict ["a", "b"]
@@ -23,8 +26,8 @@ let ``Binary().OverHttp() returns a binary transport over HTTP.``() =
     
     getField trans "_url" <=> "http://example.org"
     getField trans "_headers" <=> headers
-    getField trans "_timeout" <=> timeout
     getField trans "_token" <=> token
+    getProp (getField trans "_client") "Timeout" <=> TimeSpan.FromSeconds(2.1)
 
 [<Fact>]
 let ``OverHttp() handles null parameters correctly.``() =
@@ -33,7 +36,7 @@ let ``OverHttp() handles null parameters correctly.``() =
     let trans: IThriftTransport = getField prot "_transport"
     
     getField trans "_headers" <=> Dictionary<string, string>()
-    getField trans "_timeout" <=> TimeSpan.FromSeconds(5.0)
+    getProp (getField trans "_client") "Timeout" <=> TimeSpan.FromSeconds(5.0)
 
 [<Fact>]
 let ``Equals is overriden to throw``() =

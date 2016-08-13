@@ -70,7 +70,6 @@
     <Compile Include="ThriftAttributes.cs" />
     <Compile Include="Transport\HttpThriftTransport.cs" />
     <Compile Include="Transport\IThriftTransport.cs" />
-    <Compile Include="Utilities\TaskEx.cs" />
     <Compile Include="Utilities\Validation.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
