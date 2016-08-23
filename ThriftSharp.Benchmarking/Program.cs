@@ -6,6 +6,8 @@
 
 using System;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Diagnostics.Windows;
 using BenchmarkDotNet.Running;
 #if BENCH_APACHE_THRIFT
 using Thrift.Transport;
@@ -15,8 +17,18 @@ using ThriftSharp.Benchmarking.Models;
 
 namespace ThriftSharp.Benchmarking
 {
+    [Config( typeof( Config ) )]
     public class Program
     {
+        private sealed class Config : ManualConfig
+        {
+            public Config()
+            {
+                Add( new MemoryDiagnoser() );
+            }
+        }
+
+
 #if BENCH_APACHE_THRIFT
         private static readonly byte[]
             T_All = TMemoryBuffer.Serialize( (T.AllTypesContainer) AllTypesContainer.Sample ),
