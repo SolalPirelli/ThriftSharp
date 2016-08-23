@@ -10,7 +10,7 @@ using ThriftSharp.Utilities;
 namespace ThriftSharp.Internals
 {
     /// <summary>
-    /// Thrift converter, including commonly-needed properties.
+    /// Thrift converter.
     /// </summary>
     internal sealed class ThriftConverter
     {
@@ -34,7 +34,7 @@ namespace ThriftSharp.Internals
             var ifaces = typeInfo.GetGenericInterfaces( typeof( IThriftValueConverter<,> ) );
             if( ifaces.Length == 0 )
             {
-                throw new ArgumentException( $"The type '{type.Name}' does not IThriftValueConverter<TFrom, TTo>." );
+                throw new ArgumentException( $"The type '{type.Name}' does not implement IThriftValueConverter<TFrom, TTo>." );
             }
             if( ifaces.Length > 1 )
             {
@@ -57,6 +57,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         public Expression CreateCall( string methodName, Expression arg )
         {
+            // TODO Use only 1 converter of each type.
             return Expression.Call(
                 Expression.New( _type ),
                 _interfaceTypeInfo.GetDeclaredMethod( methodName ),

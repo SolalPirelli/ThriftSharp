@@ -23,7 +23,7 @@ module ``Parsing: Converters`` =
 
     [<Fact>]
     let ``Converter not implementing IThriftValueConverter<,> is not allowed``() =
-        throws<string>("The type 'String' does not IThriftValueConverter<TFrom, TTo>")
+        throws<string>("The type 'String' does not implement IThriftValueConverter<TFrom, TTo>")
 
 
     type BadConverter(notAParameterlessCtor: obj) =

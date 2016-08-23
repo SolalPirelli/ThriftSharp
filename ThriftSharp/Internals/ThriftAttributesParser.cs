@@ -17,6 +17,7 @@ namespace ThriftSharp.Internals
     internal static class ThriftAttributesParser
     {
         private static readonly Dictionary<TypeInfo, ThriftStruct> _knownStructs = new Dictionary<TypeInfo, ThriftStruct>();
+        private static readonly Dictionary<TypeInfo, ThriftService> _knownServices = new Dictionary<TypeInfo, ThriftService>();
 
         /// <summary>
         /// Parses a Thrift field from the specified PropertyInfo.
@@ -183,24 +184,29 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static ThriftService ParseService( TypeInfo typeInfo )
         {
-            if( !typeInfo.IsInterface )
+            if( !_knownServices.ContainsKey( typeInfo ) )
             {
-                throw ThriftParsingException.NotAService( typeInfo );
+                if( !typeInfo.IsInterface )
+                {
+                    throw ThriftParsingException.NotAService( typeInfo );
+                }
+
+                var attr = typeInfo.GetCustomAttribute<ThriftServiceAttribute>();
+                if( attr == null )
+                {
+                    throw ThriftParsingException.ServiceWithoutAttribute( typeInfo );
+                }
+
+                var methods = typeInfo.DeclaredMethods.ToDictionary( m => m.Name, m => ParseMethod( m ) );
+                if( methods.Count == 0 )
+                {
+                    throw ThriftParsingException.NoMethods( typeInfo );
+                }
+
+                _knownServices.Add( typeInfo, new ThriftService( attr.Name, methods ) );
             }
 
-            var attr = typeInfo.GetCustomAttribute<ThriftServiceAttribute>();
-            if( attr == null )
-            {
-                throw ThriftParsingException.ServiceWithoutAttribute( typeInfo );
-            }
-
-            var methods = typeInfo.DeclaredMethods.ToDictionary( m => m.Name, m => ParseMethod( m ) );
-            if( methods.Count == 0 )
-            {
-                throw ThriftParsingException.NoMethods( typeInfo );
-            }
-
-            return new ThriftService( attr.Name, methods );
+            return _knownServices[typeInfo];
         }
     }
 }
