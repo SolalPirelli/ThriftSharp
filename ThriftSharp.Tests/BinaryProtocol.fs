@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 module ThriftSharp.Tests.``Binary protocol``
@@ -406,9 +406,9 @@ type Reading() =
              0x00; 0x00; 0x00; 0x02 // "Me" length in UTF-8 (int32)
              0x4D; 0x65; // "Me" in UTF-8 (string)
              0x00; 0x00; 0x00; 0x00] // ID (int32)
-        let trans = MemoryTransport(data |> List.map byte)
+        let trans = new MemoryTransport(data |> List.map byte)
 
-        let exn = Assert.Throws<ThriftProtocolException>(ThriftBinaryProtocol(trans).ReadMessageHeader >> box)
+        let exn = Assert.Throws<ThriftProtocolException>((new ThriftBinaryProtocol(trans)).ReadMessageHeader >> box)
         exn.ExceptionType <=> nullable(ThriftProtocolExceptionType.InvalidProtocol)
 
     [<Fact>]
@@ -418,19 +418,19 @@ type Reading() =
              0x4D; 0x65; 0x73; 0x73; 0x61; 0x67; 0x65 // "Message" in UTF-8 (string)
              0x03 // Message type (byte)
              0x00; 0x00; 0x00; 0x00] // ID (int32)
-        let trans = MemoryTransport(data |> List.map byte)
-        ThriftBinaryProtocol(trans).ReadMessageHeader() <=> ThriftMessageHeader("Message", ThriftMessageType.Exception)
+        let trans = new MemoryTransport(data |> List.map byte)
+        (new ThriftBinaryProtocol(trans)).ReadMessageHeader() <=> ThriftMessageHeader("Message", ThriftMessageType.Exception)
         trans.IsEmpty <=> true
 
     [<Fact>]
     let ``FieldStop``() =
-        let trans = MemoryTransport([0uy])
-        ThriftBinaryProtocol(trans).ReadFieldHeader().TypeId <=> ThriftTypeId.Empty
+        let trans = new MemoryTransport([0uy])
+        (new ThriftBinaryProtocol(trans)).ReadFieldHeader().TypeId <=> ThriftTypeId.Empty
         trans.IsEmpty <=> true
 
     override x.Test (bin, rw, inst) =
-        let trans = MemoryTransport(bin |> List.map byte)
-        let obj = (ThriftBinaryProtocol(trans) |> rw |> fst) ()
+        let trans = new MemoryTransport(bin |> List.map byte)
+        let obj = (new ThriftBinaryProtocol(trans) |> rw |> fst) ()
         obj <=> inst
         trans.IsEmpty <=> true
 
@@ -438,27 +438,27 @@ type Writing() =
     inherit Tests()
     [<Fact>]
     let ``FieldStop``() =
-        let trans = MemoryTransport()
-        do ThriftBinaryProtocol(trans).WriteFieldStop()
+        let trans = new MemoryTransport()
+        do (new ThriftBinaryProtocol(trans)).WriteFieldStop()
         trans.WrittenValues <=> [0uy]
 
     override x.Test (bin, rw, inst) =
-        let trans = MemoryTransport()
-        do (ThriftBinaryProtocol(trans) |> rw |> snd) inst
+        let trans = new MemoryTransport()
+        do (new ThriftBinaryProtocol(trans) |> rw |> snd) inst
         trans.WrittenValues <=> (bin |> List.map byte)
 
 type Other() =
     [<Fact>]
     let ``Dispose() works``() =
-        let trans = MemoryTransport()
-        let prot = ThriftBinaryProtocol(trans)
+        let trans = new MemoryTransport()
+        let prot = new ThriftBinaryProtocol(trans)
         do prot.Dispose()
         trans.IsDisposed <=> true
 
     [<Fact>]
     let ``FlushAndReadAsync() works``() = asTask <| async {
-        let trans = MemoryTransport()
-        let prot = ThriftBinaryProtocol(trans)
+        let trans = new MemoryTransport()
+        let prot = new ThriftBinaryProtocol(trans)
         do! prot.FlushAndReadAsync() |> Async.AwaitTask
         trans.HasRead <=> true
     }

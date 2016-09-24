@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 [<AutoOpen>]
@@ -26,9 +26,14 @@ let dict vals =
     dic
 
 
-/// Nicer syntax for assert equals, using deep equality
+/// Nicer syntax for equality assertions
 let (<=>) (act: 'a) (exp: 'a) =
-    DeepEqual.Syntax.ObjectExtensions.ShouldDeepEqual(act, exp)
+    // TODO not good, this is a hack using the auto-generated ToString in F#...
+    if Object.ReferenceEquals(exp, null) then
+        Assert.Null(act)
+    else
+        Assert.NotNull(exp)
+        Assert.Equal(exp.ToString(), act.ToString())
 
 
 /// Converts a non-generic Task to a Task<unit>
@@ -63,9 +68,8 @@ let makeInterface (attrs: AttributeInfo list)
                   (meths: ((Type * AttributeInfo list) list * Type * AttributeInfo list) list) =    
     let guid = Guid.NewGuid()
     let assemblyName = AssemblyName(guid.ToString())
-    let moduleBuilder = Thread.GetDomain()
-                              .DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run)
-                              .DefineDynamicModule(assemblyName.Name)
+    let moduleBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run)
+                                       .DefineDynamicModule(assemblyName.Name)
     
     let interfaceBuilder = moduleBuilder.DefineType("GeneratedType", TypeAttributes.Interface ||| TypeAttributes.Abstract ||| TypeAttributes.Public)
     
@@ -84,16 +88,15 @@ let makeInterface (attrs: AttributeInfo list)
 
         methAttrs |> List.iter (AttributeInfo.AsBuilder >> methodBuilder.SetCustomAttribute) )
     
-    interfaceBuilder.CreateType().GetTypeInfo()
+    interfaceBuilder.CreateTypeInfo()
 
 /// Creates a class with the specified attributes and properties (with their own attributes)
 let makeClass (attrs: AttributeInfo list) 
               (props: (Type * AttributeInfo list) list) =
     let guid = Guid.NewGuid()
     let assemblyName = AssemblyName(guid.ToString())
-    let moduleBuilder = Thread.GetDomain()
-                              .DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run)
-                              .DefineDynamicModule(assemblyName.Name)
+    let moduleBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run)
+                                       .DefineDynamicModule(assemblyName.Name)
     
     let typeBuilder = moduleBuilder.DefineType("GeneratedType", TypeAttributes.Class ||| TypeAttributes.Public)
     
@@ -121,4 +124,4 @@ let makeClass (attrs: AttributeInfo list)
 
         attrs |> List.iter (AttributeInfo.AsBuilder >> propBuilder.SetCustomAttribute) )
 
-    typeBuilder.CreateType().GetTypeInfo()
+    typeBuilder.CreateTypeInfo()

@@ -1,9 +1,10 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Net.Http;
 using System.Threading;
 using ThriftSharp.Protocols;
 using ThriftSharp.Transport;
@@ -22,9 +23,11 @@ namespace ThriftSharp
         /// </summary>
         /// <param name="url">The URL, including the port.</param>
         /// <param name="headers">Optional. The headers to use with the requests. No additional headers by default.</param>
+        /// <param name="clientHandler">Optional. The HTTP handler. The default is the default HTTP handler.</param>
         /// <param name="timeout">Optional. The timeout in milliseconds. The default is 5 seconds.</param>
         /// <returns>A finished ThriftCommunication object.</returns>
-        ThriftCommunication OverHttp( string url, IReadOnlyDictionary<string, string> headers = null, TimeSpan? timeout = null );
+        ThriftCommunication OverHttp( string url, IReadOnlyDictionary<string, string> headers = null,
+                                      HttpMessageHandler clientHandler = null, TimeSpan? timeout = null );
 
         /// <summary>
         /// Communicates using the specified transport.
@@ -88,14 +91,16 @@ namespace ThriftSharp
         /// <summary>
         /// Communicate over HTTP at the specified URL.
         /// </summary>
-        ThriftCommunication IThriftTransportPicker.OverHttp( string url, IReadOnlyDictionary<string, string> headers, TimeSpan? timeout )
+        ThriftCommunication IThriftTransportPicker.OverHttp( string url, IReadOnlyDictionary<string, string> headers,
+                                                             HttpMessageHandler clientHandler, TimeSpan? timeout )
         {
             Validation.IsNeitherNullNorWhitespace( url, nameof( url ) );
 
             var realHeaders = headers ?? new Dictionary<string, string>();
+            var realHandler = clientHandler ?? new HttpClientHandler();
             var realTimeout = timeout ?? DefaultTimeout;
 
-            return new ThriftCommunication( this, token => new HttpThriftTransport( url, token, realHeaders, realTimeout ) );
+            return new ThriftCommunication( this, token => new HttpThriftTransport( url, realHeaders, realHandler, token, realTimeout ) );
         }
 
         /// <summary>

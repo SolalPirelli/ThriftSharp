@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 module ThriftSharp.Tests.``Converters``
@@ -6,6 +6,8 @@ module ThriftSharp.Tests.``Converters``
 open System
 open Xunit
 open ThriftSharp
+open ThriftSharp.Tests.Utils
+
 
 [<Theory;
   InlineData(0,           01, 01, 1970, 00, 00, 00);

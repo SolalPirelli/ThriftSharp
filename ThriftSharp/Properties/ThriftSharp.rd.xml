@@ -1,0 +1,33 @@
+﻿<Directives xmlns="http://schemas.microsoft.com/netfx/2013/01/metadata">
+  <Library>
+    <Assembly Name="ThriftSharp">
+      <!-- Called by the generated expressions to read structs -->
+      <Type Name="ThriftSharp.Internals.ThriftStructReader">
+        <Method Name="Read{T}" Dynamic="Required" />
+      </Type>
+
+      <!-- Called by the generated expressions to write structs -->
+      <Type Name="ThriftSharp.Internals.ThriftStructWriter">
+        <Method Name="Write{T}" Dynamic="Required" />
+      </Type>
+      
+      <!-- Called by the proxy -->
+      <Type Name="ThriftSharp.Internals.Thrift">
+        <Method Name="CallMethodAsync" Dynamic="Required" />
+      </Type>
+
+      <!-- Reflection is used to get/set properties and instantiate Thrift structs -->
+      <Type Name="ThriftSharp.ThriftStructAttribute">
+        <AttributeImplies Dynamic="Required All" />
+      </Type>
+
+      <!-- Reflection is used to read methods of Thrift services -->
+      <Type Name="ThriftSharp.ThriftServiceAttribute">
+        <AttributeImplies Browse="All" />
+      </Type>
+
+      <!-- Converters are instantiated, their methods are called, and their interface implementations are read -->
+      <Type Name="ThriftSharp.IThriftValueConverter`2" Dynamic="Required All" />
+    </Assembly>
+  </Library>
+</Directives>

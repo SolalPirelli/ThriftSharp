@@ -24,29 +24,31 @@ namespace ThriftSharp.Internals
         {
             // The attributes parser guarantees that there are 0 or 1 tokens per method
             var token = args.OfType<CancellationToken>().FirstOrDefault();
-            var protocol = communication.CreateProtocol( token );
-            var method = service.Methods[methodName];
-            var methodArgs = args.Where( a => !( a is CancellationToken ) ).ToArray();
 
-            for( int n = 0; n < methodArgs.Length; n++ )
+            using( var protocol = communication.CreateProtocol( token ) )
             {
-                if( methodArgs[n] == null )
+                var method = service.Methods[methodName];
+                var methodArgs = args.Where( a => !( a is CancellationToken ) ).ToArray();
+
+                for( int n = 0; n < methodArgs.Length; n++ )
                 {
-                    throw ThriftSerializationException.NullParameter( method.Parameters[n].Name );
+                    if( methodArgs[n] == null )
+                    {
+                        throw ThriftSerializationException.NullParameter( method.Parameters[n].Name );
+                    }
                 }
+
+                ThriftClientMessageWriter.Write( method, methodArgs, protocol );
+
+                await protocol.FlushAndReadAsync();
+
+                if( method.IsOneWay )
+                {
+                    return default( T );
+                }
+
+                return ThriftClientMessageReader.Read<T>( method, protocol );
             }
-
-            ThriftClientMessageWriter.Write( method, methodArgs, protocol );
-
-            await protocol.FlushAndReadAsync();
-
-            if( method.IsOneWay )
-            {
-                protocol.Dispose();
-                return default( T );
-            }
-
-            return ThriftClientMessageReader.Read<T>( method, protocol );
         }
     }
 }

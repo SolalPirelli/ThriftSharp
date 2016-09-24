@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 using System;
@@ -15,16 +15,23 @@ namespace ThriftSharp.Benchmarking
         private MemoryStream _memory;
 
 
-        public static byte[] Serialize<T>( T obj )
+        public static ArraySegment<byte> Serialize<T>( T obj )
         {
             var buffer = new MemoryBuffer() { _memory = new MemoryStream() };
             ThriftStructWriter.Write( obj, new ThriftBinaryProtocol( buffer ) );
-            return buffer._memory.GetBuffer();
+
+            ArraySegment<byte> result;
+            if( buffer._memory.TryGetBuffer( out result ) )
+            {
+                return result;
+            }
+
+            throw new Exception( "What now?" );
         }
 
-        public static T Deserialize<T>( byte[] bytes )
+        public static T Deserialize<T>( ArraySegment<byte> bytes )
         {
-            var buffer = new MemoryBuffer { _memory = new MemoryStream( bytes ) };
+            var buffer = new MemoryBuffer { _memory = new MemoryStream( bytes.Array, bytes.Offset, bytes.Count ) };
             return ThriftStructReader.Read<T>( new ThriftBinaryProtocol( buffer ) );
         }
 

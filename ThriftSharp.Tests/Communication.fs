@@ -20,7 +20,7 @@ let ``Binary().OverHttp() returns a binary transport over HTTP.``() =
     let headers = dict ["a", "b"]
     let timeout = TimeSpan.FromSeconds(2.1)
     let token = CancellationToken(false)
-    let comm = ThriftCommunication.Binary().OverHttp("http://example.org", headers, nullable timeout)
+    let comm = ThriftCommunication.Binary().OverHttp("http://example.org", headers, null, nullable timeout)
     let prot = comm.CreateProtocol(token)
     let trans: IThriftTransport = getField prot "_transport"
     

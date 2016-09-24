@@ -1,7 +1,8 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -17,7 +18,7 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftStructReader
     {
-        private static readonly Dictionary<ThriftStruct, object> _knownReaders = new Dictionary<ThriftStruct, object>();
+        private static readonly ConcurrentDictionary<ThriftStruct, object> _knownReaders = new ConcurrentDictionary<ThriftStruct, object>();
 
 
         /// <summary>
@@ -33,7 +34,8 @@ namespace ThriftSharp.Internals
                 Expression.Throw(
                     Expression.Call(
                         Methods.ThriftSerializationException_TypeIdMismatch,
-                        Expression.Constant( expected ), actual
+                        Expression.Constant( expected ),
+                        actual
                     )
                 )
             );
@@ -477,7 +479,7 @@ namespace ThriftSharp.Internals
                     var check = isSetVars.ContainsKey( field )
                       // Do not use IsFalse, not supported by UWP's expression interpreter
                       ? (Expression) Expression.Equal( isSetVars[field], Expression.Constant( false ) )
-                      : Expression.Equal( field.Getter, Expression.Constant( null ) );
+                      : field.NullChecker;
 
                     if( field.DefaultValue == null )
                     {
@@ -503,6 +505,7 @@ namespace ThriftSharp.Internals
                                 defaultValueExpr
                             );
                         }
+
                         statements.Add(
                             Expression.IfThen(
                                 check,
@@ -614,7 +617,7 @@ namespace ThriftSharp.Internals
             var thriftStruct = ThriftAttributesParser.ParseStruct( typeof( T ).GetTypeInfo() );
             if( !_knownReaders.ContainsKey( thriftStruct ) )
             {
-                _knownReaders.Add( thriftStruct, CreateReaderForStruct( thriftStruct ).Compile() );
+                _knownReaders.TryAdd( thriftStruct, CreateReaderForStruct( thriftStruct ).Compile() );
             }
 
             return ( (Func<IThriftProtocol, T>) _knownReaders[thriftStruct] )( protocol );

@@ -17,10 +17,7 @@ using Thrift.Transport;
 
 namespace ThriftSharp.Benchmarking.Models.Thrift
 {
-
-  #if !SILVERLIGHT
-  [Serializable]
-  #endif
+    
   public partial class Person : TBase
   {
     private string _lastName;
@@ -62,9 +59,7 @@ namespace ThriftSharp.Benchmarking.Models.Thrift
 
 
     public Isset __isset;
-    #if !SILVERLIGHT
-    [Serializable]
-    #endif
+    
     public struct Isset {
       public bool lastName;
       public bool age;

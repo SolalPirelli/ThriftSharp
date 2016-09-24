@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 module ThriftSharp.Tests.``Structs``
@@ -612,7 +612,7 @@ type Reading() =
                  @ [FieldEnd
                     FieldStop
                     StructEnd] 
-        let m = MemoryProtocol(data)
+        let m = new MemoryProtocol(data)
         let meth = typeof<ThriftStructReader>.GetMethod("Read").MakeGenericMethod([| typ.AsType() |])
         let exn = Assert.Throws<ThriftSerializationException>(fun () -> 
             try meth.Invoke(null, [| m |])
@@ -621,7 +621,7 @@ type Reading() =
 
 
     override x.Test fieldData typeId (value: 'a) =
-        let isReq = typeof<'a>.IsValueType && System.Nullable.GetUnderlyingType(typeof<'a>) = null
+        let isReq = typeof<'a>.GetTypeInfo().IsValueType && System.Nullable.GetUnderlyingType(typeof<'a>) = null
         let typ = makeClass [{typ = typeof<ThriftStructAttribute>; args = ["Struct"]; namedArgs = []}]
                             [typeof<'a>, [{typ = typeof<ThriftFieldAttribute>; args = [1s; isReq; "Field"]; namedArgs = []}]]
         
@@ -631,14 +631,14 @@ type Reading() =
           @ fieldData 
           @ [FieldEnd; FieldStop; StructEnd]
         
-        let m = MemoryProtocol(data)
+        let m = new MemoryProtocol(data)
         let meth = typeof<ThriftStructReader>.GetMethod("Read").MakeGenericMethod([| typ.AsType() |])
         let structInst = meth.Invoke(null, [| m |])
         m.IsEmpty <=> true
         (typ.GetProperty("0").GetValue(structInst) :?> 'a) <=> value
 
     override x.TestStruct data (value: 'a) =
-        let m = MemoryProtocol(data)
+        let m = new MemoryProtocol(data)
         let inst = ThriftStructReader.Read<'a>(m)
         m.IsEmpty <=> true
         inst <=> value
@@ -650,7 +650,7 @@ type Reading() =
             [StructHeader "StructField"
              FieldStop
              StructEnd]
-        let m = MemoryProtocol(data)
+        let m = new MemoryProtocol(data)
         let exn = Assert.Throws<ThriftSerializationException>(fun () -> ThriftStructReader.Read<StructWithStructField>(m) |> box)
         Assert.Contains("Field 'Field' is a required field, but was not present", exn.Message)
 
@@ -713,14 +713,14 @@ type Writing() =
         | :? TargetInvocationException as e -> raise e.InnerException
 
     override x.Test fieldData typeId (value: 'a) =
-        let isReq = typeof<'a>.IsValueType && System.Nullable.GetUnderlyingType(typeof<'a>) = null
+        let isReq = typeof<'a>.GetTypeInfo().IsValueType && System.Nullable.GetUnderlyingType(typeof<'a>) = null
         let typ = makeClass [{typ = typeof<ThriftStructAttribute>; args = ["Struct"]; namedArgs = []}]
                             [typeof<'a>, [{typ = typeof<ThriftFieldAttribute>; args = [1s; isReq; "Field"]; namedArgs = []}]]
 
-        let inst = System.Activator.CreateInstance(typ)
+        let inst = System.Activator.CreateInstance(typ.AsType())
         typ.GetProperty("0").SetValue(inst, value)
         
-        let m = MemoryProtocol()
+        let m = new MemoryProtocol()
         write m inst
 
         m.WrittenValues <=> [StructHeader "Struct"
@@ -731,14 +731,14 @@ type Writing() =
                              StructEnd]
 
     override x.TestStruct data (value: 'a) =
-        let m = MemoryProtocol()
+        let m = new MemoryProtocol()
         write m value
         m.WrittenValues <=> data
 
 
     [<Fact>]
     member __.``Error on required but unset field``() =
-        let exn = Assert.Throws<ThriftSerializationException>(fun () -> write (MemoryProtocol()) (StructWithStructField()))
+        let exn = Assert.Throws<ThriftSerializationException>(fun () -> write (new MemoryProtocol()) (StructWithStructField()))
         Assert.Contains("Field 'Field' is a required field but was null", exn.Message)
 
 
@@ -752,7 +752,7 @@ type Skipping() =
           @ fieldData 
           @ [FieldEnd; FieldStop; StructEnd]
 
-        let m = MemoryProtocol(data)
+        let m = new MemoryProtocol(data)
         ThriftStructReader.Read<StructWithoutFields>(m) |> ignore
         m.IsEmpty <=> true
 

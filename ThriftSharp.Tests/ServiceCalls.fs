@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 module ThriftSharp.Tests.``Service calls``
@@ -90,13 +90,12 @@ type IService =
     abstract OneWay: unit -> Task
 
 
-[<AbstractClass>]
-type Tests() =
-    abstract GetService: (IThriftTransport -> IThriftProtocol) -> IService
-
+type ``Proxy``() =
     member x.Test call expectedWrite expectedRead expectedResult = asTask <| async {
         let mutable prot: IThriftProtocol = null
-        let svc = x.GetService(fun t -> prot <- MemoryProtocol(expectedRead, t); prot)
+        let comm = ThriftCommunication.UsingCustomProtocol(fun t -> prot <- new MemoryProtocol(expectedRead, t); prot)
+                                      .UsingCustomTransport(fun t -> new MemoryTransport([], t) :> IThriftTransport)
+        let svc = ThriftProxy.Create<IService>(comm)
         let! res = call(svc) |> Async.AwaitTask
         (prot :?> MemoryProtocol).WrittenValues <=> expectedWrite
         res <=> expectedResult
@@ -104,7 +103,9 @@ type Tests() =
     
     member x.TestException<'e when 'e :> exn> call expectedWrite expectedRead checker = asTask <| async {
         let mutable prot: IThriftProtocol = null
-        let svc = x.GetService(fun t -> prot <- MemoryProtocol(expectedRead, t); prot)
+        let comm = ThriftCommunication.UsingCustomProtocol(fun t -> prot <- new MemoryProtocol(expectedRead, t); prot)
+                                      .UsingCustomTransport(fun t -> new MemoryTransport([], t) :> IThriftTransport)
+        let svc = ThriftProxy.Create<IService>(comm)
         let! ex = Assert.ThrowsAnyAsync<'e>(fun() -> call(svc) :> Task) |> Async.AwaitTask
         (prot :?> MemoryProtocol).WrittenValues <=> expectedWrite
         checker(ex)
@@ -600,50 +601,3 @@ type Tests() =
                []
                []
                (fun e -> Assert.Contains("Parameter 'arg4' was null", e.Message))
-  
-      
-open System
-type ServiceImpl(prot) =
-    inherit ThriftServiceImplementation<IService>(ThriftCommunication.UsingCustomProtocol(Func<IThriftTransport, IThriftProtocol>(prot))
-                                                                     .UsingCustomTransport(fun t -> MemoryTransport([], t) :> IThriftTransport))
-
-    // Mimics the C# expression `x => x.Method`
-    // Not very pretty, but it works.
-    member __.E<'f>(name) =
-        let param = Expression.Parameter(typeof<IService>)
-        let meth = param.Type.GetMethod(name)
-        let call = Expression.Call(Expression.Constant(meth), "CreateDelegate", [| |], 
-                                [| Expression.Constant(typeof<'f>) :> Expression; param :> Expression |])
-        let conv = Expression.Convert(call, typeof<'f>)
-        Expression.Lambda<Func<IService, 'f>>(conv, param)
-
-    interface IService with
-        member x.NoReturn0() = base.CallAsync(x.E<Func<Task>>("NoReturn0"))
-        member x.NoReturn1(a1) = base.CallAsync<bool>(x.E<Func<bool, Task>>("NoReturn1"), a1)
-        member x.NoReturn2(a1,a2) = base.CallAsync<bool, int>(x.E<Func<bool, int, Task>>("NoReturn2"), a1, a2)
-        member x.NoReturn3(a1,a2,a3) = base.CallAsync<bool, int, double>(x.E<Func<bool, int, double, Task>>("NoReturn3"), a1, a2, a3)
-        member x.NoReturn4(a1,a2,a3,a4) = base.CallAsync<bool, int, double, string>(x.E<Func<bool, int, double, string, Task>>("NoReturn4"), a1, a2, a3, a4)
-        member x.NoReturn5(a1,a2,a3,a4,a5) = base.CallAsync("NoReturn5", a1, a2, a3, a4, a5)
-        member x.NoReturnException() = base.CallAsync(x.E<Func<Task>>("NoReturnException"))
-        member x.Return0() = base.CallAsync<int>(x.E<Func<Task<int>>>("Return0"))
-        member x.Return1(a1) = base.CallAsync<bool, int>(x.E<Func<bool, Task<int>>>("Return1"), a1)
-        member x.Return2(a1,a2) = base.CallAsync<bool, int, int>(x.E<Func<bool, int, Task<int>>>("Return2"), a1, a2)
-        member x.Return3(a1,a2,a3) = base.CallAsync<bool, int, double, int>(x.E<Func<bool, int, double, Task<int>>>("Return3"), a1, a2, a3)
-        member x.Return4(a1,a2,a3,a4) = base.CallAsync<bool, int, double, string, int>(x.E<Func<bool, int, double, string, Task<int>>>("Return4"), a1, a2, a3, a4)
-        member x.Return5(a1,a2,a3,a4,a5) = base.CallAsync<int>("Return5", a1, a2, a3, a4, a5)
-        member x.ReturnException() = base.CallAsync<int>(x.E<Func<Task<int>>>("ReturnException"))
-        member x.ConvertedReturn() = base.CallAsync<DateTime>(x.E<Func<Task<DateTime>>>("ConvertedReturn"))
-        member x.OneWay() =  base.CallAsync(x.E<Func<Task>>("OneWay"))
-
-type ServiceImplementation() =
-    inherit Tests()
-
-    override __.GetService prot =
-        ServiceImpl(prot) :> IService
-
-type Proxy() =
-    inherit Tests()
-
-    override __.GetService prot =
-        ThriftProxy.Create<IService>(ThriftCommunication.UsingCustomProtocol(Func<IThriftTransport, IThriftProtocol>(prot))
-                                                        .UsingCustomTransport(fun t -> MemoryTransport([], t) :> IThriftTransport))

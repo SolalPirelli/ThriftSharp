@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 // Uncomment this line to also bench Apache Thrift
@@ -50,7 +50,7 @@ namespace ThriftSharp.Benchmarking
             T_TimePeriod = TMemoryBuffer.Serialize( (T.TimePeriod) TimePeriod.Sample );
 #endif
 
-        private static readonly byte[]
+        private static readonly ArraySegment<byte>
             TS_All = MemoryBuffer.Serialize( AllTypesContainer.Sample ),
             TS_Binary = MemoryBuffer.Serialize( BinaryContainer.Sample ),
             TS_Bool = MemoryBuffer.Serialize( BoolContainer.Sample ),
@@ -182,103 +182,103 @@ namespace ThriftSharp.Benchmarking
 
 
         [Benchmark]
-        public byte[] TS_W_All()
+        public ArraySegment<byte> TS_W_All()
         {
             return MemoryBuffer.Serialize( AllTypesContainer.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_Binary()
+        public ArraySegment<byte> TS_W_Binary()
         {
             return MemoryBuffer.Serialize( BinaryContainer.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_Bool()
+        public ArraySegment<byte> TS_W_Bool()
         {
             return MemoryBuffer.Serialize( BoolContainer.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_Byte()
+        public ArraySegment<byte> TS_W_Byte()
         {
             return MemoryBuffer.Serialize( ByteContainer.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_Double()
+        public ArraySegment<byte> TS_W_Double()
         {
             return MemoryBuffer.Serialize( DoubleContainer.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_Empty()
+        public ArraySegment<byte> TS_W_Empty()
         {
             return MemoryBuffer.Serialize( EmptyStruct.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_Int16()
+        public ArraySegment<byte> TS_W_Int16()
         {
             return MemoryBuffer.Serialize( Int16Container.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_Int32()
+        public ArraySegment<byte> TS_W_Int32()
         {
             return MemoryBuffer.Serialize( Int32Container.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_Int64()
+        public ArraySegment<byte> TS_W_Int64()
         {
             return MemoryBuffer.Serialize( Int64Container.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_List()
+        public ArraySegment<byte> TS_W_List()
         {
             return MemoryBuffer.Serialize( ListContainer.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_Map()
+        public ArraySegment<byte> TS_W_Map()
         {
             return MemoryBuffer.Serialize( MapContainer.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_Person()
+        public ArraySegment<byte> TS_W_Person()
         {
             return MemoryBuffer.Serialize( Person.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_PersonAvailability()
+        public ArraySegment<byte> TS_W_PersonAvailability()
         {
             return MemoryBuffer.Serialize( PersonAvailability.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_Set()
+        public ArraySegment<byte> TS_W_Set()
         {
             return MemoryBuffer.Serialize( SetContainer.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_String()
+        public ArraySegment<byte> TS_W_String()
         {
             return MemoryBuffer.Serialize( StringContainer.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_Struct()
+        public ArraySegment<byte> TS_W_Struct()
         {
             return MemoryBuffer.Serialize( StructContainer.Sample );
         }
 
         [Benchmark]
-        public byte[] TS_W_TimePeriod()
+        public ArraySegment<byte> TS_W_TimePeriod()
         {
             return MemoryBuffer.Serialize( TimePeriod.Sample );
         }

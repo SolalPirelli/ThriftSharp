@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 using System;
@@ -57,6 +57,11 @@ namespace ThriftSharp.Internals
         /// </summary>
         public readonly Func<Expression, Expression> Setter;
 
+        /// <summary>
+        /// Gets an expression testing whether the field's value is null, if any.
+        /// </summary>
+        public readonly Expression NullChecker;
+
 
         /// <summary>
         /// Initializes a new instance of the ThriftWireField class with the specified values.
@@ -76,6 +81,35 @@ namespace ThriftSharp.Internals
             Converter = converter;
             Getter = getter;
             Setter = setter;
+
+            // NullChecker is required because UWP doesn't implement Equal/NotEqual on nullables.
+            if( getter != null )
+            {
+                if( Nullable.GetUnderlyingType( underlyingTypeInfo.AsType() ) == null )
+                {
+                    if( !underlyingTypeInfo.IsValueType )
+                    {
+                        NullChecker = Expression.Equal(
+                            getter,
+                            Expression.Constant( null )
+                        );
+                    }
+                }
+                else
+                {
+                    // Can't use HasValue, not supported by UWP's expression interpreter
+                    NullChecker = Expression.Call(
+                        typeof( object ),
+                        "ReferenceEquals",
+                        Type.EmptyTypes,
+                        Expression.Convert(
+                            getter,
+                            typeof( object )
+                        ),
+                        Expression.Constant( null )
+                    );
+                }
+            }
         }
 
 

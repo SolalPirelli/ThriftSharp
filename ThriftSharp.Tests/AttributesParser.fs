@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 namespace ThriftSharp.Tests.``Parsing services``
@@ -312,7 +312,7 @@ module ``Parsing structs: Normal fields`` =
         let genType = makeStruct fieldType isReq
         let expected = ThriftStruct(ThriftStructHeader("Struct"), [| ThriftField(0s, "Field", isReq, null, null, genType.GetProperty("0")) |], genType)
         
-        ThriftAttributesParser.ParseStruct(genType.GetTypeInfo()) <=> expected
+        ThriftAttributesParser.ParseStruct(genType) <=> expected
 
     let throws fieldType isReq expected =
         let genType = makeStruct fieldType isReq

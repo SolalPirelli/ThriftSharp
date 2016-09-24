@@ -1,7 +1,8 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -26,7 +27,7 @@ namespace ThriftSharp.Internals
             { typeof( sbyte[] ), ThriftTypeId.Binary }
         };
 
-        private static readonly Dictionary<Type, ThriftType> _knownTypes = new Dictionary<Type, ThriftType>();
+        private static readonly ConcurrentDictionary<Type, ThriftType> _knownTypes = new ConcurrentDictionary<Type, ThriftType>();
 
 
         // Generic arguments if the type is a list, set or map
@@ -173,7 +174,7 @@ namespace ThriftSharp.Internals
             {
                 var thriftType = new ThriftType( type );
 
-                _knownTypes.Add( type, thriftType );
+                _knownTypes.TryAdd( type, thriftType );
 
                 // This has to be done this way because otherwise self-referencing types will loop 
                 // since they'd call ThriftType.Get before they were themselves added to _knownTypes

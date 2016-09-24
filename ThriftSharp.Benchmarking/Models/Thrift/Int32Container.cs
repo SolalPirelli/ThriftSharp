@@ -18,9 +18,7 @@ using Thrift.Transport;
 namespace ThriftSharp.Benchmarking.Models.Thrift
 {
 
-  #if !SILVERLIGHT
-  [Serializable]
-  #endif
+  
   public partial class Int32Container : TBase
   {
 

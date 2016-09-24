@@ -1,7 +1,8 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using ThriftSharp.Models;
@@ -15,8 +16,8 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftClientMessageWriter
     {
-        private static readonly Dictionary<ThriftMethod, Action<object[], IThriftProtocol>> _knownWriters =
-            new Dictionary<ThriftMethod, Action<object[], IThriftProtocol>>();
+        private static readonly ConcurrentDictionary<ThriftMethod, Action<object[], IThriftProtocol>> _knownWriters =
+            new ConcurrentDictionary<ThriftMethod, Action<object[], IThriftProtocol>>();
 
         /// <summary>
         /// Creates a writer for the specified method.
@@ -71,7 +72,7 @@ namespace ThriftSharp.Internals
         {
             if( !_knownWriters.ContainsKey( method ) )
             {
-                _knownWriters.Add( method, CreateWriterForMethod( method ).Compile() );
+                _knownWriters.TryAdd( method, CreateWriterForMethod( method ).Compile() );
             }
 
             _knownWriters[method]( args, protocol );

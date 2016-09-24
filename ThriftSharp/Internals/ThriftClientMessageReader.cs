@@ -1,7 +1,8 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using ThriftSharp.Models;
@@ -15,7 +16,7 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftClientMessageReader
     {
-        private static readonly Dictionary<ThriftMethod, object> _knownReaders = new Dictionary<ThriftMethod, object>();
+        private static readonly ConcurrentDictionary<ThriftMethod, object> _knownReaders = new ConcurrentDictionary<ThriftMethod, object>();
 
 
         /// <summary>
@@ -97,9 +98,7 @@ namespace ThriftSharp.Internals
 
                 ThriftStructReader.CreateReaderForFields( protocolParam, wireFields ),
 
-                Expression.Call( protocolParam, Methods.IThriftProtocol_ReadMessageEnd ),
-
-                Expression.Call( protocolParam, Methods.IDisposable_Dispose )
+                Expression.Call( protocolParam, Methods.IThriftProtocol_ReadMessageEnd )
             };
 
             if( returnVariable != null )
@@ -146,7 +145,7 @@ namespace ThriftSharp.Internals
         {
             if( !_knownReaders.ContainsKey( method ) )
             {
-                _knownReaders.Add( method, CreateReaderForMethod( method ).Compile() );
+                _knownReaders.TryAdd( method, CreateReaderForMethod( method ).Compile() );
             }
 
             return ( (Func<IThriftProtocol, T>) _knownReaders[method] )( protocol );

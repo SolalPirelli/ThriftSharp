@@ -1,7 +1,10 @@
 ﻿module ThriftSharp.Tests.``HTTP transport``
 
+#if HTTP_LISTENER_AVAILABLE
+
 open System
 open System.Collections.Generic
+open System.Net.Http
 open System.Net
 open System.Threading
 open Xunit
@@ -20,9 +23,9 @@ let mutable PortCounter = 4000
 
 let test (ps: TestParams) = async {
     let url = sprintf "http://localhost:%d/" (Interlocked.Increment(&PortCounter))
-    let transport = HttpThriftTransport(url, CancellationToken.None, ps.Headers, ps.Timeout)
+    let transport = new HttpThriftTransport(url, ps.Headers, new HttpClientHandler(), CancellationToken.None, ps.Timeout)
 
-    let listener = HttpListener()
+    let listener = new HttpListener()
     listener.Prefixes.Add(url)
     listener.Start()
 
@@ -80,9 +83,9 @@ let ``Client sends headers along with the request``() = asTask <| async {
 [<Fact>]
 let ``Server takes too long to respond``() = asTask <| async {
     let url = sprintf "http://localhost:%d/" (Interlocked.Increment(&PortCounter))
-    let transport = HttpThriftTransport(url, CancellationToken.None, dict [], TimeSpan.FromMilliseconds(30.0))
+    let transport = new HttpThriftTransport(url, dict [], new HttpClientHandler(), CancellationToken.None, TimeSpan.FromMilliseconds(30.0))
 
-    let listener = HttpListener()
+    let listener = new HttpListener()
     listener.Prefixes.Add(url)
     listener.Start()
 
@@ -99,9 +102,9 @@ let ``Server takes too long to respond``() = asTask <| async {
 [<Fact>]
 let ``Client's token is canceled before even sending data``() = asTask <| async {
     let url = sprintf "http://localhost:%d/" (Interlocked.Increment(&PortCounter))
-    let transport = HttpThriftTransport(url, CancellationToken(true), dict [], Timeout.InfiniteTimeSpan)
+    let transport = new HttpThriftTransport(url, dict [], new HttpClientHandler(), CancellationToken(true), Timeout.InfiniteTimeSpan)
 
-    let listener = HttpListener()
+    let listener = new HttpListener()
     listener.Prefixes.Add(url)
     listener.Start()
 
@@ -115,11 +118,11 @@ let ``Client's token is canceled before even sending data``() = asTask <| async 
 
 [<Fact>]
 let ``Client's token is canceled after sending data but before receiving it``() = asTask <| async {
-    let source = CancellationTokenSource()
+    let source = new CancellationTokenSource()
     let url = sprintf "http://localhost:%d/" (Interlocked.Increment(&PortCounter))
-    let transport = HttpThriftTransport(url, source.Token, dict [], Timeout.InfiniteTimeSpan)
+    let transport = new HttpThriftTransport(url, dict [], new HttpClientHandler(), source.Token, Timeout.InfiniteTimeSpan)
 
-    let listener = HttpListener()
+    let listener = new HttpListener()
     listener.Prefixes.Add(url)
     listener.Start()
 
@@ -135,3 +138,5 @@ let ``Client's token is canceled after sending data but before receiving it``() 
 
     do! Assert.ThrowsAnyAsync<OperationCanceledException>(fun () -> flushTask) |> Async.AwaitTask |> Async.Ignore
 }
+
+#endif

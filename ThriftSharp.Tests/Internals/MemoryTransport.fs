@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 namespace ThriftSharp.Tests
@@ -19,7 +19,7 @@ type MemoryTransport(toRead: byte list, ?token: CancellationToken) =
     member x.IsDisposed with get() = isDisposed
     member x.HasRead with get() = hasRead
 
-    new() = MemoryTransport([])
+    new() = new MemoryTransport([])
 
     interface IThriftTransport with
         member x.WriteBytes(bs, off, count) =
@@ -45,9 +45,12 @@ type MemoryTransport(toRead: byte list, ?token: CancellationToken) =
                 failwith "Already disposed."
 
             match token with
-            | Some t when t.IsCancellationRequested -> Task.FromCanceled(t)
+            | Some t when t.IsCancellationRequested -> let tcs = TaskCompletionSource()
+                                                       tcs.SetCanceled()
+                                                       tcs.Task :> Task
+
             | _ -> hasRead <- true
-                   Task.CompletedTask
+                   Task.FromResult(0) :> Task
 
         member x.Dispose() =
             isDisposed <- true

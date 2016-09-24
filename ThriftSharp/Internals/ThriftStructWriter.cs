@@ -1,7 +1,8 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -16,7 +17,7 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftStructWriter
     {
-        private static readonly Dictionary<ThriftStruct, object> _knownWriters = new Dictionary<ThriftStruct, object>();
+        private static readonly ConcurrentDictionary<ThriftStruct, object> _knownWriters = new ConcurrentDictionary<ThriftStruct, object>();
 
 
         /// <summary>
@@ -320,13 +321,11 @@ namespace ThriftSharp.Internals
                     return writingExpr;
 
                 case ThriftWireFieldState.Required:
+                    // It's possible to have a nullable required field if it's converted to a class
                     if( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable )
                     {
                         return Expression.IfThenElse(
-                            Expression.Equal(
-                                field.Getter,
-                                Expression.Constant( null )
-                            ),
+                            field.NullChecker,
                             Expression.Throw(
                                 Expression.Call(
                                     Methods.ThriftSerializationException_RequiredFieldIsNull,
@@ -342,9 +341,10 @@ namespace ThriftSharp.Internals
                     if( field.DefaultValue == null && ( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable ) )
                     {
                         return Expression.IfThen(
-                            Expression.NotEqual(
-                                field.Getter,
-                                Expression.Constant( null )
+                            // Do not use IsFalse, not supported by UWP's expression interpreter
+                            Expression.Equal(
+                                field.NullChecker,
+                                Expression.Constant( false )
                             ),
                             writingExpr
                         );
@@ -358,9 +358,10 @@ namespace ThriftSharp.Internals
                     if( field.UnderlyingTypeInfo.IsClass || isUnderlyingNullable )
                     {
                         condition = Expression.AndAlso(
-                            Expression.NotEqual(
-                                field.Getter,
-                                Expression.Constant( null )
+                            // Do not use IsTrue, not supported by UWP's expression interpreter
+                            Expression.Equal(
+                                field.NullChecker,
+                                Expression.Constant( false )
                             ),
                             condition
                         );
@@ -382,7 +383,7 @@ namespace ThriftSharp.Internals
             var thriftStruct = ThriftAttributesParser.ParseStruct( typeof( T ).GetTypeInfo() );
             if( !_knownWriters.ContainsKey( thriftStruct ) )
             {
-                _knownWriters.Add( thriftStruct, CreateWriterForStruct( thriftStruct ).Compile() );
+                _knownWriters.TryAdd( thriftStruct, CreateWriterForStruct( thriftStruct ).Compile() );
             }
 
             ( (Action<T, IThriftProtocol>) _knownWriters[thriftStruct] )( value, protocol );

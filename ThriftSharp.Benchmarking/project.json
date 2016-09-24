@@ -1,0 +1,31 @@
+{
+  "version": "5.0.0",
+
+  "buildOptions": {
+    "emitEntryPoint": true
+  },
+
+  "dependencies": {
+    "Microsoft.NETCore.Portable.Compatibility": "1.0.1",
+
+    "Microsoft.NETCore.App": {
+      "type": "platform",
+      "version": "1.0.0"
+    },
+
+    "ApacheThrift": "0.9.3",
+    "BenchmarkDotNet": "0.9.9",
+    "BenchmarkDotNet.Diagnostics.Windows": "0.9.9"
+  },
+
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": [ "net35", "net45" ],
+      "dependencies": {
+        "ThriftSharp": {
+          "target": "project"
+        }
+      }
+    }
+  }
+}

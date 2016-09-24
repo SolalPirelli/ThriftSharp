@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 using System;
@@ -29,16 +29,21 @@ namespace ThriftSharp.Transport
         /// Initializes a new instance of the <see cref="HttpThriftTransport" /> class using the specified values.
         /// </summary>
         /// <param name="url">The URL, including the port if necessary.</param>
-        /// <param name="token">The cancellation token that will cancel asynchronous tasks.</param>
         /// <param name="headers">The HTTP headers to include with every request.</param>
+        /// <param name="clientHandler">The HTTP client handler.</param>
+        /// <param name="token">The cancellation token that will cancel asynchronous tasks.</param>
         /// <param name="timeout">The timeout.</param>
-        public HttpThriftTransport( string url, CancellationToken token, IReadOnlyDictionary<string, string> headers, TimeSpan timeout )
+        public HttpThriftTransport( string url, IReadOnlyDictionary<string, string> headers, HttpMessageHandler clientHandler,
+                                    CancellationToken token, TimeSpan timeout )
         {
             _url = url;
             _token = token;
             _headers = headers;
 
-            _client = new HttpClient { Timeout = timeout };
+            _client = new HttpClient( clientHandler, disposeHandler: false )
+            {
+                Timeout = timeout
+            };
 
             _outputStream = new MemoryStream();
         }
@@ -88,6 +93,7 @@ namespace ThriftSharp.Transport
             var response = await _client.SendAsync( request, HttpCompletionOption.ResponseHeadersRead, _token );
 
             _inputStream = await response.Content.ReadAsStreamAsync();
+
             _outputStream.Dispose();
             _outputStream = null;
         }
@@ -115,14 +121,8 @@ namespace ThriftSharp.Transport
         /// </summary>
         private void DisposePrivate()
         {
-            if( _outputStream != null )
-            {
-                _outputStream.Dispose();
-            }
-            if( _inputStream != null )
-            {
-                _inputStream.Dispose();
-            }
+            _outputStream?.Dispose();
+            _inputStream?.Dispose();
         }
         #endregion
     }

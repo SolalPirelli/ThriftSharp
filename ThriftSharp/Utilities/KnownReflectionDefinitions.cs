@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 using System;
@@ -56,8 +56,6 @@ namespace ThriftSharp.Utilities
     internal static class Methods
     {
         public static readonly MethodInfo
-            IDisposable_Dispose = typeof( IDisposable ).GetTypeInfo().GetDeclaredMethod( "Dispose" ),
-
             Enum_IsDefined = typeof( Enum ).GetTypeInfo().GetDeclaredMethod( "IsDefined" ),
 
             ThriftStructReader_Skip = TypeInfos.ThriftStructReader.GetDeclaredMethod( "Skip" ),

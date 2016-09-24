@@ -1,0 +1,65 @@
+﻿{
+  "version": "5.0.0",
+
+  "testRunner": "xunit",
+
+  "buildOptions": {
+    "emitEntryPoint": true,
+    "compilerName": "fsc",
+    "compile": {
+      "includeFiles": [
+        "Internals/MemoryProtocol.fs",
+        "Internals/MemoryTransport.fs",
+        "Internals/Utils.fs",
+        "Converters.fs",
+        "ModelsEqualsHash.fs",
+        "BinaryProtocol.fs",
+        "AttributesParser.fs",
+        "ServiceCalls.fs",
+        "MemoryLeaks.fs",
+        "StructsSerialization.fs",
+        "Communication.fs",
+        "HttpTransport.fs",
+        "ParametersValidation.fs"
+      ]
+    }
+  },
+
+  "dependencies": {
+    // Fix from https://github.com/dotnet/corefx/pull/10716, which is not yet released
+    "System.Net.Http": "4.1.1-beta-24423-02",
+    "System.Reflection": "4.1.0",
+    "System.Threading.Tasks": "4.0.11",
+    "Microsoft.NETCore.Portable.Compatibility": "1.0.1",
+
+    "ThriftSharp": "5.0.0",
+
+    "xunit": "2.2.0-beta2-build3300",
+    "dotnet-test-xunit": "2.2.0-preview2-build1029"
+  },
+
+  "tools": {
+    "dotnet-compile-fsc": "1.0.0-preview2-*"
+  },
+
+  "runtimes": {
+    "win10-x64": {}
+  },
+
+  "frameworks": {
+    "netcoreapp1.0": {
+      "dependencies": {
+        "Microsoft.FSharp.Core.netcore": "1.0.0-alpha-160805"
+      }
+    },
+    "net451": {
+      "dependencies": {
+        "FSharp.Core": "4.0.0.1"
+      },
+
+      "buildOptions": {
+        "define": [ "HTTP_LISTENER_AVAILABLE" ]
+      }
+    }
+  }
+}

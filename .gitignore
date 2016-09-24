@@ -1,18 +1,13 @@
 # User-specific files
+.vs/
 *.vs
 *.user
 
-# NuGet packages
-[Pp]ackages/
-
 # Build results
-[Dd]ebug/
-[Rr]elease/
-[Bb]in/
-[Oo]bj/
-
-# NuGet build results
-*.nupkg
+bin/
+obj/
+*.lock.json
+*.nuget.props
 
 # VS test results
 TestResults/

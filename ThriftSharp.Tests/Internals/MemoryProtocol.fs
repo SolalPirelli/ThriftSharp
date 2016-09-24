@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2014-16 Solal Pirelli
+﻿// Copyright (c) Solal Pirelli
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 namespace ThriftSharp.Tests
@@ -47,7 +47,7 @@ type MemoryProtocol(toRead: ThriftProtocolValue list, ?transport: IThriftTranspo
     member __.WrittenValues with get() = List.rev writtenVals
     member __.IsEmpty with get() = toRead.Count = 0
 
-    new() = MemoryProtocol([])
+    new() = new MemoryProtocol([])
 
     interface IThriftProtocol with
         member __.WriteMessageHeader(h) =
@@ -117,7 +117,7 @@ type MemoryProtocol(toRead: ThriftProtocolValue list, ?transport: IThriftTranspo
         member __.FlushAndReadAsync() =
             match transport with
             | Some t -> t.FlushAndReadAsync()
-            | None -> Task.CompletedTask
+            | None -> Task.FromResult(0) :> Task
 
 
         member __.ReadMessageHeader() =
