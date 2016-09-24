@@ -1,5 +1,5 @@
 ﻿{
-  "version": "5.0.0",
+  "version": "5.0.1",
 
   "title": "Thrift#",
   "authors": [ "Solal Pirelli" ],
@@ -8,7 +8,15 @@
   "packOptions": {
     "projectUrl": "https://github.com/SolalPirelli/ThriftSharp",
     "licenseUrl": "https://raw.githubusercontent.com/SolalPirelli/ThriftSharp/master/License.txt",
-    "tags": [ "thrift" ]
+    "tags": [ "thrift" ],
+
+    "files": {
+      "include": "Properties/ThriftSharp.rd.xml",
+
+      "mappings": {
+        "lib/netstandard1.3/ThriftSharp/Properties/ThriftSharp.rd.xml": "Properties/ThriftSharp.rd.xml"
+      }
+    }
   },
 
   "frameworks": {
