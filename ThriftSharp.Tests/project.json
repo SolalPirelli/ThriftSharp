@@ -1,6 +1,4 @@
 ﻿{
-  "version": "5.0.0",
-
   "testRunner": "xunit",
 
   "buildOptions": {
@@ -26,15 +24,10 @@
   },
 
   "dependencies": {
-    // Fix from https://github.com/dotnet/corefx/pull/10716, which is not yet released
-    "System.Net.Http": "4.1.1-beta-24423-02",
-    "System.Reflection": "4.1.0",
-    "System.Threading.Tasks": "4.0.11",
-    "Microsoft.NETCore.Portable.Compatibility": "1.0.1",
-
-    "ThriftSharp": "5.0.0",
+    "ThriftSharp": "5.0.4",
 
     "xunit": "2.2.0-beta2-build3300",
+    "xunit.runner.visualstudio": "2.1.0",
     "dotnet-test-xunit": "2.2.0-preview2-build1029"
   },
 
@@ -47,11 +40,13 @@
   },
 
   "frameworks": {
-    "netcoreapp1.0": {
-      "dependencies": {
-        "Microsoft.FSharp.Core.netcore": "1.0.0-alpha-160805"
-      }
-    },
+    // TODO make this work
+    //"netcoreapp1.0": {
+    //  "dependencies": {
+    //    "Microsoft.FSharp.Core.netcore": "1.0.0-alpha-160805",
+    //    "Microsoft.NETCore.Portable.Compatibility": "1.0.1"
+    //  }
+    //},
     "net451": {
       "dependencies": {
         "FSharp.Core": "4.0.0.1"

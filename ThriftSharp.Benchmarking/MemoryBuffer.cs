@@ -20,13 +20,7 @@ namespace ThriftSharp.Benchmarking
             var buffer = new MemoryBuffer() { _memory = new MemoryStream() };
             ThriftStructWriter.Write( obj, new ThriftBinaryProtocol( buffer ) );
 
-            ArraySegment<byte> result;
-            if( buffer._memory.TryGetBuffer( out result ) )
-            {
-                return result;
-            }
-
-            throw new Exception( "What now?" );
+            return new ArraySegment<byte>( buffer._memory.GetBuffer() );
         }
 
         public static T Deserialize<T>( ArraySegment<byte> bytes )

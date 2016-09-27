@@ -7,8 +7,9 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>ThriftSharp.Tests</RootNamespace>
     <AssemblyName>ThriftSharp.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -39,8 +40,6 @@
     </When>
   </Choose>
   <ItemGroup>
-    <Content Include="App.config" />
-    <None Include="ThriftSharp.Tests.project.json" />
     <None Include="project.json" />
     <Compile Include="Internals\MemoryProtocol.fs" />
     <Compile Include="Internals\MemoryTransport.fs" />
@@ -55,12 +54,5 @@
     <Compile Include="StructsSerialization.fs" />
     <Compile Include="Communication.fs" />
     <Compile Include="ParametersValidation.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ThriftSharp\ThriftSharp.csproj">
-      <Name>ThriftSharp</Name>
-      <Project>{d1275e05-4238-447e-b6ab-f7301aa6cd2e}</Project>
-      <Private>True</Private>
-    </ProjectReference>
   </ItemGroup>
 </Project>
