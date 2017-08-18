@@ -7,7 +7,7 @@
 using System;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Diagnostics.Windows;
+using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Running;
 #if BENCH_APACHE_THRIFT
 using Thrift.Transport;

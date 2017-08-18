@@ -1,7 +1,5 @@
 ﻿module ThriftSharp.Tests.``HTTP transport``
 
-#if HTTP_LISTENER_AVAILABLE
-
 open System
 open System.Collections.Generic
 open System.Net.Http
@@ -23,7 +21,7 @@ let mutable PortCounter = 4000
 
 let test (ps: TestParams) = async {
     let url = sprintf "http://localhost:%d/" (Interlocked.Increment(&PortCounter))
-    let transport = new HttpThriftTransport(url, ps.Headers, new HttpClientHandler(), CancellationToken.None, ps.Timeout)
+    let transport = new ThriftHttpTransport(url, ps.Headers, new HttpClientHandler(), CancellationToken.None, ps.Timeout)
 
     let listener = new HttpListener()
     listener.Prefixes.Add(url)
@@ -83,7 +81,7 @@ let ``Client sends headers along with the request``() = asTask <| async {
 [<Fact>]
 let ``Server takes too long to respond``() = asTask <| async {
     let url = sprintf "http://localhost:%d/" (Interlocked.Increment(&PortCounter))
-    let transport = new HttpThriftTransport(url, dict [], new HttpClientHandler(), CancellationToken.None, TimeSpan.FromMilliseconds(30.0))
+    let transport = new ThriftHttpTransport(url, dict [], new HttpClientHandler(), CancellationToken.None, TimeSpan.FromMilliseconds(30.0))
 
     let listener = new HttpListener()
     listener.Prefixes.Add(url)
@@ -102,7 +100,7 @@ let ``Server takes too long to respond``() = asTask <| async {
 [<Fact>]
 let ``Client's token is canceled before even sending data``() = asTask <| async {
     let url = sprintf "http://localhost:%d/" (Interlocked.Increment(&PortCounter))
-    let transport = new HttpThriftTransport(url, dict [], new HttpClientHandler(), CancellationToken(true), Timeout.InfiniteTimeSpan)
+    let transport = new ThriftHttpTransport(url, dict [], new HttpClientHandler(), CancellationToken(true), Timeout.InfiniteTimeSpan)
 
     let listener = new HttpListener()
     listener.Prefixes.Add(url)
@@ -120,7 +118,7 @@ let ``Client's token is canceled before even sending data``() = asTask <| async 
 let ``Client's token is canceled after sending data but before receiving it``() = asTask <| async {
     let source = new CancellationTokenSource()
     let url = sprintf "http://localhost:%d/" (Interlocked.Increment(&PortCounter))
-    let transport = new HttpThriftTransport(url, dict [], new HttpClientHandler(), source.Token, Timeout.InfiniteTimeSpan)
+    let transport = new ThriftHttpTransport(url, dict [], new HttpClientHandler(), source.Token, Timeout.InfiniteTimeSpan)
 
     let listener = new HttpListener()
     listener.Prefixes.Add(url)
@@ -139,4 +137,82 @@ let ``Client's token is canceled after sending data but before receiving it``() 
     do! Assert.ThrowsAnyAsync<OperationCanceledException>(fun () -> flushTask) |> Async.AwaitTask |> Async.Ignore
 }
 
-#endif
+[<Fact>]
+let ``Null URL throws``() =
+    Assert.Throws<ArgumentNullException>(fun () -> new ThriftHttpTransport(null, dict [], new HttpClientHandler(), CancellationToken.None, TimeSpan.Zero) |> ignore)
+    
+[<Fact>]
+let ``Empty URL throws``() =
+    Assert.Throws<ArgumentNullException>(fun () -> new ThriftHttpTransport("", dict [], new HttpClientHandler(), CancellationToken.None, TimeSpan.Zero) |> ignore)
+    
+[<Fact>]
+let ``Null headers throws``() =
+    Assert.Throws<ArgumentNullException>(fun () -> new ThriftHttpTransport("http://localhost:80", null, new HttpClientHandler(), CancellationToken.None, TimeSpan.Zero) |> ignore)
+
+[<Fact>]
+let ``Null handler throws``() =
+    Assert.Throws<ArgumentNullException>(fun () -> new ThriftHttpTransport("http://localhost:80", dict [], null, CancellationToken.None, TimeSpan.Zero) |> ignore)
+
+[<Fact>]
+let ``Cannot write after flushing``() = asTask <| async {
+    let url = sprintf "http://localhost:%d/" (Interlocked.Increment(&PortCounter))
+    let transport = new ThriftHttpTransport(url, dict [], new HttpClientHandler(), CancellationToken.None, TimeSpan.FromMilliseconds(30.0))
+    
+    let listener = new HttpListener()
+    listener.Prefixes.Add(url)
+    listener.Start()
+    
+    let flushTask = transport.FlushAndReadAsync()
+
+    let! context = listener.GetContextAsync() |> Async.AwaitTask
+    
+    do! context.Response.OutputStream.AsyncWrite([| |], 0, 0)
+    context.Response.OutputStream.Close()
+
+    do! flushTask |> Async.AwaitTask
+
+    Assert.Throws<InvalidOperationException>(fun () -> transport.WriteBytes([| 0uy; 1uy |], 0, 2)) |> ignore
+}
+
+[<Fact>]
+let ``Cannot write after disposing``() =
+    let transport = new ThriftHttpTransport("http://localhost:80/", dict [], new HttpClientHandler(), CancellationToken.None, TimeSpan.FromMilliseconds(30.0))
+
+    transport.Dispose()
+
+    Assert.Throws<ObjectDisposedException>(fun () -> transport.WriteBytes([| 0uy; 1uy |], 0, 2)) |> ignore
+    
+[<Fact>]
+let ``Cannot read before flushing``() =
+    let transport = new ThriftHttpTransport("http://localhost:80/", dict [], new HttpClientHandler(), CancellationToken.None, TimeSpan.FromMilliseconds(30.0))
+    
+    Assert.Throws<InvalidOperationException>(fun () -> transport.ReadBytes([| 0uy; 1uy |], 0, 2)) |> ignore
+
+[<Fact>]
+let ``Cannot read after disposing``() =
+    let transport = new ThriftHttpTransport("http://localhost:80/", dict [], new HttpClientHandler(), CancellationToken.None, TimeSpan.FromMilliseconds(30.0))
+
+    transport.Dispose()
+    
+    Assert.Throws<ObjectDisposedException>(fun () -> transport.ReadBytes([| 0uy; 1uy |], 0, 2)) |> ignore
+    
+[<Fact>]
+let ``Cannot flush twice``() = asTask <| async {
+    let url = sprintf "http://localhost:%d/" (Interlocked.Increment(&PortCounter))
+    let transport = new ThriftHttpTransport(url, dict [], new HttpClientHandler(), CancellationToken.None, TimeSpan.FromMilliseconds(30.0))
+    
+    let listener = new HttpListener()
+    listener.Prefixes.Add(url)
+    listener.Start()
+
+    let flushTask = transport.FlushAndReadAsync()
+
+    let! context = listener.GetContextAsync() |> Async.AwaitTask
+    
+    do! context.Response.OutputStream.AsyncWrite([| |], 0, 0)
+    context.Response.OutputStream.Close()
+
+    do! flushTask |> Async.AwaitTask
+
+    Assert.ThrowsAsync<InvalidOperationException>(fun () -> transport.FlushAndReadAsync()) |> Async.AwaitTask |> Async.Ignore
+}

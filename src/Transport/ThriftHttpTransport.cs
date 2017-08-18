@@ -14,7 +14,7 @@ namespace ThriftSharp.Transport
     /// <summary>
     /// Transports binary data over HTTP POST requests.
     /// </summary>
-    public sealed class HttpThriftTransport : IThriftTransport
+    public sealed class ThriftHttpTransport : IThriftTransport
     {
         private readonly string _url;
         private readonly CancellationToken _token;
@@ -23,23 +23,34 @@ namespace ThriftSharp.Transport
 
         private MemoryStream _outputStream;
         private Stream _inputStream;
+        private bool _disposed;
 
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HttpThriftTransport" /> class using the specified values.
+        /// Initializes a new instance of the <see cref="ThriftHttpTransport" /> class using the specified values.
         /// </summary>
         /// <param name="url">The URL, including the port if necessary.</param>
         /// <param name="headers">The HTTP headers to include with every request.</param>
         /// <param name="clientHandler">The HTTP client handler.</param>
         /// <param name="token">The cancellation token that will cancel asynchronous tasks.</param>
         /// <param name="timeout">The timeout.</param>
-        public HttpThriftTransport( string url, IReadOnlyDictionary<string, string> headers, HttpMessageHandler clientHandler,
+        public ThriftHttpTransport( string url, IReadOnlyDictionary<string, string> headers, HttpMessageHandler clientHandler,
                                     CancellationToken token, TimeSpan timeout )
         {
+            if( string.IsNullOrEmpty( url ) )
+            {
+                throw new ArgumentNullException( nameof( url ) );
+            }
+            if( headers == null )
+            {
+                throw new ArgumentNullException( nameof( headers ) );
+            }
+
             _url = url;
             _token = token;
             _headers = headers;
 
+            // HttpClient ctor takes care of validating the handler
             _client = new HttpClient( clientHandler, disposeHandler: false )
             {
                 Timeout = timeout
@@ -57,18 +68,16 @@ namespace ThriftSharp.Transport
         /// <param name="count">The number of bytes to write.</param>
         public void WriteBytes( byte[] bytes, int offset, int count )
         {
-            _outputStream.Write( bytes, offset, count );
-        }
+            if( _disposed == true )
+            {
+                throw new ObjectDisposedException( nameof( ThriftHttpTransport ) );
+            }
+            if( _outputStream == null )
+            {
+                throw new InvalidOperationException( "The stream has already been flushed." );
+            }
 
-        /// <summary>
-        /// Reads unsigned bytes, and puts them in the specified array.
-        /// </summary>
-        /// <param name="output">The array in which to write read bytes.</param>
-        /// <param name="offset">The offset at which to start writing in the array.</param>
-        /// <param name="count">The number of bytes to read.</param>
-        public void ReadBytes( byte[] output, int offset, int count )
-        {
-            _inputStream.Read( output, offset, count );
+            _outputStream.Write( bytes, offset, count );
         }
 
         /// <summary>
@@ -76,6 +85,15 @@ namespace ThriftSharp.Transport
         /// </summary>
         public async Task FlushAndReadAsync()
         {
+            if( _disposed == true )
+            {
+                throw new ObjectDisposedException( nameof( ThriftHttpTransport ) );
+            }
+            if( _outputStream == null )
+            {
+                throw new InvalidOperationException( "The stream has already been flushed." );
+            }
+
             _token.ThrowIfCancellationRequested();
 
             _outputStream.Seek( 0, SeekOrigin.Begin );
@@ -90,7 +108,7 @@ namespace ThriftSharp.Transport
                 request.Headers.TryAddWithoutValidation( header.Key, header.Value );
             }
 
-            var response = await _client.SendAsync( request, HttpCompletionOption.ResponseHeadersRead, _token );
+            var response = await _client.SendAsync( request, HttpCompletionOption.ResponseContentRead, _token );
 
             _inputStream = await response.Content.ReadAsStreamAsync();
 
@@ -98,26 +116,47 @@ namespace ThriftSharp.Transport
             _outputStream = null;
         }
 
+        /// <summary>
+        /// Reads unsigned bytes, and puts them in the specified array.
+        /// </summary>
+        /// <param name="output">The array in which to write read bytes.</param>
+        /// <param name="offset">The offset at which to start writing in the array.</param>
+        /// <param name="count">The number of bytes to read.</param>
+        public void ReadBytes( byte[] output, int offset, int count )
+        {
+            if( _disposed == true )
+            {
+                throw new ObjectDisposedException( nameof( ThriftHttpTransport ) );
+            }
+            if( _inputStream == null )
+            {
+                throw new InvalidOperationException( "The stream has not been flushed yet." );
+            }
+
+            _inputStream.Read( output, offset, count );
+        }
+
         #region IDisposable implementation
         /// <summary>
-        /// Finalizes the <see cref="HttpThriftTransport" />.
+        /// Finalizes the <see cref="ThriftHttpTransport" />.
         /// </summary>
-        ~HttpThriftTransport()
+        ~ThriftHttpTransport()
         {
             DisposePrivate();
         }
 
         /// <summary>
-        /// Disposes of the <see cref="HttpThriftTransport" />.
+        /// Disposes of the <see cref="ThriftHttpTransport" />.
         /// </summary>
         public void Dispose()
         {
             DisposePrivate();
             GC.SuppressFinalize( this );
+            _disposed = true;
         }
 
         /// <summary>
-        /// Disposes of the <see cref="HttpThriftTransport" />'s internals.
+        /// Disposes of the <see cref="ThriftHttpTransport" />'s internals.
         /// </summary>
         private void DisposePrivate()
         {

@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.2.2" />
+    <PackageReference Include="System.Net.Http" Version="4.3.2" />
+    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+    <PackageReference Include="xunit" Version="2.3.0-beta4-build3742" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.0-beta4-build3742" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0-preview-20170810-02" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\ThriftSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Internals\MemoryProtocol.fs" />
+    <Compile Include="Internals\MemoryTransport.fs" />
+    <Compile Include="Internals\Utils.fs" />
+    <Compile Include="AttributesParser.fs" />
+    <Compile Include="BinaryProtocol.fs" />
+    <Compile Include="Communication.fs" />
+    <Compile Include="Converters.fs" />
+    <Compile Include="HttpTransport.fs" />
+    <Compile Include="MemoryTransport.fs" />
+    <Compile Include="ServiceCalls.fs" />
+    <Compile Include="StructsSerialization.fs" />
+    <Compile Include="MemoryLeaks.fs" />
+    <Compile Include="ModelsEqualsHash.fs" />
+    <Compile Include="ParametersValidation.fs" />
+    <Compile Include="ThriftSerializer.fs" />
+  </ItemGroup>
+</Project>

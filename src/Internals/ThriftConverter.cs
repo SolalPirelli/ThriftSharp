@@ -57,7 +57,6 @@ namespace ThriftSharp.Internals
         /// </summary>
         public Expression CreateCall( string methodName, Expression arg )
         {
-            // TODO Use only 1 converter of each type.
             return Expression.Call(
                 Expression.New( _type ),
                 _interfaceTypeInfo.GetDeclaredMethod( methodName ),

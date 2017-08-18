@@ -100,7 +100,7 @@ namespace ThriftSharp
             var realHandler = clientHandler ?? new HttpClientHandler();
             var realTimeout = timeout ?? DefaultTimeout;
 
-            return new ThriftCommunication( this, token => new HttpThriftTransport( url, realHeaders, realHandler, token, realTimeout ) );
+            return new ThriftCommunication( this, token => new ThriftHttpTransport( url, realHeaders, realHandler, token, realTimeout ) );
         }
 
         /// <summary>

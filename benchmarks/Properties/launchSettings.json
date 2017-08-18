@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ThriftSharp.Benchmarks": {
+      "commandName": "Executable",
+      "executablePath": "D:\\Projects\\ThriftSharp\\benchmarks\\bin\\Debug\\netstandard2.0\\ThriftSharp.Benchmarks.dll"
+    }
+  }
+}

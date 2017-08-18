@@ -738,7 +738,7 @@ module ``Parsing structs: Normal structs`` =
     
     [<Fact>]
     let ``Struct with marked and unmarked fields``() =
-        parse typeof<StructWithUnmarkedFields>1
+        parse typeof<StructWithUnmarkedFields> 1
 
 
     

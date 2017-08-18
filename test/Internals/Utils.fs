@@ -8,7 +8,6 @@ open System
 open System.Collections.Generic
 open System.Reflection
 open System.Reflection.Emit
-open System.Threading
 open System.Threading.Tasks
 open Xunit
 open ThriftSharp
