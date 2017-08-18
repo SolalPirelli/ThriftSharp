@@ -3,12 +3,28 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>6.0.0</Version>
-    <Authors>Solal Pirelli</Authors>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Authors>Solal Pirelli</Authors>
+    <Description>Attribute-based, IDL-less Apache Thrift client for .NET.</Description>
+    <PackageProjectUrl>https://github.com/SolalPirelli/ThriftSharp</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/SolalPirelli/ThriftSharp/master/License.md</PackageLicenseUrl>
+    <PackageTags>thrift</PackageTags>
+    <PackageReleaseNotes>- .NET Standard 2.0 support
+- Added ThriftSerializer, to easily de/serialize and object to bytes using the Thrift binary protocol.
+- Added ThriftMemoryTransport, a simple in-memory transport.
+- Renamed HttpThriftTransport to ThriftHttpTransport for consistency.</PackageReleaseNotes>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Properties\ThriftSharp.rd.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\ThriftSharp.rd.xml" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Reflection.DispatchProxy" Version="4.4.0" />
