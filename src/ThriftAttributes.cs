@@ -176,7 +176,7 @@ namespace ThriftSharp
     /// <summary>
     /// Optional attribute marking methods to specify a Thrift "throws" clause.
     /// </summary>
-    [AttributeUsage( AttributeTargets.Method )]
+    [AttributeUsage( AttributeTargets.Method, AllowMultiple = true)]
     public sealed class ThriftThrowsAttribute : ThriftConvertibleAttribute
     {
         /// <summary>
