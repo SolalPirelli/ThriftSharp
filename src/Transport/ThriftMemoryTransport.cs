@@ -49,6 +49,20 @@ namespace ThriftSharp.Transport
         }
 
         /// <summary>
+        /// Gets the array of bytes written by this transport.
+        /// </summary>
+        public ArraySegment<byte> GetBuffer()
+        {
+            if (_isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(ThriftMemoryTransport));
+            }
+
+            _stream.TryGetBuffer(out var arr);
+            return arr;
+        }
+
+        /// <summary>
         /// Writes the specified array of unsigned bytes.
         /// </summary>
         /// <param name="bytes">The array.</param>

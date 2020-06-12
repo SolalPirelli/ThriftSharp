@@ -12,10 +12,12 @@ type SimpleStruct() =
 [<Fact>]
 let ``Roundtrip``() =
     let obj = SimpleStruct(Field = 42)
-    let bytes = ThriftSerializer.Serialize(obj)
+    let arr = ThriftSerializer.Serialize(obj)
+    let bytes = arr.ToArray();
     let obj2 = ThriftSerializer.Deserialize<SimpleStruct>(bytes)
     obj.Field <=> obj2.Field
-    
+    bytes.Length <=> 8
+
 [<Fact>]
 let ``Serializing a null object fails``() =
     Assert.Throws<ArgumentNullException>(fun () -> ThriftSerializer.Serialize(null) |> ignore) |> ignore
