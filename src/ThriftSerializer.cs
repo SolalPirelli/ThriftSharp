@@ -16,7 +16,7 @@ namespace ThriftSharp
         /// <typeparam name="T">The object type.</typeparam>
         /// <param name="obj">The object.</param>
         /// <returns>Thrift binary data representing the object.</returns>
-        public static byte[] Serialize<T>( T obj )
+        public static ArraySegment<byte> Serialize<T>( T obj )
         {
             if( obj == null )
             {
@@ -26,7 +26,7 @@ namespace ThriftSharp
             var transport = new ThriftMemoryTransport();
             var protocol = new ThriftBinaryProtocol( transport );
             ThriftStructWriter.Write( obj, protocol );
-            return transport.GetInternalBuffer();
+            return transport.GetBuffer();
         }
 
         /// <summary>
