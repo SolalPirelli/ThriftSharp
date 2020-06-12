@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>6.0.1</Version>
+    <Version>6.0.2</Version>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -12,10 +12,7 @@
     <PackageProjectUrl>https://github.com/SolalPirelli/ThriftSharp</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/SolalPirelli/ThriftSharp/master/License.md</PackageLicenseUrl>
     <PackageTags>thrift</PackageTags>
-    <PackageReleaseNotes>- .NET Standard 2.0 support
-- Added ThriftSerializer, to easily de/serialize and object to bytes using the Thrift binary protocol.
-- Added ThriftMemoryTransport, a simple in-memory transport.
-- Renamed HttpThriftTransport to ThriftHttpTransport for consistency.</PackageReleaseNotes>
+    <PackageReleaseNotes>Concurrency-related fixes, thanks to @tranb3r</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
