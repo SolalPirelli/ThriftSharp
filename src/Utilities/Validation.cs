@@ -6,7 +6,7 @@ using System;
 namespace ThriftSharp.Utilities
 {
     /// <summary>
-    /// Utility class for validating method parameters, using expressions to avoid hardcoded parameter names.
+    /// Utility class for validating method parameters.
     /// </summary>
     internal static class Validation
     {
