@@ -78,7 +78,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static ThriftStruct ParseStruct( TypeInfo typeInfo )
         {
-            if( !_knownStructs.ContainsKey( typeInfo ) )
+            return _knownStructs.GetOrAdd( typeInfo, _ =>
             {
                 if( typeInfo.IsInterface || typeInfo.IsAbstract )
                 {
@@ -96,14 +96,8 @@ namespace ThriftSharp.Internals
                                      .Where( f => f != null )
                                      .ToArray();
 
-                // The type may have been added during fields parsing
-                if( !_knownStructs.ContainsKey( typeInfo ) )
-                {
-                    _knownStructs.TryAdd( typeInfo, new ThriftStruct( new ThriftStructHeader( attr.Name ), fields, typeInfo ) );
-                }
-            }
-
-            return _knownStructs[typeInfo];
+                return new ThriftStruct( new ThriftStructHeader( attr.Name ), fields, typeInfo );
+            });
         }
 
 
@@ -184,7 +178,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static ThriftService ParseService( TypeInfo typeInfo )
         {
-            if( !_knownServices.ContainsKey( typeInfo ) )
+            return _knownServices.GetOrAdd( typeInfo, _ =>
             {
                 if( !typeInfo.IsInterface )
                 {
@@ -203,10 +197,8 @@ namespace ThriftSharp.Internals
                     throw ThriftParsingException.NoMethods( typeInfo );
                 }
 
-                _knownServices.TryAdd( typeInfo, new ThriftService( attr.Name, methods ) );
-            }
-
-            return _knownServices[typeInfo];
+                return new ThriftService( attr.Name, methods );
+            });
         }
     }
 }

@@ -214,5 +214,5 @@ let ``Cannot flush twice``() = asTask <| async {
 
     do! flushTask |> Async.AwaitTask
 
-    Assert.ThrowsAsync<InvalidOperationException>(fun () -> transport.FlushAndReadAsync()) |> Async.AwaitTask |> Async.Ignore
+    do! Assert.ThrowsAsync<InvalidOperationException>(fun () -> transport.FlushAndReadAsync()) |> Async.AwaitTask |> Async.Ignore
 }

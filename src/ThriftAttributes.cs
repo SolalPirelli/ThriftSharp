@@ -2,7 +2,7 @@
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Reflection;
 using ThriftSharp.Internals;
 using ThriftSharp.Utilities;
@@ -14,7 +14,7 @@ namespace ThriftSharp
     /// </summary>
     public abstract class ThriftConvertibleAttribute : Attribute
     {
-        private static readonly Dictionary<Type, ThriftConverter> _knownConverters = new Dictionary<Type, ThriftConverter>();
+        private static readonly ConcurrentDictionary<Type, ThriftConverter> _knownConverters = new ConcurrentDictionary<Type, ThriftConverter>();
 
         private Type _converter;
 
@@ -32,10 +32,7 @@ namespace ThriftSharp
                     return;
                 }
 
-                if( !_knownConverters.ContainsKey( value ) )
-                {
-                    _knownConverters.Add( value, new ThriftConverter( value ) );
-                }
+                _knownConverters.TryAdd( value, new ThriftConverter( value ) );
 
                 _converter = value;
             }

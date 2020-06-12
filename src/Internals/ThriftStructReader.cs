@@ -615,10 +615,7 @@ namespace ThriftSharp.Internals
         public static T Read<T>( IThriftProtocol protocol )
         {
             var thriftStruct = ThriftAttributesParser.ParseStruct( typeof( T ).GetTypeInfo() );
-            if( !_knownReaders.ContainsKey( thriftStruct ) )
-            {
-                _knownReaders.TryAdd( thriftStruct, CreateReaderForStruct( thriftStruct ).Compile() );
-            }
+            _knownReaders.TryAdd( thriftStruct, CreateReaderForStruct( thriftStruct ).Compile() );
 
             return ( (Func<IThriftProtocol, T>) _knownReaders[thriftStruct] )( protocol );
         }

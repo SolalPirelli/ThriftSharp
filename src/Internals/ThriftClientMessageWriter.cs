@@ -70,11 +70,7 @@ namespace ThriftSharp.Internals
         /// </summary>
         public static void Write( ThriftMethod method, object[] args, IThriftProtocol protocol )
         {
-            if( !_knownWriters.ContainsKey( method ) )
-            {
-                _knownWriters.TryAdd( method, CreateWriterForMethod( method ).Compile() );
-            }
-
+            _knownWriters.TryAdd( method, CreateWriterForMethod( method ).Compile() );
             _knownWriters[method]( args, protocol );
         }
     }

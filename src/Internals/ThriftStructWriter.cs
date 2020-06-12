@@ -381,10 +381,7 @@ namespace ThriftSharp.Internals
         public static void Write<T>( T value, IThriftProtocol protocol )
         {
             var thriftStruct = ThriftAttributesParser.ParseStruct( typeof( T ).GetTypeInfo() );
-            if( !_knownWriters.ContainsKey( thriftStruct ) )
-            {
-                _knownWriters.TryAdd( thriftStruct, CreateWriterForStruct( thriftStruct ).Compile() );
-            }
+            _knownWriters.TryAdd( thriftStruct, CreateWriterForStruct( thriftStruct ).Compile() );
 
             ( (Action<T, IThriftProtocol>) _knownWriters[thriftStruct] )( value, protocol );
         }
