@@ -2,7 +2,7 @@
 // This code is licensed under the MIT License (see Licence.txt for details)
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -16,8 +16,8 @@ namespace ThriftSharp.Internals
     /// </summary>
     internal static class ThriftAttributesParser
     {
-        private static readonly Dictionary<TypeInfo, ThriftStruct> _knownStructs = new Dictionary<TypeInfo, ThriftStruct>();
-        private static readonly Dictionary<TypeInfo, ThriftService> _knownServices = new Dictionary<TypeInfo, ThriftService>();
+        private static readonly ConcurrentDictionary<TypeInfo, ThriftStruct> _knownStructs = new ConcurrentDictionary<TypeInfo, ThriftStruct>();
+        private static readonly ConcurrentDictionary<TypeInfo, ThriftService> _knownServices = new ConcurrentDictionary<TypeInfo, ThriftService>();
 
         /// <summary>
         /// Parses a Thrift field from the specified PropertyInfo.
@@ -99,7 +99,7 @@ namespace ThriftSharp.Internals
                 // The type may have been added during fields parsing
                 if( !_knownStructs.ContainsKey( typeInfo ) )
                 {
-                    _knownStructs.Add( typeInfo, new ThriftStruct( new ThriftStructHeader( attr.Name ), fields, typeInfo ) );
+                    _knownStructs.TryAdd( typeInfo, new ThriftStruct( new ThriftStructHeader( attr.Name ), fields, typeInfo ) );
                 }
             }
 
@@ -203,7 +203,7 @@ namespace ThriftSharp.Internals
                     throw ThriftParsingException.NoMethods( typeInfo );
                 }
 
-                _knownServices.Add( typeInfo, new ThriftService( attr.Name, methods ) );
+                _knownServices.TryAdd( typeInfo, new ThriftService( attr.Name, methods ) );
             }
 
             return _knownServices[typeInfo];
