@@ -12,7 +12,7 @@
     <PackageProjectUrl>https://github.com/SolalPirelli/ThriftSharp</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/SolalPirelli/ThriftSharp/master/License.md</PackageLicenseUrl>
     <PackageTags>thrift</PackageTags>
-    <PackageReleaseNotes>Concurrency-related fixes, thanks to @tranb3r</PackageReleaseNotes>
+    <PackageReleaseNotes>Concurrency-related fixes, thanks to @tranb3r, and support for multiple ThriftThrowsAttributes thanks to @annymsMthd</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
