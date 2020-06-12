@@ -19,6 +19,13 @@ type CustomException() =
     [<ThriftField(1s, true, "Value")>]
     member val Value = "" with get, set
 
+[<ThriftStruct("CustomException2")>]
+type CustomException2() =
+    inherit exn()
+
+    [<ThriftField(1s, true, "Value")>]
+    member val Value = "" with get, set
+
 [<ThriftService("Service")>]
 type IService =
     [<ThriftMethod("NoReturn0")>]
@@ -47,10 +54,15 @@ type IService =
                       * [<ThriftParameter(2s, "arg2")>] arg2: int
                       * [<ThriftParameter(3s, "arg3")>] arg3: double
                       * [<ThriftParameter(4s, "arg4")>] arg4: string -> Task
-                      
+
     [<ThriftMethod("NoReturnException")>]
     [<ThriftThrows(1s, "exn", typeof<CustomException>)>]
     abstract NoReturnException: unit -> Task
+
+    [<ThriftMethod("NoReturnTwoTypesException")>]
+    [<ThriftThrows(1s, "exn", typeof<CustomException>)>]
+    [<ThriftThrows(2s, "exn2", typeof<CustomException2>)>]
+    abstract NoReturnTwoTypesException: unit -> Task
 
     [<ThriftMethod("Return0")>]
     abstract Return0: unit -> Task<int>
@@ -295,6 +307,54 @@ type ``Proxy``() =
                StructHeader ""
                FieldHeader (1s, "exn", ThriftTypeId.Struct)
                StructHeader ("CustomException")
+               FieldHeader (1s, "Value", ThriftTypeId.Binary)
+               String "Oops"
+               FieldEnd
+               FieldStop
+               StructEnd
+               FieldEnd
+               FieldStop
+               StructEnd
+               MessageEnd]
+              (fun e -> e.Value <=> "Oops")
+
+    [<Fact>]
+    member x.``No return value, declared exception 1st type thrown``() =
+        x.TestException<CustomException> 
+              (fun s -> s.NoReturnTwoTypesException() |> asUnit)
+              [MessageHeader ("NoReturnTwoTypesException", ThriftMessageType.Call)
+               StructHeader ""
+               FieldStop
+               StructEnd
+               MessageEnd]
+              [MessageHeader ("", ThriftMessageType.Reply)
+               StructHeader ""
+               FieldHeader (1s, "exn", ThriftTypeId.Struct)
+               StructHeader ("CustomException")
+               FieldHeader (1s, "Value", ThriftTypeId.Binary)
+               String "Oops"
+               FieldEnd
+               FieldStop
+               StructEnd
+               FieldEnd
+               FieldStop
+               StructEnd
+               MessageEnd]
+              (fun e -> e.Value <=> "Oops")
+
+    [<Fact>]
+    member x.``No return value, declared exception 2nd type thrown``() =
+        x.TestException<CustomException2>
+              (fun s -> s.NoReturnTwoTypesException() |> asUnit)
+              [MessageHeader ("NoReturnTwoTypesException", ThriftMessageType.Call)
+               StructHeader ""
+               FieldStop
+               StructEnd
+               MessageEnd]
+              [MessageHeader ("", ThriftMessageType.Reply)
+               StructHeader ""
+               FieldHeader (2s, "exn2", ThriftTypeId.Struct)
+               StructHeader ("CustomException2")
                FieldHeader (1s, "Value", ThriftTypeId.Binary)
                String "Oops"
                FieldEnd
@@ -565,6 +625,7 @@ type ``Proxy``() =
                StructEnd
                MessageEnd]
               (fun e -> e.Value <=> "Oops")
+
     [<Fact>]
     member x.``Converted return value``() =
         x.Test (fun s -> s.ConvertedReturn())
