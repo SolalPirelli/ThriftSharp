@@ -56,7 +56,7 @@ namespace ThriftSharp.Utilities
     internal static class Methods
     {
         public static readonly MethodInfo
-            Enum_IsDefined = typeof( Enum ).GetTypeInfo().GetDeclaredMethod( "IsDefined" ),
+            Enum_IsDefined = typeof( Enum ).GetTypeInfo().GetMethod( "IsDefined", new [] { typeof(Type), typeof(object) } ),
 
             ThriftStructReader_Skip = TypeInfos.ThriftStructReader.GetDeclaredMethod( "Skip" ),
 
