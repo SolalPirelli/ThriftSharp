@@ -9,3 +9,5 @@ This allows complete freedom over the types, and enables interesting features su
 Read the [documentation](https://github.com/SolalPirelli/ThriftSharp/wiki) to get started.
 
 Pull requests, bug reports and suggestions are welcome.
+
+To package as a NuGet package, run `dotnet pack -c Release --include-source --include-symbols` in `src/`.

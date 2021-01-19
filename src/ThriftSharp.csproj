@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>6.0.2</Version>
+    <Version>6.0.3</Version>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -10,9 +10,9 @@
     <Authors>Solal Pirelli</Authors>
     <Description>Attribute-based, IDL-less Apache Thrift client for .NET.</Description>
     <PackageProjectUrl>https://github.com/SolalPirelli/ThriftSharp</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/SolalPirelli/ThriftSharp/master/License.md</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>thrift</PackageTags>
-    <PackageReleaseNotes>Concurrency-related fixes, thanks to @tranb3r, and support for multiple ThriftThrowsAttributes thanks to @annymsMthd</PackageReleaseNotes>
+    <PackageReleaseNotes>Fix for .NET 5 thanks to @tranb3r</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
